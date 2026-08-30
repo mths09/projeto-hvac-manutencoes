@@ -1,0 +1,738 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --bg-main: #131726; /* Fundo principal escuro */
+  --bg-card: #202639; /* Fundo dos cards/elementos elevados */
+  --bg-card-hover: #2a3148;
+  --cyan: #00d2ff;
+  --cyan-hover: #00b8e6;
+  --magenta: #d122e3;
+  --green-wpp: #25d366;
+  --green-wpp-hover: #1fbc5a;
+  --text-white: #ffffff;
+  --text-gray: #9ba1b6;
+  --border-color: rgba(255, 255, 255, 0.08);
+
+  --section-padding: 6rem 10%;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-white);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ==========================================================================
+   Header e Navegação
+   ========================================================================== */
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 1.2rem 10%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(19, 23, 38, 0.9);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.logo-img {
+  height: 48px;
+  width: auto;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 3.5rem;
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+  gap: 2.5rem;
+}
+
+.nav-link {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-gray);
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--cyan);
+}
+
+.btn-cliente {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  background-color: var(--cyan);
+  color: #000000;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.btn-cliente:hover {
+  background-color: var(--cyan-hover);
+  transform: translateY(-2px);
+}
+
+.svg-pessoa {
+  width: 18px;
+  height: 18px;
+}
+
+/* ==========================================================================
+   Estilo Base: Badges/Pills (Botões arredondados auxiliares)
+   ========================================================================== */
+.texto-auxiliar,
+#servicos span,
+#portfolio .texto-section,
+#contatos .texto-contatos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.2rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 50px;
+  color: var(--cyan);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.texto-auxiliar::before,
+#contatos .texto-contatos::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: var(--cyan);
+  border-radius: 50%;
+}
+
+/* ==========================================================================
+   Seção Início (Hero)
+   ========================================================================== */
+#inicio {
+  padding: 10rem 10% 6rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.titulo-hero {
+  font-size: 4rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  max-width: 650px;
+}
+
+.subtitulo-hero {
+  font-size: 1.15rem;
+  color: var(--text-gray);
+  max-width: 550px;
+  margin-bottom: 3rem;
+  line-height: 1.6;
+}
+
+.botao-atendimento,
+.botao-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.botao-atendimento {
+  background-color: var(--cyan);
+  color: #000;
+  margin-right: 1rem;
+}
+
+.botao-atendimento:hover {
+  background-color: var(--cyan-hover);
+  transform: translateY(-3px);
+}
+
+.botao-whatsapp {
+  background-color: var(--green-wpp);
+  color: var(--text-white);
+}
+
+.botao-whatsapp:hover {
+  background-color: var(--green-wpp-hover);
+  transform: translateY(-3px);
+}
+
+.svg-calendario,
+.svg-whatsapp {
+  width: 20px;
+  height: 20px;
+}
+
+.lista-qualidades {
+  list-style: none;
+  display: flex;
+  gap: 1.8rem;
+  margin-top: 2.5rem;
+}
+
+.texto-verificado {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-white);
+}
+
+.svg-check circle {
+  fill: var(--cyan);
+}
+.svg-check path {
+  stroke: #000;
+}
+
+.hero-img {
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 45%;
+  max-width: 650px;
+  z-index: -1;
+}
+
+.servico-concluido {
+  position: absolute;
+  right: 25%;
+  bottom: 20%;
+  background-color: var(--bg-card);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+/* ==========================================================================
+   Seção Serviços
+   ========================================================================== */
+#servicos {
+  padding: var(--section-padding);
+  text-align: center;
+}
+
+#servicos h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+#servicos p {
+  color: var(--text-gray);
+  margin-bottom: 3rem;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin-inline: auto;
+}
+
+.grade-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.grade-cards button {
+  background-color: var(--bg-card);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 2.2rem;
+  color: var(--text-white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.grade-cards button:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-color);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.grade-cards button svg.w-12 {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 1.5rem;
+}
+
+/* Cores específicas dos ícones baseadas na imagem */
+button[data-servico="ar-condicionado"] svg.w-12 {
+  color: var(--cyan);
+}
+button[data-servico="frigorifico"] svg.w-12 {
+  color: #3b82f6;
+} /* Azul */
+button[data-servico="iluminacao"] svg.w-12 {
+  color: #eab308;
+} /* Amarelo */
+button[data-servico="manutencao"] svg.w-12 {
+  color: #a855f7;
+} /* Roxo */
+button[data-servico="eletromecanica"] svg.w-12 {
+  color: var(--magenta);
+}
+button[data-servico="atendimento-urgente"] svg.w-12 {
+  color: #ef4444;
+} /* Vermelho */
+
+.grade-cards button svg.w-4 {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  color: var(--text-gray);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  padding: 4px;
+  transition: all 0.3s ease;
+}
+
+.grade-cards button:hover svg.w-4 {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-white);
+}
+
+.titulo-servico {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.subtitulo-servico {
+  font-size: 0.9rem;
+  color: var(--text-gray);
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Formulário Escondido
+   ========================================================================== */
+.escondido {
+  display: none !important;
+}
+
+#painel-formulario {
+  background-color: var(--bg-card);
+  padding: 3rem;
+  border-radius: 16px;
+  margin-top: 3rem;
+  border: 1px solid var(--border-color);
+  text-align: left;
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.titulo-painel {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitulo-painel {
+  color: var(--cyan) !important;
+  font-size: 1rem !important;
+  margin-bottom: 2rem !important;
+}
+
+.form-servicos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.form-servicos label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  color: var(--text-white);
+}
+
+.form-servicos input,
+.form-servicos textarea {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-white);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.form-servicos input:focus,
+.form-servicos textarea:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+
+.form-servicos textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.01);
+  transition: all 0.3s;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.upload-box:hover {
+  border-color: var(--cyan);
+  background-color: rgba(0, 210, 255, 0.02);
+}
+
+.anexo-arquivos {
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  color: var(--cyan);
+}
+
+.tipo-arquivos {
+  font-size: 0.85rem;
+  color: var(--text-gray);
+}
+
+/* ==========================================================================
+   Portfólio & Estatísticas
+   ========================================================================== */
+#portfolio {
+  padding: var(--section-padding);
+  text-align: center;
+}
+
+#portfolio h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+#portfolio p {
+  color: var(--text-gray);
+  margin-bottom: 3rem;
+}
+
+.botao-ver-projetos {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 5rem;
+  transition: all 0.3s;
+}
+
+.botao-ver-projetos:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--text-white);
+}
+
+.container-status {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.card-status {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 3.5rem;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.container-status .card-status:nth-child(1) .stat-number {
+  color: var(--text-white);
+}
+.container-status .card-status:nth-child(2) .stat-number {
+  color: var(--magenta);
+}
+.container-status .card-status:nth-child(3) .stat-number {
+  color: var(--cyan);
+}
+.container-status .card-status:nth-child(4) .stat-number {
+  color: var(--magenta);
+}
+
+.label-status {
+  font-size: 0.95rem;
+  color: var(--text-gray) !important;
+  margin-bottom: 0 !important;
+}
+
+/* ==========================================================================
+   Contatos
+   ========================================================================== */
+#contatos {
+  padding: var(--section-padding);
+  text-align: center;
+}
+
+.titulo-contatos {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.subtitulo-contatos {
+  color: var(--text-gray);
+  margin-bottom: 3rem;
+  font-size: 1.1rem;
+}
+
+#contatos .botao-whatsapp {
+  margin-bottom: 4rem;
+}
+
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.card {
+  background-color: var(--bg-card);
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.card span {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 1.2rem;
+}
+
+.card-titulo {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-white);
+}
+
+.card-texto {
+  color: var(--text-gray);
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.footer {
+  background-color: var(--bg-card);
+  padding: 4rem 10% 0;
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 3rem;
+}
+
+.footer-logo img {
+  height: 40px;
+  margin-bottom: 1.5rem;
+}
+
+.logo-descricao {
+  color: var(--text-gray);
+  line-height: 1.6;
+  font-size: 0.9rem;
+  max-width: 400px;
+}
+
+.footer-coluna-titulo {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-white);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.footer ul {
+  list-style: none;
+}
+
+.footer ul li {
+  margin-bottom: 0.8rem;
+}
+
+.footer ul li a {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  transition: color 0.3s;
+}
+
+.footer ul li a:hover {
+  color: var(--cyan);
+}
+
+.footer-fundo {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 0;
+  margin-top: 3rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-gray);
+  font-size: 0.85rem;
+}
+
+.legal-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   Responsividade (Mobile & Tablet)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .hero-img {
+    opacity: 0.3;
+    right: 0;
+  }
+  .grade-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    display: none;
+  }
+  header {
+    padding: 1rem 5%;
+    justify-content: center;
+  }
+  .btn-cliente {
+    display: none;
+  }
+
+  #inicio {
+    padding: 8rem 5% 4rem;
+    text-align: center;
+  }
+  .hero-img,
+  .servico-concluido {
+    display: none;
+  }
+  .titulo-hero {
+    font-size: 2.8rem;
+    margin: 0 auto 1.5rem;
+  }
+  .subtitulo-hero {
+    margin: 0 auto 2rem;
+  }
+
+  .botao-atendimento,
+  .botao-whatsapp {
+    width: 100%;
+    justify-content: center;
+    margin: 0 0 1rem 0;
+  }
+  .lista-qualidades {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .grade-cards,
+  .info-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 3rem 5% 0;
+  }
+  .logo-descricao {
+    margin: 0 auto;
+  }
+  .footer-fundo {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
