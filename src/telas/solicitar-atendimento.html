@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solicitar Atendimento | HVAC Lex Company</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background:
+          radial-gradient(
+            circle at 15% 20%,
+            rgba(0, 190, 255, 0.12),
+            transparent 30%
+          ),
+          radial-gradient(
+            circle at 85% 80%,
+            rgba(0, 110, 255, 0.14),
+            transparent 35%
+          ),
+          linear-gradient(135deg, #020b1c 0%, #061a38 50%, #031127 100%);
+        color: white;
+        min-height: 100vh;
+      } /* ========================= HEADER ========================= */
+      header {
+        height: 85px;
+        background: rgba(3, 18, 43, 0.72);
+        border-bottom: 1px solid rgba(0, 210, 255, 0.18);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 7%;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+      } /* ========================= LOGO HEADER ========================= */
+      .logo-header {
+        display: flex;
+        align-items: center;
+      }
+      .logo-header img {
+        height: 50px;
+        width: auto;
+        object-fit: contain;
+      } /* ========================= ÁREA DO CLIENTE ========================= */
+      .cliente {
+        background: linear-gradient(135deg, #16d8e8, #27cfe1);
+        color: #03152e;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: bold;
+        box-shadow: 0 0 20px rgba(25, 217, 232, 0.16);
+        transition: 0.25s ease;
+        text-decoration: none;
+      }
+      .cliente:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 28px rgba(25, 217, 232, 0.28);
+      } /* ========================= CONTEÚDO PRINCIPAL ========================= */
+      main {
+        width: 90%;
+        max-width: 850px;
+        margin: 40px auto 60px;
+      } /* ========================= TÍTULO ========================= */
+      .titulo {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .logo-destaque {
+        width: 130px;
+        height: auto;
+        margin-bottom: 15px;
+        filter: drop-shadow(0 0 15px rgba(25, 217, 232, 0.3));
+      }
+      .titulo h1 {
+        font-size: 38px;
+        margin-bottom: 12px;
+        letter-spacing: -0.5px;
+      }
+      .titulo h1 span {
+        color: #20d9e7;
+        text-shadow: 0 0 18px rgba(32, 217, 231, 0.25);
+      }
+      .titulo p {
+        color: #b9c9e8;
+        font-size: 17px;
+        line-height: 1.5;
+      } /* ========================= FORMULÁRIO ========================= */
+      .formulario {
+        background: rgba(7, 27, 58, 0.68);
+        border: 1px solid rgba(80, 210, 255, 0.18);
+        border-radius: 22px;
+        padding: 35px;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow:
+          0 25px 60px rgba(0, 0, 0, 0.35),
+          0 0 40px rgba(0, 150, 255, 0.06);
+      } /* ========================= TÍTULOS DAS SEÇÕES ========================= */
+      .secao-titulo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 22px;
+        font-size: 19px;
+        color: #ffffff;
+      }
+      .secao-titulo::before {
+        content: "";
+        width: 4px;
+        height: 22px;
+        border-radius: 5px;
+        background: linear-gradient(180deg, #20d9e7, #36e5c3);
+        box-shadow: 0 0 12px rgba(32, 217, 231, 0.35);
+      }
+      .separador {
+        height: 1px;
+        background: rgba(100, 210, 255, 0.12);
+        margin: 10px 0 30px;
+      } /* ========================= CAMPOS ========================= */
+      .campo {
+        margin-bottom: 24px;
+      }
+      label {
+        display: block;
+        margin-bottom: 9px;
+        font-size: 15px;
+        font-weight: bold;
+        color: #edf7ff;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(120, 210, 255, 0.14);
+        border-radius: 11px;
+        background: rgba(2, 15, 34, 0.72);
+        color: white;
+        font-size: 15px;
+        outline: none;
+        transition: 0.25s ease;
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: #7f94b5;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: rgba(32, 217, 231, 0.7);
+        box-shadow:
+          0 0 0 3px rgba(32, 217, 231, 0.08),
+          0 0 20px rgba(32, 217, 231, 0.08);
+        background: rgba(3, 20, 43, 0.9);
+      }
+      input:hover,
+      select:hover,
+      textarea:hover {
+        border-color: rgba(80, 210, 255, 0.3);
+      } /* ========================= CAMPOS DO USUÁRIO ========================= */
+      .dados-cliente input[readonly] {
+        background: rgba(2, 15, 34, 0.45);
+        color: #aebed5;
+        cursor: not-allowed;
+      }
+      .dados-cliente input[readonly]:hover {
+        border-color: rgba(120, 210, 255, 0.14);
+      } /* ========================= SELECT ========================= */
+      select {
+        cursor: pointer;
+      }
+      select option {
+        background: #071b38;
+        color: white;
+      } /* ========================= TEXTAREA ========================= */
+      textarea {
+        min-height: 130px;
+        resize: vertical;
+        line-height: 1.5;
+      } /* ========================= LINHAS ========================= */
+      .linha {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      } /* ========================= BOTÃO ========================= */
+      .botao {
+        width: 100%;
+        margin-top: 10px;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #18d9e7, #36e5c3);
+        color: #03152e;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(24, 217, 231, 0.14);
+        transition: 0.25s ease;
+      }
+      .botao:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.08);
+        box-shadow: 0 10px 30px rgba(24, 217, 231, 0.28);
+      }
+      .botao:active {
+        transform: translateY(0);
+      } /* ========================= VOLTAR ========================= */
+      .voltar {
+        display: block;
+        text-align: center;
+        margin-top: 25px;
+        color: #20d9e7;
+        text-decoration: none;
+        transition: 0.2s ease;
+      }
+      .voltar:hover {
+        color: #5eeaf3;
+        text-decoration: underline;
+        text-shadow: 0 0 12px rgba(32, 217, 231, 0.3);
+      } /* ========================= RESPONSIVIDADE ========================= */
+      @media (max-width: 650px) {
+        header {
+          padding: 0 20px;
+        }
+        .logo-header img {
+          height: 70px;
+          width: auto;
+          object-fit: contain;
+          transform: scale(1.35);
+          transform-origin: left center;
+        }
+        .cliente {
+          padding: 10px 14px;
+          font-size: 13px;
+        }
+        .logo-destaque {
+          width: 100px;
+        }
+        .titulo h1 {
+          font-size: 28px;
+        }
+        .titulo p {
+          font-size: 15px;
+        }
+        .formulario {
+          padding: 25px 20px;
+        }
+        .linha {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ========================= HEADER ========================= -->
+    <header>
+      <div class="logo-header">
+        <img src="../../assets/logoSite.png" alt="HVAC Lex Company" />
+      </div>
+      <a href="#" class="cliente"> 👤 Área do Cliente </a>
+    </header>
+    <!-- ========================= CONTEÚDO ========================= -->
+    <main>
+      <!-- TÍTULO -->
+      <div class="titulo">
+        <img
+          src="../../assets/logoHVAC.png"
+          alt="Símbolo HVAC Lex Company"
+          class="logo-destaque"
+        />
+        <h1>Solicitar <span>Atendimento</span></h1>
+        <p>Preencha as informações abaixo para solicitar um serviço.</p>
+      </div>
+      <!-- FORMULÁRIO -->
+      <form class="formulario">
+        <!-- ========================= DADOS DO CLIENTE ========================= -->
+        <div class="dados-cliente">
+          <h2 class="secao-titulo">Dados do cliente</h2>
+          <div class="linha">
+            <div class="campo">
+              <label for="nome"> Nome completo </label>
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                placeholder="Nome completo"
+                readonly
+              />
+            </div>
+            <div class="campo">
+              <label for="telefone"> Telefone </label>
+              <input
+                type="tel"
+                id="telefone"
+                name="telefone"
+                placeholder="(15) 99999-9999"
+                readonly
+              />
+            </div>
+          </div>
+          <div class="campo">
+            <label for="email"> E-mail </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="seuemail@email.com"
+              readonly
+            />
+          </div>
+        </div>
+        <!-- SEPARADOR -->
+        <div class="separador"></div>
+        <!-- ========================= DADOS DO ATENDIMENTO ========================= -->
+        <div class="dados-atendimento">
+          <h2 class="secao-titulo">Dados do atendimento</h2>
+          <!-- SERVIÇO -->
+          <div class="campo">
+            <label for="servico"> Tipo de serviço </label>
+            <select id="servico" name="servico">
+              <option value="">Selecione o serviço</option>
+              <option value="manutencao">Manutenção de ar-condicionado</option>
+              <option value="instalacao">Instalação</option>
+              <option value="limpeza">Limpeza e higienização</option>
+              <option value="refrigeracao">Refrigeração</option>
+              <option value="eletrica">Eletromecânica</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <!-- DESCRIÇÃO -->
+          <div class="campo">
+            <label for="descricao"> Descrição do problema </label>
+            <textarea
+              id="descricao"
+              name="descricao"
+              placeholder="Descreva o problema ou serviço que você precisa..."
+            ></textarea>
+          </div>
+          <!-- ENDEREÇO -->
+          <div class="campo">
+            <label for="endereco"> Endereço do atendimento </label>
+            <input
+              type="text"
+              id="endereco"
+              name="endereco"
+              placeholder="Rua, número, bairro e cidade"
+            />
+          </div>
+          <!-- DATA E HORÁRIO -->
+          <div class="linha">
+            <div class="campo">
+              <label for="data"> Data desejada </label>
+              <input type="date" id="data" name="data" />
+            </div>
+            <div class="campo">
+              <label for="horario"> Horário desejado </label>
+              <input type="time" id="horario" name="horario" />
+            </div>
+          </div>
+          <!-- BOTÃO -->
+          <button type="submit" class="botao">Solicitar Atendimento</button>
+        </div>
+      </form>
+      <!-- VOLTAR -->
+      <a href="javascript:history.back()" class="voltar">
+        ← Voltar para a Área do Cliente
+      </a>
+    </main>
+  </body>
+</html>
