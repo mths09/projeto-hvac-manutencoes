@@ -1,9 +1,38 @@
 <!doctype html>
 <html lang="pt-br">
+
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="../../assets/HVAC.jpg" />
+    <link rel="stylesheet" href="../css/cadastro.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>Cadastro</title>
   </head>
-  <body></body>
+
+  <body>
+    <img src="../../assets/HVAC.jpg" alt="Logo da Empresa" />
+    <h1>Bem-vindo à Área do Cliente</h1>
+    <p>Acompanhe os seus serviços e agendamentos</p>
+    <form>
+      <label for="email">E-mail:</label>
+      <input type="email" id="email" name="email" required /><br /><br />
+        <a href="./login.html">Esqueceu a senha?</a><br /><br />
+
+      <label for="senha">Senha:</label>
+      <input type="password" id="senha" name="senha" required /><br /><br />
+      
+      <input type="checkbox" id="lembrar" name="lembrar" />
+      <label for="lembrar">Lembrar de mim</label>
+      
+      <br /><br />
+      <button class="btn-entrar" type="submit">Entrar na conta→</button>
+      
+      <hr /><br />
+
+      <p>Ainda não tem acesso à área do cliente?</p>
+      <button class="btn-cadastro" type="button" onclick="window.location.href='./cadastro.html'">Solicitar 1.° Atendimento</button>
+  
+    </body>
+
 </html>
