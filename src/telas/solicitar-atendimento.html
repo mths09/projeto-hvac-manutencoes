@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="pt-br">
   <head>
@@ -9,16 +10,18 @@
       rel="stylesheet"
     />
     <title>Solicitar Atendimento | HVAC Lex Company</title>
+
     <style>
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
+
       body {
+        font-family: "Poppins", sans-serif;
         min-height: 100vh;
         color: #fff;
-        font-family: "Poppins", sans-serif;
         background:
           radial-gradient(
             circle at 15% 20%,
@@ -38,8 +41,9 @@
             #15110c 100%
           );
         overflow-x: hidden;
-      } /* Ondas */
-      .wave {
+      }
+
+      .wave-decor {
         position: fixed;
         top: 0;
         width: 300px;
@@ -48,6 +52,11 @@
         pointer-events: none;
         opacity: 0.9;
       }
+
+      .wave-decor svg {
+        width: 100%;
+        height: 100%;
+      }
       .wave-right {
         right: 0;
       }
@@ -55,20 +64,18 @@
         left: 0;
         transform: scaleX(-1);
       }
-      .wave svg {
-        width: 100%;
-        height: 100%;
-      } /* Conteúdo */
+
       .conteudo-central {
         position: relative;
         z-index: 2;
         width: 100%;
         min-height: 100vh;
-        padding: 45px 20px 30px;
         display: flex;
         flex-direction: column;
         align-items: center;
+        padding: 45px 20px 30px;
       }
+
       .voltar-site {
         align-self: flex-start;
         margin-left: max(0px, calc((100% - 900px) / 2));
@@ -76,16 +83,20 @@
         color: #dbeafe;
         text-decoration: none;
         font-size: 14px;
+        font-weight: 500;
         transition: 0.25s;
       }
+
       .voltar-site:hover {
         color: #fff;
         transform: translateX(-3px);
-      } /* Título */
+      }
+
       .titulo {
         text-align: center;
         margin-bottom: 30px;
       }
+
       .logo-destaque {
         width: 95px;
         height: 95px;
@@ -95,21 +106,27 @@
         filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.35))
           drop-shadow(0 0 25px rgba(124, 58, 237, 0.18));
       }
+
       .titulo h1 {
-        margin-bottom: 10px;
         font-size: 34px;
+        font-weight: 700;
         line-height: 1.2;
+        margin-bottom: 10px;
       }
+
       .titulo h1 span {
         background: linear-gradient(90deg, #3b82f6, #7c3aed, #c0a86a);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
       }
+
       .titulo p {
         color: #cbd5e1;
         font-size: 15px;
-      } /* Card */
+        line-height: 1.6;
+      }
+
       .formulario {
         width: 100%;
         max-width: 900px;
@@ -122,18 +139,23 @@
         border: 1px solid rgba(148, 163, 184, 0.22);
         border-radius: 24px;
         backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
         box-shadow:
           0 30px 70px rgba(0, 0, 0, 0.45),
           0 0 40px rgba(59, 130, 246, 0.08);
       }
+
       .secao-titulo {
         display: flex;
         align-items: center;
         gap: 11px;
         margin-bottom: 22px;
+        color: #fff;
         font-size: 18px;
+        font-weight: 600;
       }
-      .secao-titulo::before {
+
+      .secao-titulo:before {
         content: "";
         width: 4px;
         height: 24px;
@@ -141,7 +163,9 @@
         background: linear-gradient(180deg, #3b82f6, #7c3aed, #a3915a);
         box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
       }
+
       .separador {
+        width: 100%;
         height: 1px;
         margin: 8px 0 30px;
         background: linear-gradient(
@@ -150,10 +174,12 @@
           rgba(148, 163, 184, 0.25),
           transparent
         );
-      } /* Campos */
+      }
+
       .campo {
         margin-bottom: 22px;
       }
+
       label {
         display: block;
         margin-bottom: 8px;
@@ -161,6 +187,7 @@
         font-size: 14px;
         font-weight: 600;
       }
+
       input,
       select,
       textarea {
@@ -175,15 +202,18 @@
         outline: none;
         transition: 0.25s;
       }
+
       input::placeholder,
       textarea::placeholder {
         color: #71809a;
       }
+
       input:hover,
       select:hover,
       textarea:hover {
         border-color: rgba(96, 165, 250, 0.35);
       }
+
       input:focus,
       select:focus,
       textarea:focus {
@@ -193,11 +223,13 @@
           0 0 0 3px rgba(59, 130, 246, 0.08),
           0 0 20px rgba(59, 130, 246, 0.08);
       }
+
       .dados-cliente input[readonly] {
         background: rgba(2, 6, 23, 0.42);
         color: #94a3b8;
         cursor: not-allowed;
       }
+
       select {
         cursor: pointer;
       }
@@ -205,16 +237,42 @@
         background: #111827;
         color: #fff;
       }
+
       textarea {
         min-height: 130px;
         resize: vertical;
         line-height: 1.6;
       }
+
       .linha {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
-      } /* Botão */
+      }
+
+      .anexo-info {
+        margin-top: -12px;
+        margin-bottom: 12px;
+        color: #94a3b8;
+        font-size: 12px;
+      }
+
+      input[type="file"] {
+        cursor: pointer;
+      }
+
+      input[type="file"]::file-selector-button {
+        margin-right: 12px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        color: #fff;
+        font-family: "Poppins", sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
       .botao {
         width: 100%;
         margin-top: 5px;
@@ -230,6 +288,7 @@
         box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
         transition: 0.25s;
       }
+
       .botao:hover {
         transform: translateY(-2px);
         filter: brightness(1.12);
@@ -237,35 +296,43 @@
           0 12px 35px rgba(59, 130, 246, 0.28),
           0 0 25px rgba(124, 58, 237, 0.12);
       }
+
       .botao:active {
         transform: translateY(0);
-      } /* Links */
+      }
+
       .voltar {
+        display: block;
         margin-top: 22px;
         color: #93c5fd;
         text-align: center;
         font-size: 14px;
         text-decoration: none;
+        transition: 0.2s;
       }
+
       .voltar:hover {
         color: #fff;
         text-decoration: underline;
       }
+
       .rodape-card {
         margin-top: 20px;
         color: #71809a;
         font-size: 12px;
         text-align: center;
       }
+
       .rodape-card a {
         color: #94a3b8;
         text-decoration: none;
       }
       .rodape-card a:hover {
         color: #fff;
-      } /* Responsividade */
+      }
+
       @media (max-width: 900px) {
-        .wave {
+        .wave-decor {
           width: 180px;
           opacity: 0.55;
         }
@@ -273,11 +340,12 @@
           margin-left: 0;
         }
       }
+
       @media (max-width: 650px) {
         .conteudo-central {
           padding: 30px 15px 25px;
         }
-        .wave {
+        .wave-decor {
           width: 110px;
           opacity: 0.35;
         }
@@ -299,98 +367,113 @@
           grid-template-columns: 1fr;
           gap: 0;
         }
+        .secao-titulo {
+          font-size: 17px;
+        }
       }
     </style>
   </head>
+
   <body>
-    <!-- Ondas decorativas -->
-    <div class="wave wave-right">
-      <svg viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg">
+    <div class="wave-decor wave-right">
+      <svg
+        viewBox="0 0 300 600"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+      >
         <defs>
-          <linearGradient id="g1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="w1" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#3b82f6" />
             <stop offset="45%" stop-color="#7c3aed" />
             <stop offset="100%" stop-color="#a3915a" />
           </linearGradient>
-          <linearGradient id="g2" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="w2" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#2563eb" />
             <stop offset="50%" stop-color="#6d28d9" />
             <stop offset="100%" stop-color="#8a7a4a" />
           </linearGradient>
-          <linearGradient id="g3" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="w3" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#1d4ed8" />
             <stop offset="55%" stop-color="#5b21b6" />
             <stop offset="100%" stop-color="#6b6a3a" />
           </linearGradient>
         </defs>
+
         <path
-          d="M220 0 C150 100 130 200 90 320 C70 400 60 480 75 580"
-          stroke="url(#g1)"
+          d="M220 0 C150 100,130 200,90 320 C70 400,60 480,75 580"
+          stroke="url(#w1)"
           stroke-width="14"
           fill="none"
           stroke-linecap="round"
         />
         <path
-          d="M250 0 C190 110 165 210 130 330 C112 410 105 490 118 580"
-          stroke="url(#g2)"
+          d="M250 0 C190 110,165 210,130 330 C112 410,105 490,118 580"
+          stroke="url(#w2)"
           stroke-width="14"
           fill="none"
           stroke-linecap="round"
         />
         <path
-          d="M280 0 C230 120 205 220 175 340 C158 415 152 495 163 580"
-          stroke="url(#g3)"
+          d="M280 0 C230 120,205 220,175 340 C158 415,152 495,163 580"
+          stroke="url(#w3)"
           stroke-width="14"
           fill="none"
           stroke-linecap="round"
         />
       </svg>
     </div>
-    <div class="wave wave-left">
-      <svg viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg">
+
+    <div class="wave-decor wave-left">
+      <svg
+        viewBox="0 0 300 600"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+      >
         <defs>
-          <linearGradient id="g4" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="w1b" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#3b82f6" />
             <stop offset="45%" stop-color="#7c3aed" />
             <stop offset="100%" stop-color="#a3915a" />
           </linearGradient>
-          <linearGradient id="g5" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="w2b" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#2563eb" />
             <stop offset="50%" stop-color="#6d28d9" />
             <stop offset="100%" stop-color="#8a7a4a" />
           </linearGradient>
-          <linearGradient id="g6" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="w3b" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#1d4ed8" />
             <stop offset="55%" stop-color="#5b21b6" />
             <stop offset="100%" stop-color="#6b6a3a" />
           </linearGradient>
         </defs>
+
         <path
-          d="M220 0 C150 100 130 200 90 320 C70 400 60 480 75 580"
-          stroke="url(#g4)"
+          d="M220 0 C150 100,130 200,90 320 C70 400,60 480,75 580"
+          stroke="url(#w1b)"
           stroke-width="14"
           fill="none"
           stroke-linecap="round"
         />
         <path
-          d="M250 0 C190 110 165 210 130 330 C112 410 105 490 118 580"
-          stroke="url(#g5)"
+          d="M250 0 C190 110,165 210,130 330 C112 410,105 490,118 580"
+          stroke="url(#w2b)"
           stroke-width="14"
           fill="none"
           stroke-linecap="round"
         />
         <path
-          d="M280 0 C230 120 205 220 175 340 C158 415 152 495 163 580"
-          stroke="url(#g6)"
+          d="M280 0 C230 120,205 220,175 340 C158 415,152 495,163 580"
+          stroke="url(#w3b)"
           stroke-width="14"
           fill="none"
           stroke-linecap="round"
         />
       </svg>
     </div>
-    <!-- Conteúdo -->
+
     <div class="conteudo-central">
-      <a href="../../index.html" class="voltar-site"> ← Voltar ao site </a>
+      <a href="../../index.html" class="voltar-site">← Voltar ao site</a>
+
       <div class="titulo">
         <img
           src="../../assets/HVAC.jpg"
@@ -400,9 +483,11 @@
         <h1>Solicitar <span>Atendimento</span></h1>
         <p>Preencha as informações abaixo para solicitar um serviço.</p>
       </div>
+
       <form class="formulario">
         <div class="dados-cliente">
           <h2 class="secao-titulo">Dados do cliente</h2>
+
           <div class="linha">
             <div class="campo">
               <label for="nome">Nome completo</label>
@@ -414,6 +499,7 @@
                 readonly
               />
             </div>
+
             <div class="campo">
               <label for="telefone">Telefone</label>
               <input
@@ -425,6 +511,7 @@
               />
             </div>
           </div>
+
           <div class="campo">
             <label for="email">E-mail</label>
             <input
@@ -436,12 +523,15 @@
             />
           </div>
         </div>
+
         <div class="separador"></div>
+
         <div class="dados-atendimento">
           <h2 class="secao-titulo">Dados do atendimento</h2>
+
           <div class="campo">
             <label for="servico">Tipo de serviço</label>
-            <select id="servico" name="servico">
+            <select id="servico" name="servico" required>
               <option value="">Selecione o serviço</option>
               <option value="manutencao">Manutenção de ar-condicionado</option>
               <option value="instalacao">Instalação</option>
@@ -451,14 +541,17 @@
               <option value="outro">Outro</option>
             </select>
           </div>
+
           <div class="campo">
             <label for="descricao">Descrição do problema</label>
             <textarea
               id="descricao"
               name="descricao"
               placeholder="Descreva o problema ou serviço que você precisa..."
+              required
             ></textarea>
           </div>
+
           <div class="campo">
             <label for="endereco">Endereço do atendimento</label>
             <input
@@ -466,27 +559,35 @@
               id="endereco"
               name="endereco"
               placeholder="Rua, número, bairro e cidade"
+              required
             />
           </div>
-          <div class="linha">
-            <div class="campo">
-              <label for="data">Data desejada</label>
-              <input type="date" id="data" name="data" />
-            </div>
-            <div class="campo">
-              <label for="horario">Horário desejado</label>
-              <input type="time" id="horario" name="horario" />
-            </div>
+
+          <div class="campo">
+            <label for="arquivo">Anexar arquivos</label>
+            <p class="anexo-info">
+              Formatos permitidos: JPG, PNG e MP4 · Tamanho máximo: 50 MB
+            </p>
+            <input
+              type="file"
+              id="arquivo"
+              name="arquivo"
+              accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
+            />
           </div>
-          <button type="submit" class="botao">Solicitar Atendimento →</button>
+
+          <button type="submit" class="botao">Ir para agendamento →</button>
         </div>
       </form>
-      <a href="javascript:history.back()" class="voltar">
-        ← Voltar para a Área do Cliente
-      </a>
+
+      <a href="javascript:history.back()" class="voltar"
+        >← Voltar para a Área do Cliente</a
+      >
+
       <footer class="rodape-card">
         © 2026 HVAC Lex Company · <a href="#">Privacidade</a>
       </footer>
     </div>
   </body>
 </html>
+```
