@@ -19,27 +19,15 @@
           />
         </a>
 
-        <!-- Botão "hamburguer" para telas pequenas-->
-        <button
-          class="menu-toggle"
-          aria-label="Abrir menu"
-          onclick="document.querySelector('.main-nav').classList.toggle('open')"
-        >
-          ☰
-        </button>
+      <nav class="navbar">
+        <ul class="nav-menu">
+          <li><a href="#inicio" class="nav-link"> Início </a></li>
+          <li><a href="#servicos" class="nav-link"> Serviços </a></li>
+          <li><a href="#portfolio" class="nav-link"> Portfólio </a></li>
+          <li><a href="#contatos" class="nav-link"> Contatos </a></li>
+        </ul>
 
-        <nav class="navbar">
-          <div class="nav-menu">
-            <a href="#inicio" class="nav-link"> Início </a>
-            <a href="#servicos" class="nav-link"> Serviços </a>
-            <a href="#portfolio" class="nav-link"> Portfólio </a>
-            <a href="#contatos" class="nav-link"> Contatos </a>
-          </div>
-        </nav>
-        <a
-          href="./cadastro.html"
-          class="btn-cliente"
-        >
+        <a href="../projeto-hvac-manutencoes/src/telas/cadastro.html" class="btn-cliente">
           <!-- Simbolo Pessoa em svg -->
           <svg viewBox="0 0 20 20" fill="currentColor" class="svg-pessoa">
             <path
