@@ -10,23 +10,36 @@
   <body>
     <!-- Barra de Navegação -->
     <header>
-      <a href="#" class="logo-container">
-        <img
-          src="./assets/logoSite.png"
-          alt="HVAC Lex Company"
-          class="logo-img"
-        />
-      </a>
+      <div class="header-interno">
+        <a href="#" class="logo-container">
+          <img
+            src="./assets/logoSite.png"
+            alt="HVAC Lex Company"
+            class="logo-img"
+          />
+        </a>
 
-      <nav class="navbar">
-        <ul class="nav-menu">
-          <li><a href="#inicio" class="nav-link"> Início </a></li>
-          <li><a href="#servicos" class="nav-link"> Serviços </a></li>
-          <li><a href="#portfolio" class="nav-link"> Portfólio </a></li>
-          <li><a href="#contatos" class="nav-link"> Contatos </a></li>
-        </ul>
+        <!-- Botão "hamburguer" para telas pequenas-->
+        <button
+          class="menu-toggle"
+          aria-label="Abrir menu"
+          onclick="document.querySelector('.main-nav').classList.toggle('open')"
+        >
+          ☰
+        </button>
 
-        <a href="../projeto-hvac-manutencoes/src/telas/cadastro.html" class="btn-cliente">
+        <nav class="navbar">
+          <div class="nav-menu">
+            <a href="#inicio" class="nav-link"> Início </a>
+            <a href="#servicos" class="nav-link"> Serviços </a>
+            <a href="#portfolio" class="nav-link"> Portfólio </a>
+            <a href="#contatos" class="nav-link"> Contatos </a>
+          </div>
+        </nav>
+        <a
+          href="./cadastro.html"
+          class="btn-cliente"
+        >
           <!-- Simbolo Pessoa em svg -->
           <svg viewBox="0 0 20 20" fill="currentColor" class="svg-pessoa">
             <path
@@ -35,134 +48,155 @@
               clip-rule="evenodd"
             />
           </svg>
-          Área do Cliente
+          <span class="btn-cliente-label">Área do Cliente</span>
         </a>
-      </nav>
+      </div>
     </header>
 
     <!-- Principal -->
     <main>
       <!-- Inicio -->
       <section id="inicio">
-        <p class="texto-auxiliar">Atendimento em Sorocaba e Região</p>
-        <h1 class="titulo-hero">
-          Climatização e <br />
-          <span style="color: cyan"> Manutenção </span><br />
-          que Funciona.
-        </h1>
-        <p class="subtitulo-hero">
-          Especialistas em ar condicionado, refrigeração e eletromecânica.
-          Técnicos certificados, orçamento gratuito e garantia em todos os
-          Serviços.
-        </p>
+        <div class="inicio-blob inicio-blob--1"></div>
 
-        <!-- href=#formulario É UMA NOVA PAGINA QUE VAI SER CRIADA, NÃO UM ERRO! -->
-        <a href="#formulario" class="botao-atendimento">
-          <!-- Simbolo Calendario -->
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            class="svg-calendario"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          Agendar Atendimento
-        </a>
-        <a
-          href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
-          target="_blank"
-          class="botao-whatsapp"
-        >
-          <!-- Simbolo Whatsapp -->
-          <svg viewBox="0 0 24 24" fill="currentColor" class="svg-whatsapp">
-            <path
-              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
-            />
-          </svg>
-          WhatsApp
-        </a>
+        <div class="inicio-grid">
 
-        <ul class="lista-qualidades">
-          <li class="texto-verificado">
-            <!-- Check ✅ -->
-            <svg viewBox="0 0 24 24" width="24" height="24" class="svg-check">
-              <circle cx="12" cy="12" r="10" fill="#00c3ff" />
+          <div class="inicio-conteudo">
+            <p class="texto-auxiliar">Atendimento em Sorocaba e Região</p>
+            
+            <h1 class="titulo-inicio">
+            Climatização e 
+            <span class="highlight"> Manutenção </span>
+            que Funciona.
+            </h1>
+
+            <p class="descricao-inicio">
+              Especialistas em ar condicionado, refrigeração e eletromecânica.
+              Técnicos certificados, orçamento gratuito e garantia em todos os
+              Serviços.
+            </p>
+
+          <div class="acoes-inicio">
+            <a href="#formulario" class="btn btn-atendimento">
+              <!-- Simbolo Calendario -->
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                class="svg svg-calendario"
+              >
               <path
-                d="M8 12l2.5 2.5L16 9"
-                stroke="#1a2035"
-                stroke-width="2.2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
-            </svg>
-            Técnicos certificados
-          </li>
-          <li class="texto-verificado">
-            <!-- Check ✅ -->
-            <svg viewBox="0 0 24 24" width="24" height="24" class="svg-check">
-              <circle cx="12" cy="12" r="10" fill="#00c3ff" />
-              <path
-                d="M8 12l2.5 2.5L16 9"
-                stroke="#1a2035"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            Garantia Inclusa
-          </li>
-          <li class="texto-verificado">
-            <!-- Check ✅ -->
-            <svg viewBox="0 0 24 24" width="24" height="24" class="svg-check">
-              <circle cx="12" cy="12" r="10" fill="#00c3ff" />
-              <path
-                d="M8 12l2.5 2.5L16 9"
-                stroke="#1a2035"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            Orçamento Gratuito
-          </li>
-        </ul>
+              </svg>
+              <span> Agendar Atendimento </span>
+            </a>
+            <a
+              href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
+              target="_blank"
+              class="btn btn-whatsapp"
+            >
+              <!-- Simbolo Whatsapp -->
+              <svg viewBox="0 0 24 24" fill="currentColor" class="svg svg-whatsapp">
+                <path
+                  d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                />
+              </svg>
+              <span> WhatsApp </span>
+            </a>
+          </div>
+          
 
-        <img
-          src="./assets/logoHVAC.png"
-          alt="HVAC logo hero"
-          class="hero-img"
-        />
-        <div class="servico-concluido">
-          <!-- DEIXAR PARA ADICIONAR APOS O SITE FUNCIONAR-->
+        <div class="lista-qualidades">
+            <span>
+              <!-- Check ✅ -->
+              <svg viewBox="0 0 24 24" width="24" height="24" class="svg">
+                <circle cx="12" cy="12" r="10" fill="#00c3ff" />
+                <path
+                  d="M8 12l2.5 2.5L16 9"
+                  stroke="#1a2035"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Técnicos certificados
+            </span>
+            <span>
+              <!-- Check ✅ -->
+              <svg viewBox="0 0 24 24" width="24" height="24" class="svg">
+                <circle cx="12" cy="12" r="10" fill="#00c3ff" />
+                <path
+                  d="M8 12l2.5 2.5L16 9"
+                  stroke="#1a2035"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Garantia Inclusa
+            </span>
+            <span>
+              <!-- Check ✅ -->
+              <svg viewBox="0 0 24 24" width="24" height="24" class="svg">
+                <circle cx="12" cy="12" r="10" fill="#00c3ff" />
+                <path
+                  d="M8 12l2.5 2.5L16 9"
+                  stroke="#1a2035"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Orçamento Gratuito
+            </span>
+          </div>
         </div>
+          
+        <div class="inicio-visual">
+          <img
+            src="./assets/logoHVAC.png"
+            alt="HVAC logo hero"
+            class="hero-img"
+          />
+          <div class="float-card">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#08112e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-check">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <div class="card-servico-concluido">
+              <!-- DEIXAR PARA ADICIONAR APOS O SITE FUNCIONAR-->
+              <strong> Serviço Concluído</strong>
+              <small> Instalação VRF 60 TR - Sorocaba - Hoje, 14h35</small>
+            </div>
+          </div>
+        </div>
+ 
       </section>
 
       <!-- Serviços -->
       <section id="servicos">
-        <span>Triagem Inteligente ── Autoatendimento</span>
-        <h2>Como podemos ajudar?</h2>
-        <p>
+        <span class="servicos-auxiliar">Triagem Inteligente ── Autoatendimento</span>
+        <h2 class="servicos-titulo">Como podemos ajudar?</h2>
+        <p class="servicos-subtitulo">
           Selecione o tipo de equipamento. Descreva o problema e envie fotos ou
-          vídeos <br />
+          vídeos 
           para agilizar o atendimento.
         </p>
 
         <div class="grade-cards">
           <!-- ------ AR CONDICIONADO ------ -->
-          <button data-servico="ar-condicionado">
-            <!-- Simbolo AC-->
+          <button data-servico="ar-condicionado" class="card-item">
+            <div class="card-topo">
+              <!-- Simbolo AC-->
             <svg
               viewBox="0 0 56 56"
               fill="none"
-              class="w-12 h-12"
+              class="svg-card svg-ar-condicionado"
               aria-hidden="true"
-              id="ar-condicionado-svg"
             >
               <rect
                 x="4"
@@ -244,7 +278,7 @@
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              class="w-4 h-4"
+              class="svg svg-seta"
             >
               <path
                 stroke-linecap="round"
@@ -252,20 +286,23 @@
                 d="M4 8h8M9 5l3 3-3 3"
               />
             </svg>
+            </div>
+            
             <h3 class="titulo-servico"><strong> Ar Condicionado </strong></h3>
             <span class="subtitulo-servico">
-              Instalação, manutenção e higienização de <br />
+              Instalação, manutenção e higienização de
               splits, cassetes e VRF
             </span>
           </button>
 
           <!-- ------ GELADEIRA ------ -->
-          <button data-servico="frigorifico">
-            <!-- Icone Geladeira -->
+          <button data-servico="frigorifico" class="card-item">
+            <div class="card-topo">
+               <!-- Icone Geladeira -->
             <svg
               viewBox="0 0 56 56"
               fill="none"
-              class="w-12 h-12"
+              class="svg-card svg-frigorifico"
               aria-hidden="true"
               id="frigorifico-svg"
             >
@@ -311,7 +348,7 @@
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              class="w-4 h-4"
+              class="svg svg-seta"
             >
               <path
                 stroke-linecap="round"
@@ -319,22 +356,25 @@
                 d="M4 8h8M9 5l3 3-3 3"
               />
             </svg>
+            </div>
+           
             <h3 class="titulo-servico">
               <strong> Frigorifico / Geladeira </strong>
             </h3>
             <span class="subtitulo-servico">
-              Conserto e manutenção de câmaras frias e <br />
+              Conserto e manutenção de câmaras frias e 
               refrigeradores comerciais
             </span>
           </button>
 
           <!-- ------ ILUMINACAO ------ -->
-          <button data-servico="iluminacao">
-            <!-- Icone Lâmpada -->
+          <button data-servico="iluminacao" class="card-item">
+            <div class="card-topo">
+              <!-- Icone Lâmpada -->
             <svg
               viewBox="0 0 56 56"
               fill="none"
-              class="w-12 h-12"
+              class="svg-card svg-iluminacao"
               aria-hidden="true"
             >
               <circle
@@ -415,7 +455,7 @@
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              class="w-4 h-4"
+              class="svg svg-seta"
             >
               <path
                 stroke-linecap="round"
@@ -423,20 +463,23 @@
                 d="M4 8h8M9 5l3 3-3 3"
               />
             </svg>
+            </div>
+            
             <h3 class="titulo-servico"><strong> Iluminação </strong></h3>
             <span class="subtitulo-servico">
-              Instalação de LED, luminárias industriais e <br />
+              Instalação de LED, luminárias industriais e 
               sistemas de emergência
             </span>
           </button>
 
           <!-- ------ MANUTENÇÃO ------ -->
-          <button data-servico="manutencao">
-            <!-- Icone Manutenção -->
+          <button data-servico="manutencao" class="card-item">
+            <div class="card-topo">
+              <!-- Icone Manutenção -->
             <svg
               viewBox="0 0 56 56"
               fill="none"
-              class="w-12 h-12"
+              class="svg-card svg-manutencao"
               aria-hidden="true"
             >
               <path
@@ -463,7 +506,7 @@
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              class="w-4 h-4"
+              class="svg svg-seta"
             >
               <path
                 stroke-linecap="round"
@@ -471,22 +514,25 @@
                 d="M4 8h8M9 5l3 3-3 3"
               />
             </svg>
+            </div>
+            
             <h3 class="titulo-servico">
               <strong> Manutenção Preventiva </strong>
             </h3>
             <span class="subtitulo-servico">
-              Planos periódicos para equipamentos <br />
+              Planos periódicos para equipamentos
               industriais e comerciais
             </span>
           </button>
 
           <!-- ------ ELETROMECANICA ------ -->
-          <button data-servico="eletromecanica">
-            <!-- Icone Raio -->
+          <button data-servico="eletromecanica" class="card-item">
+            <div class="card-topo">
+              <!-- Icone Raio -->
             <svg
               viewBox="0 0 56 56"
               fill="none"
-              class="w-12 h-12"
+              class="svg-card svg-raio"
               aria-hidden="true"
             >
               <path
@@ -504,7 +550,7 @@
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              class="w-4 h-4"
+              class="svg svg-seta"
             >
               <path
                 stroke-linecap="round"
@@ -512,20 +558,23 @@
                 d="M4 8h8M9 5l3 3-3 3"
               />
             </svg>
+            </div>
+            
             <h3 class="titulo-servico"><strong> Eletromecânica </strong></h3>
             <span class="subtitulo-servico">
-              Motores, bombas, quadros elétricos e <br />
+              Motores, bombas, quadros elétricos e
               automação industrial
             </span>
           </button>
 
           <!-- ------ ATENDIMENTO URGENTE ------ -->
-          <button data-servico="atendimento-urgente">
-            <!-- Icone urgente -->
+          <button data-servico="atendimento-urgente" class="card-item">
+            <div class="card-topo">
+              <!-- Icone urgente -->
             <svg
               viewBox="0 0 56 56"
               fill="none"
-              class="w-12 h-12"
+              class="svg-card svg-atendimento-urgente"
               aria-hidden="true"
             >
               <path
@@ -553,7 +602,7 @@
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              class="w-4 h-4"
+              class="svg svg-seta"
             >
               <path
                 stroke-linecap="round"
@@ -561,27 +610,33 @@
                 d="M4 8h8M9 5l3 3-3 3"
               />
             </svg>
+            </div>
+            
             <h3 class="titulo-servico">
               <strong> Atendimento Urgente </strong>
             </h3>
             <span class="subtitulo-servico">
-              Suporte de emergência 24h para falhas <br />
+              Suporte de emergência 24h para falhas
               críticas de equipamentos
             </span>
           </button>
         </div>
+
+        <p class="servico-rodape">📎 Após selecionar, pode <a href="#servicos">anexar fotos ou vídeos</a> do problema</p>
 
         <!-- ------ FORMULÁRIO ------ (realizar verificações e vinculo no banco de dados) -->
         <div id="painel-formulario" class="escondido">
           <!-- Icone (decidido via JS) -->
           <div id="form-icone-svg"></div>
 
-          <h3 class="titulo-painel">Descreva o Problema</h3>
-          <p class="subtitulo-painel" data-card-atributo="form-subtitulo">
-            Ar Condicionado ── Quanto mais detalhes, mais rápido enviamos um
-            técnico.
-          </p>
-
+          <div class="form-cabecalho">
+            <h3 class="titulo-form">Descreva o Problema</h3>
+            <p class="subtitulo-form" data-card-atributo="form-subtitulo">
+              Ar Condicionado ── Quanto mais detalhes, mais rápido enviamos um
+              técnico.
+            </p>
+          </div>
+          
           <form
             action="/enviar"
             method="post"
@@ -710,7 +765,7 @@
       <section id="contatos">
         <p class="texto-contatos">Urgência? Disponíveis 24h</p>
         <h2 class="titulo-contatos">
-          Precisa de Atendimento <br />
+          Precisa de Atendimento
           <span style="color: cyan"> Urgente? </span>
         </h2>
         <p class="subtitulo-contatos">
@@ -738,7 +793,7 @@
             <span>📍</span>
             <p class="card-titulo"><strong> Endereço </strong></p>
             <p class="card-texto">
-              Rua Tenente Giovaldo, 67 <br />
+              Rua Tenente Giovaldo, 67 
               Sorocaba, SP - 18105-000
             </p>
           </div>
@@ -749,8 +804,8 @@
               <strong> Horário de Funcionamento </strong>
             </p>
             <p class="card-texto">
-              Segunda a Sexta: 8h às 18h <br />
-              Sábado: 8h às 12h <br />
+              Segunda a Sexta: 8h às 18h 
+              Sábado: 8h às 12h 
               Emergências: 24h/7
             </p>
           </div>
@@ -759,7 +814,7 @@
             <span> 📧 </span>
             <p class="card-titulo"><strong> E-mail </strong></p>
             <p class="card-texto">
-              contato@hvaclex.com.br <br />
+              contato@hvaclex.com.br 
               orcamento@hvaclex.com.br
             </p>
           </div>
@@ -774,8 +829,8 @@
           <img src="./assets/logoSite.png" alt="Logo Rodapé" />
         </div>
         <p class="logo-descricao">
-          Especialistas em climatização, refrigeração e <br />
-          eletromecânica em Sorocaba e região há mais <br />
+          Especialistas em climatização, refrigeração e 
+          eletromecânica em Sorocaba e região há mais 
           de 15 anos. CREA-SP registrado.
         </p>
       </div>
@@ -1105,6 +1160,6 @@
         </svg>
       </template>
     </div>
-    <script src="./js/script.js"></script>
+    <script src="./src/js/script.js"></script>
   </body>
 </html>
