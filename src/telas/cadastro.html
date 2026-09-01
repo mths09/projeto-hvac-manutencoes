@@ -1,115 +1,163 @@
 <!doctype html>
 <html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="icon" href="../../assets/HVAC.jpg" />
-  <link rel="stylesheet" href="../css/cadastro.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700" rel="stylesheet" />
-  <title>Cadastro</title>
-</head>
+    <link rel="icon" href="../../assets/HVAC.jpg" />
+    <link rel="stylesheet" href="../css/cadastro.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700"
+      rel="stylesheet"
+    />
+    <title>Cadastro</title>
+  </head>
 
-<body>
-
-  <!-- Ondas decorativas -->
-  <div class="wave-decor wave-right">
-    <svg viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="waveGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#3b82f6" />
-          <stop offset="45%" stop-color="#7c3aed" />
-          <stop offset="100%" stop-color="#a3915a" />
-        </linearGradient>
-        <linearGradient id="waveGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#2563eb" />
-          <stop offset="50%" stop-color="#6d28d9" />
-          <stop offset="100%" stop-color="#8a7a4a" />
-        </linearGradient>
-        <linearGradient id="waveGradient3" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#1d4ed8" />
-          <stop offset="55%" stop-color="#5b21b6" />
-          <stop offset="100%" stop-color="#6b6a3a" />
-        </linearGradient>
-      </defs>
-      <path d="M 220 0 C 150 100, 130 200, 90 320 C 70 400, 60 480, 75 580"
-            stroke="url(#waveGradient1)" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.85" />
-      <path d="M 250 0 C 190 110, 165 210, 130 330 C 112 410, 105 490, 118 580"
-            stroke="url(#waveGradient2)" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.85" />
-      <path d="M 280 0 C 230 120, 205 220, 175 340 C 158 415, 152 495, 163 580"
-            stroke="url(#waveGradient3)" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.85" />
-    </svg>
-  </div>
-
-  <div class="wave-decor wave-left">
-    <svg viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="waveGradient1b" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#3b82f6" />
-          <stop offset="45%" stop-color="#7c3aed" />
-          <stop offset="100%" stop-color="#a3915a" />
-        </linearGradient>
-        <linearGradient id="waveGradient2b" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#2563eb" />
-          <stop offset="50%" stop-color="#6d28d9" />
-          <stop offset="100%" stop-color="#8a7a4a" />
-        </linearGradient>
-        <linearGradient id="waveGradient3b" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#1d4ed8" />
-          <stop offset="55%" stop-color="#5b21b6" />
-          <stop offset="100%" stop-color="#6b6a3a" />
-        </linearGradient>
-      </defs>
-      <path d="M 220 0 C 150 100, 130 200, 90 320 C 70 400, 60 480, 75 580"
-            stroke="url(#waveGradient1b)" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.85" />
-      <path d="M 250 0 C 190 110, 165 210, 130 330 C 112 410, 105 490, 118 580"
-            stroke="url(#waveGradient2b)" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.85" />
-      <path d="M 280 0 C 230 120, 205 220, 175 340 C 158 415, 152 495, 163 580"
-            stroke="url(#waveGradient3b)" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.85" />
-    </svg>
-  </div>
-
-  <!-- Conteúdo principal: link "voltar" + card, empilhados e centralizados juntos -->
-  <div class="conteudo-central">
-    <a href="../../index.html" class="voltar-site">← Voltar ao site</a>
-
-    <div class="card">
-      <img src="../../assets/logoHVAC.png" alt="Logo da Empresa" />
-      <h1>Bem-vindo à Área do Cliente</h1>
-      <p>Acompanhe os seus serviços e agendamentos</p>
-
-      <form>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required />
-        <a href="./login.html" class="link-senha">Esqueceu a senha?</a>
-
-        <label for="senha">Senha:</label>
-        <input type="password" id="senha" name="senha" required />
-
-        <div class="lembrar">
-          <input type="checkbox" id="lembrar" name="lembrar" />
-          <label for="lembrar">Lembrar de mim</label>
-        </div>
-
-        <button class="btn-entrar" type="submit">Entrar na conta→</button>
-
-        <div class="divisor">
-          <span>ou</span>
-        </div>
-
-        <p>Ainda não tem acesso à área do cliente?</p>
-        <button class="btn-cadastro" type="button" onclick="window.location.href='../telas/solicitar-atendimento.html'">
-          Solicitar 1.º Atendimento
-        </button>
-
-        
-      </form>
+  <body>
+    <!-- Ondas decorativas -->
+    <div class="wave-decor wave-right">
+      <svg
+        viewBox="0 0 300 600"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="waveGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#3b82f6" />
+            <stop offset="45%" stop-color="#7c3aed" />
+            <stop offset="100%" stop-color="#a3915a" />
+          </linearGradient>
+          <linearGradient id="waveGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2563eb" />
+            <stop offset="50%" stop-color="#6d28d9" />
+            <stop offset="100%" stop-color="#8a7a4a" />
+          </linearGradient>
+          <linearGradient id="waveGradient3" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#1d4ed8" />
+            <stop offset="55%" stop-color="#5b21b6" />
+            <stop offset="100%" stop-color="#6b6a3a" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M 220 0 C 150 100, 130 200, 90 320 C 70 400, 60 480, 75 580"
+          stroke="url(#waveGradient1)"
+          stroke-width="14"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"
+        />
+        <path
+          d="M 250 0 C 190 110, 165 210, 130 330 C 112 410, 105 490, 118 580"
+          stroke="url(#waveGradient2)"
+          stroke-width="14"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"
+        />
+        <path
+          d="M 280 0 C 230 120, 205 220, 175 340 C 158 415, 152 495, 163 580"
+          stroke="url(#waveGradient3)"
+          stroke-width="14"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"
+        />
+      </svg>
     </div>
-    <footer class="rodape-card">
-          © 2026 HVAC Lex Company · <a href="">Privacidade</a>
-        </footer>
-  </div>
 
+    <div class="wave-decor wave-left">
+      <svg
+        viewBox="0 0 300 600"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="waveGradient1b" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#3b82f6" />
+            <stop offset="45%" stop-color="#7c3aed" />
+            <stop offset="100%" stop-color="#a3915a" />
+          </linearGradient>
+          <linearGradient id="waveGradient2b" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2563eb" />
+            <stop offset="50%" stop-color="#6d28d9" />
+            <stop offset="100%" stop-color="#8a7a4a" />
+          </linearGradient>
+          <linearGradient id="waveGradient3b" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#1d4ed8" />
+            <stop offset="55%" stop-color="#5b21b6" />
+            <stop offset="100%" stop-color="#6b6a3a" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M 220 0 C 150 100, 130 200, 90 320 C 70 400, 60 480, 75 580"
+          stroke="url(#waveGradient1b)"
+          stroke-width="14"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"
+        />
+        <path
+          d="M 250 0 C 190 110, 165 210, 130 330 C 112 410, 105 490, 118 580"
+          stroke="url(#waveGradient2b)"
+          stroke-width="14"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"
+        />
+        <path
+          d="M 280 0 C 230 120, 205 220, 175 340 C 158 415, 152 495, 163 580"
+          stroke="url(#waveGradient3b)"
+          stroke-width="14"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"
+        />
+      </svg>
+    </div>
 
-</body>
+    <!-- Conteúdo principal: link "voltar" + card, empilhados e centralizados juntos -->
+    <div class="conteudo-central">
+      <a href="../../index.html" class="voltar-site">← Voltar ao site</a>
+
+      <div class="card">
+        <img src="../../assets/logoHVAC.png" alt="Logo da Empresa" />
+        <h1>Bem-vindo à Área do Cliente</h1>
+        <p>Acompanhe os seus serviços e agendamentos</p>
+
+        <form>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required />
+          <a href="./login.html" class="link-senha">Esqueceu a senha?</a>
+
+          <label for="senha">Senha:</label>
+          <input type="password" id="senha" name="senha" required />
+
+          <div class="lembrar">
+            <input type="checkbox" id="lembrar" name="lembrar" />
+            <label for="lembrar">Lembrar de mim</label>
+          </div>
+
+          <button class="btn-entrar" type="submit">Entrar na conta→</button>
+
+          <div class="divisor">
+            <span>ou</span>
+          </div>
+
+          <p>Ainda não tem acesso à área do cliente?</p>
+          <button
+            class="btn-cadastro"
+            type="button"
+            onclick="
+              window.location.href = '../telas/solicitar-atendimento.html'
+            "
+          >
+            Solicitar 1.º Atendimento
+          </button>
+        </form>
+      </div>
+      <footer class="rodape-card">
+        © 2026 HVAC Lex Company · <a href="">Privacidade</a>
+      </footer>
+    </div>
+  </body>
 </html>
