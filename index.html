@@ -11,7 +11,7 @@
     <!-- Barra de Navegação -->
     <header>
       <div class="header-interno">
-        <a href="#" class="logo-container">
+        <a href="#inicio" class="logo-container">
           <img
             src="./assets/logoSite.png"
             alt="HVAC Lex Company"
@@ -20,14 +20,14 @@
         </a>
 
       <nav class="navbar">
-        <ul class="nav-menu">
-          <li><a href="#inicio" class="nav-link"> Início </a></li>
-          <li><a href="#servicos" class="nav-link"> Serviços </a></li>
-          <li><a href="#portfolio" class="nav-link"> Portfólio </a></li>
-          <li><a href="#contatos" class="nav-link"> Contatos </a></li>
-        </ul>
+        <div class="nav-menu">
+          <a href="#inicio" class="nav-link"> Início </a>
+          <a href="#servicos" class="nav-link"> Serviços </a>
+          <a href="#portfolio" class="nav-link"> Portfólio </a>
+          <a href="#contatos" class="nav-link"> Contatos </a>
+        </div>
 
-        <a href="../projeto-hvac-manutencoes/src/telas/cadastro.html" class="btn-cliente">
+        <a href="./src/telas/cadastro.html" class="btn-cliente">
           <!-- Simbolo Pessoa em svg -->
           <svg viewBox="0 0 20 20" fill="currentColor" class="svg-pessoa">
             <path
@@ -65,7 +65,7 @@
             </p>
 
           <div class="acoes-inicio">
-            <a href="#formulario" class="btn btn-atendimento">
+            <a href="./src/telas/agendamento.html" class="btn btn-atendimento">
               <!-- Simbolo Calendario -->
               <svg
                 viewBox="0 0 24 24"
@@ -710,6 +710,8 @@
                 até 50 MB
               </p>
             </label>
+
+            <button type="submit" class="btn-enviar"> Enviar </button>
           </form>
         </div>
       </section>
@@ -722,11 +724,13 @@
         <p>Mais de 500 clientes satisfeitos em Sorocaba e região.</p>
 
         <!-- NOTA: INSERIR IMAGENS DO PORTFOLIO AQUI-->
+        <div id="portfolio-grid"></div>
 
         <a href="#portfolio-completo" class="botao-ver-projetos">
           Ver todos os Projetos
         </a>
-        <div class="container-status">
+        <div class="faixa-status">
+            <div class="container-status">
           <div class="card-status">
             <span class="stat-number cyan">10+</span>
             <p class="label-status">Anos de experiência</p>
@@ -747,9 +751,11 @@
             <p class="label-status">Suporte de Emergência</p>
           </div>
         </div>
+        </div>
+        
       </section>
 
-      <!-- ATENDIMENTO URGENTE -->
+      <!-- CONTATOS -->
       <section id="contatos">
         <p class="texto-contatos">Urgência? Disponíveis 24h</p>
         <h2 class="titulo-contatos">
@@ -859,295 +865,6 @@
         </ul>
       </div>
     </footer>
-
-    <div id="templates-icones" style="display: none">
-      <!-- TEMPLATE AR CONDICIONADO -->
-      <template id="tpl-ar-condicionado">
-        <svg
-          viewBox="0 0 56 56"
-          fill="none"
-          class="w-12 h-12"
-          aria-hidden="true"
-        >
-          <rect
-            x="4"
-            y="17"
-            width="48"
-            height="22"
-            rx="6"
-            fill="currentColor"
-            fill-opacity=".15"
-            stroke="currentColor"
-            stroke-width="2.4"
-          />
-          <line
-            x1="13"
-            y1="24"
-            x2="13"
-            y2="32"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="20"
-            y1="24"
-            x2="20"
-            y2="32"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="27"
-            y1="24"
-            x2="27"
-            y2="32"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="34"
-            y1="24"
-            x2="34"
-            y2="32"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="41"
-            y1="24"
-            x2="41"
-            y2="32"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-          />
-          <circle cx="47" cy="23" r="3.5" fill="currentColor" />
-          <line
-            x1="28"
-            y1="5"
-            x2="28"
-            y2="12"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-          <path
-            d="M23 8.5L28 5l5 3.5"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </template>
-      <!-- TEMPLATE FRIGORIFICO -->
-      <template id="tpl-frigorifico">
-        <svg
-          viewBox="0 0 56 56"
-          fill="none"
-          class="w-12 h-12"
-          aria-hidden="true"
-        >
-          <rect
-            x="13"
-            y="5"
-            width="30"
-            height="46"
-            rx="5"
-            fill="currentColor"
-            fill-opacity=".12"
-            stroke="currentColor"
-            stroke-width="2.4"
-          />
-          <line
-            x1="13"
-            y1="23"
-            x2="43"
-            y2="23"
-            stroke="currentColor"
-            stroke-width="2.4"
-          />
-          <rect
-            x="37"
-            y="12"
-            width="2.5"
-            height="7"
-            rx="1.25"
-            fill="currentColor"
-          />
-          <rect
-            x="37"
-            y="29"
-            width="2.5"
-            height="11"
-            rx="1.25"
-            fill="currentColor"
-          />
-        </svg>
-      </template>
-
-      <!-- TEMPLATE ILUMINACAO -->
-      <template id="tpl-iluminacao">
-        <svg
-          viewBox="0 0 56 56"
-          fill="none"
-          class="w-12 h-12"
-          aria-hidden="true"
-        >
-          <circle
-            cx="28"
-            cy="22"
-            r="12"
-            fill="currentColor"
-            fill-opacity=".15"
-            stroke="currentColor"
-            stroke-width="2.4"
-          />
-          <path
-            d="M22 34h12l-2 8H24z"
-            fill="currentColor"
-            fill-opacity=".45"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linejoin="round"
-          />
-          <line
-            x1="24"
-            y1="42"
-            x2="32"
-            y2="42"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-          />
-          <line
-            x1="28"
-            y1="6"
-            x2="28"
-            y2="4"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="9"
-            y1="22"
-            x2="7"
-            y2="22"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="47"
-            y1="22"
-            x2="49"
-            y2="22"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="14"
-            y1="9"
-            x2="12"
-            y2="7"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-          <line
-            x1="42"
-            y1="9"
-            x2="44"
-            y2="7"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </template>
-
-      <!-- TEMPLATE MANUTENCAO -->
-      <template id="tpl-manutencao">
-        <svg
-          viewBox="0 0 56 56"
-          fill="none"
-          class="w-12 h-12"
-          aria-hidden="true"
-        >
-          <path
-            d="M34 9c7 0 13 6 11 12L31 35 23 43c-2 2-6 2-8 0s-2-6 0-8l8-8 14-14c-1-2-3-4-3-4z"
-            fill="currentColor"
-            fill-opacity=".12"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linejoin="round"
-          />
-          <circle
-            cx="17"
-            cy="39"
-            r="4.5"
-            fill="currentColor"
-            fill-opacity=".25"
-            stroke="currentColor"
-            stroke-width="2"
-          />
-        </svg>
-      </template>
-
-      <!-- TEMPLATE ELETROMECANICA -->
-      <template id="tpl-eletromecanica">
-        <svg
-          viewBox="0 0 56 56"
-          fill="none"
-          class="w-12 h-12"
-          aria-hidden="true"
-        >
-          <path
-            d="M33 5L19 29h8L25 51l14-26h-8z"
-            fill="currentColor"
-            fill-opacity=".18"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </template>
-
-      <!-- TEMPLATE ATENDIMENTO URGENTE -->
-      <template id="tpl-atendimento-urgente">
-        <svg
-          viewBox="0 0 56 56"
-          fill="none"
-          class="w-12 h-12"
-          aria-hidden="true"
-        >
-          <path
-            d="M28 7C24 7 11 13 11 25s10 18 17 24c7-6 17-12 17-24S32 7 28 7z"
-            fill="currentColor"
-            fill-opacity=".12"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linejoin="round"
-          />
-          <line
-            x1="28"
-            y1="22"
-            x2="28"
-            y2="32"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-          />
-          <circle cx="28" cy="38" r="2.2" fill="currentColor" />
-        </svg>
-      </template>
-    </div>
     <script src="./src/js/script.js"></script>
   </body>
 </html>
