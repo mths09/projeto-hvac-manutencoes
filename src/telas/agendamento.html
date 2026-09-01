@@ -1,11 +1,11 @@
 <!doctype html>
-
-<html lang="pt-br">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    ```
+    <title>Agendar Atendimento | HVAC Lex Company</title>
+
     <link rel="icon" href="../../assets/HVAC.jpg" />
 
     <link
@@ -13,803 +13,366 @@
       rel="stylesheet"
     />
 
-    <title>Agendamento | HVAC Lex Company</title>
+    <!-- ÍCONES -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        min-height: 100vh;
-        font-family: "Poppins", sans-serif;
-        color: #fff;
-
-        background:
-          radial-gradient(
-            circle at 15% 20%,
-            rgba(59, 130, 246, 0.18),
-            transparent 32%
-          ),
-          radial-gradient(
-            circle at 85% 80%,
-            rgba(124, 58, 237, 0.18),
-            transparent 32%
-          ),
-          linear-gradient(135deg, #020617, #0f1b3d 45%, #24164f 72%, #15110c);
-
-        overflow-x: hidden;
-      }
-
-      /* ONDAS */
-
-      .wave {
-        position: fixed;
-        top: 0;
-        width: 220px;
-        height: 100vh;
-        pointer-events: none;
-        opacity: 0.7;
-        z-index: 0;
-      }
-
-      .wave svg {
-        width: 100%;
-        height: 100%;
-      }
-
-      .wave-right {
-        right: 0;
-      }
-
-      .wave-left {
-        left: 0;
-        transform: scaleX(-1);
-      }
-
-      /* CONTEÚDO */
-
-      .container {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        min-height: 100vh;
-        padding: 40px 20px;
-
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .voltar {
-        width: 100%;
-        max-width: 850px;
-        margin-bottom: 25px;
-      }
-
-      .voltar a {
-        color: #dbeafe;
-        text-decoration: none;
-        font-size: 14px;
-        transition: 0.2s;
-      }
-
-      .voltar a:hover {
-        color: #fff;
-      }
-
-      /* TÍTULO */
-
-      .titulo {
-        text-align: center;
-        margin-bottom: 30px;
-      }
-
-      .logo {
-        width: 85px;
-        height: 85px;
-        object-fit: contain;
-        border-radius: 50%;
-        margin-bottom: 12px;
-
-        filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.35))
-          drop-shadow(0 0 25px rgba(124, 58, 237, 0.18));
-      }
-
-      h1 {
-        font-size: 34px;
-        margin-bottom: 8px;
-      }
-
-      h1 span {
-        background: linear-gradient(90deg, #3b82f6, #7c3aed, #c0a86a);
-
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-      }
-
-      .titulo p {
-        color: #cbd5e1;
-        font-size: 14px;
-      }
-
-      /* CARD */
-
-      .card {
-        width: 100%;
-        max-width: 850px;
-        padding: 35px;
-
-        background: linear-gradient(
-          145deg,
-          rgba(15, 27, 61, 0.88),
-          rgba(24, 20, 50, 0.84)
-        );
-
-        border: 1px solid rgba(148, 163, 184, 0.22);
-        border-radius: 24px;
-
-        backdrop-filter: blur(18px);
-
-        box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
-      }
-
-      .secao {
-        margin-bottom: 25px;
-      }
-
-      .secao h2 {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-
-        font-size: 18px;
-        margin-bottom: 20px;
-      }
-
-      .secao h2::before {
-        content: "";
-
-        width: 4px;
-        height: 24px;
-
-        border-radius: 5px;
-
-        background: linear-gradient(180deg, #3b82f6, #7c3aed, #a3915a);
-      }
-
-      /* SERVIÇO */
-
-      label {
-        display: block;
-
-        color: #e2e8f0;
-
-        font-size: 14px;
-        font-weight: 600;
-
-        margin-bottom: 8px;
-      }
-
-      .servico-container {
-        position: relative;
-      }
-
-      #servico {
-        width: 100%;
-        padding: 13px 15px;
-
-        border-radius: 11px;
-
-        border: 1px solid rgba(148, 163, 184, 0.18);
-
-        background: rgba(2, 6, 23, 0.65);
-
-        color: #fff;
-
-        font-family: inherit;
-        font-size: 14px;
-
-        outline: none;
-
-        cursor: not-allowed;
-
-        opacity: 0.85;
-      }
-
-      /* DATA */
-
-      input[type="date"] {
-        width: 100%;
-
-        padding: 13px 15px;
-
-        border-radius: 11px;
-
-        border: 1px solid rgba(148, 163, 184, 0.18);
-
-        background: rgba(2, 6, 23, 0.65);
-
-        color: #fff;
-
-        font-family: inherit;
-
-        outline: none;
-
-        color-scheme: dark;
-      }
-
-      input:focus {
-        border-color: rgba(59, 130, 246, 0.75);
-
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
-      }
-
-      /* HORÁRIOS */
-
-      .horarios {
-        display: grid;
-
-        grid-template-columns: repeat(4, 1fr);
-
-        gap: 12px;
-      }
-
-      .horario {
-        padding: 12px;
-
-        border: 1px solid rgba(148, 163, 184, 0.2);
-
-        border-radius: 10px;
-
-        background: rgba(2, 6, 23, 0.55);
-
-        color: #fff;
-
-        font-family: inherit;
-
-        cursor: pointer;
-
-        transition: 0.2s;
-      }
-
-      .horario:hover {
-        border-color: #3b82f6;
-
-        transform: translateY(-2px);
-      }
-
-      .horario.selecionado {
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
-
-        border-color: transparent;
-
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
-      }
-
-      .horario.indisponivel {
-        opacity: 0.35;
-
-        cursor: not-allowed;
-
-        text-decoration: line-through;
-      }
-
-      /* MENSAGEM DE HORÁRIOS */
-
-      .mensagem-horarios {
-        grid-column: 1 / -1;
-
-        padding: 18px;
-
-        text-align: center;
-
-        color: #94a3b8;
-
-        font-size: 14px;
-
-        border: 1px dashed rgba(148, 163, 184, 0.2);
-
-        border-radius: 10px;
-      }
-
-      /* RESUMO */
-
-      .resumo {
-        margin-top: 25px;
-
-        padding: 18px;
-
-        border-radius: 12px;
-
-        background: rgba(2, 6, 23, 0.4);
-
-        border: 1px solid rgba(148, 163, 184, 0.12);
-
-        color: #cbd5e1;
-
-        font-size: 14px;
-      }
-
-      .resumo strong {
-        color: #fff;
-      }
-
-      /* BOTÃO */
-
-      .botao {
-        width: 100%;
-
-        margin-top: 25px;
-
-        padding: 15px;
-
-        border: none;
-
-        border-radius: 12px;
-
-        background: linear-gradient(90deg, #2563eb, #7c3aed, #9b8750);
-
-        color: #fff;
-
-        font-family: inherit;
-
-        font-size: 15px;
-
-        font-weight: 600;
-
-        cursor: pointer;
-
-        transition: 0.25s;
-      }
-
-      .botao:hover {
-        transform: translateY(-2px);
-
-        filter: brightness(1.1);
-
-        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.25);
-      }
-
-      .botao:active {
-        transform: translateY(0);
-      }
-
-      /* VOLTAR */
-
-      .voltar-cliente {
-        margin-top: 22px;
-
-        color: #93c5fd;
-
-        text-decoration: none;
-
-        font-size: 14px;
-      }
-
-      .voltar-cliente:hover {
-        color: #fff;
-
-        text-decoration: underline;
-      }
-
-      .rodape {
-        margin-top: 20px;
-
-        color: #71809a;
-
-        font-size: 12px;
-
-        text-align: center;
-      }
-
-      /* RESPONSIVO */
-
-      @media (max-width: 700px) {
-        .wave {
-          width: 100px;
-          opacity: 0.35;
-        }
-
-        .card {
-          padding: 25px 20px;
-        }
-
-        h1 {
-          font-size: 27px;
-        }
-
-        .horarios {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-    </style>
-    ```
+    <link rel="stylesheet" href="../css/agendamento.css" />
   </head>
 
   <body>
-    ```
-    <!-- ONDA DIREITA -->
+    <!-- FUNDO -->
+    <div class="fundo-brilho brilho-1"></div>
+    <div class="fundo-brilho brilho-2"></div>
 
-    <div class="wave wave-right">
-      <svg viewBox="0 0 300 600" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="g1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#3b82f6" />
+    <!-- CABEÇALHO -->
+    <header class="topo">
+      <div class="topo-conteudo">
+        <div class="logo">HVAC Lex Company</div>
 
-            <stop offset="45%" stop-color="#7c3aed" />
+        <a href="../../index.html" class="voltar-site"> ← Voltar ao site </a>
+      </div>
+    </header>
 
-            <stop offset="100%" stop-color="#a3915a" />
-          </linearGradient>
-        </defs>
-
-        <path
-          d="M220 0 C150 100 130 200 90 320 C70 400 60 480 75 580"
-          stroke="url(#g1)"
-          stroke-width="14"
-          fill="none"
-          stroke-linecap="round"
-        />
-
-        <path
-          d="M250 0 C190 110 165 210 130 330 C112 410 105 490 118 580"
-          stroke="url(#g1)"
-          stroke-width="14"
-          fill="none"
-          stroke-linecap="round"
-        />
-      </svg>
-    </div>
-
-    <!-- ONDA ESQUERDA -->
-
-    <div class="wave wave-left">
-      <svg viewBox="0 0 300 600" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="g2" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#3b82f6" />
-
-            <stop offset="45%" stop-color="#7c3aed" />
-
-            <stop offset="100%" stop-color="#a3915a" />
-          </linearGradient>
-        </defs>
-
-        <path
-          d="M220 0 C150 100 130 200 90 320 C70 400 60 480 75 580"
-          stroke="url(#g2)"
-          stroke-width="14"
-          fill="none"
-          stroke-linecap="round"
-        />
-
-        <path
-          d="M250 0 C190 110 165 210 130 330 C112 410 105 490 118 580"
-          stroke="url(#g2)"
-          stroke-width="14"
-          fill="none"
-          stroke-linecap="round"
-        />
-      </svg>
-    </div>
-
+    <!-- CONTEÚDO -->
     <main class="container">
-      <div class="voltar">
-        <a href="../../index.html"> ← Voltar ao site </a>
+      <section class="titulo-area">
+        <h1>Agendar Atendimento</h1>
+
+        <p>Siga os passos abaixo para solicitar um técnico qualificado.</p>
+      </section>
+
+      <!-- ETAPAS -->
+      <div class="etapas">
+        <div class="etapa ativa" id="etapa-1">
+          <div class="numero">1</div>
+          <span>Tipo de Serviço</span>
+        </div>
+
+        <div class="linha"></div>
+
+        <div class="etapa" id="etapa-2">
+          <div class="numero">2</div>
+          <span>Data e Detalhes</span>
+        </div>
+
+        <div class="linha"></div>
+
+        <div class="etapa" id="etapa-3">
+          <div class="numero">3</div>
+          <span>Confirmação</span>
+        </div>
       </div>
 
-      <div class="titulo">
-        <img src="../../assets/HVAC.jpg" alt="HVAC Lex Company" class="logo" />
+      <!-- CONTEÚDO DAS ETAPAS -->
+      <div id="conteudo-etapa">
+        <!-- ========================= -->
+        <!-- ETAPA 1 -->
+        <!-- ========================= -->
 
-        <h1>
-          Realizar
-          <span>Agendamento</span>
-        </h1>
+        <section class="tipo-servico" id="tela-etapa-1">
+          <h2>Qual é o tipo de serviço?</h2>
 
-        <p>Escolha a data e um dos horários disponíveis.</p>
-      </div>
+          <div class="servicos-grid">
+            <!-- AR CONDICIONADO -->
+            <button
+              type="button"
+              class="servico-card selecionado"
+              data-servico="Ar Condicionado"
+              data-descricao="Instalação, manutenção e higienização de splits, cassetes e VRF"
+            >
+              <div class="icone-servico ar">
+                <i data-lucide="air-vent"></i>
+              </div>
 
-      <div class="card">
-        <!-- SERVIÇO -->
+              <div class="servico-texto">
+                <h3>Ar Condicionado</h3>
 
-        <section class="secao">
-          <h2>Serviço solicitado</h2>
+                <p>
+                  Instalação, manutenção e higienização de splits, cassetes e
+                  VRF
+                </p>
 
-          <label for="servico"> Tipo de serviço </label>
+                <span class="status-selecionado"> ✓ Selecionado </span>
+              </div>
+            </button>
 
-          <div class="servico-container">
+            <!-- GELADEIRA -->
+            <button
+              type="button"
+              class="servico-card"
+              data-servico="Frigorífico / Geladeira"
+              data-descricao="Conserto e manutenção de câmaras frias e refrigeradores comerciais"
+            >
+              <div class="icone-servico geladeira">
+                <i data-lucide="refrigerator"></i>
+              </div>
+
+              <div class="servico-texto">
+                <h3>Frigorífico / Geladeira</h3>
+
+                <p>
+                  Conserto e manutenção de câmaras frias e refrigeradores
+                  comerciais
+                </p>
+
+                <span class="status-selecionado"> ✓ Selecionado </span>
+              </div>
+            </button>
+
+            <!-- ILUMINAÇÃO -->
+            <button
+              type="button"
+              class="servico-card"
+              data-servico="Iluminação"
+              data-descricao="Instalação de LED, luminárias industriais e sistemas de emergência"
+            >
+              <div class="icone-servico iluminacao">
+                <i data-lucide="lightbulb"></i>
+              </div>
+
+              <div class="servico-texto">
+                <h3>Iluminação</h3>
+
+                <p>
+                  Instalação de LED, luminárias industriais e sistemas de
+                  emergência
+                </p>
+
+                <span class="status-selecionado"> ✓ Selecionado </span>
+              </div>
+            </button>
+
+            <!-- MANUTENÇÃO -->
+            <button
+              type="button"
+              class="servico-card"
+              data-servico="Manutenção Preventiva"
+              data-descricao="Planos periódicos para equipamentos industriais e comerciais"
+            >
+              <div class="icone-servico manutencao">
+                <i data-lucide="wrench"></i>
+              </div>
+
+              <div class="servico-texto">
+                <h3>Manutenção Preventiva</h3>
+
+                <p>
+                  Planos periódicos para equipamentos industriais e comerciais
+                </p>
+
+                <span class="status-selecionado"> ✓ Selecionado </span>
+              </div>
+            </button>
+
+            <!-- ELETROMECÂNICA -->
+            <button
+              type="button"
+              class="servico-card"
+              data-servico="Eletromecânica"
+              data-descricao="Motores, bombas, quadros elétricos e automação industrial"
+            >
+              <div class="icone-servico eletro">
+                <i data-lucide="zap"></i>
+              </div>
+
+              <div class="servico-texto">
+                <h3>Eletromecânica</h3>
+
+                <p>Motores, bombas, quadros elétricos e automação industrial</p>
+
+                <span class="status-selecionado"> ✓ Selecionado </span>
+              </div>
+            </button>
+
+            <!-- URGENTE -->
+            <button
+              type="button"
+              class="servico-card"
+              data-servico="Atendimento Urgente"
+              data-descricao="Suporte de emergência 24h para falhas críticas de equipamentos"
+            >
+              <div class="icone-servico urgente">
+                <i data-lucide="circle-alert"></i>
+              </div>
+
+              <div class="servico-texto">
+                <h3>Atendimento Urgente</h3>
+
+                <p>
+                  Suporte de emergência 24h para falhas críticas de equipamentos
+                </p>
+
+                <span class="status-selecionado"> ✓ Selecionado </span>
+              </div>
+            </button>
+          </div>
+
+          <button type="button" class="botao-continuar" id="botaoContinuar">
+            Continuar — Ar Condicionado →
+          </button>
+        </section>
+
+        <!-- ========================= -->
+        <!-- ETAPA 2 -->
+        <!-- ========================= -->
+
+        <section class="data-detalhes escondido" id="tela-etapa-2">
+          <!-- SERVIÇO ESCOLHIDO -->
+          <div class="servico-escolhido">
+            <div class="servico-escolhido-icone" id="iconeServicoEscolhido">
+              <i data-lucide="air-vent"></i>
+            </div>
+
+            <div>
+              <h3 id="nomeServicoEscolhido">Ar Condicionado</h3>
+
+              <button type="button" id="alterarServico" class="alterar-servico">
+                ← Alterar tipo
+              </button>
+            </div>
+          </div>
+
+          <div class="agendamento-grid">
+            <!-- CALENDÁRIO -->
+            <div class="painel-agendamento">
+              <h3 id="tituloMes">Agosto 2026</h3>
+
+              <div class="dias-semana">
+                <span>Dom</span>
+                <span>Seg</span>
+                <span>Ter</span>
+                <span>Qua</span>
+                <span>Qui</span>
+                <span>Sex</span>
+                <span>Sáb</span>
+              </div>
+
+              <div class="calendario" id="calendario"></div>
+
+              <p class="info-calendario">
+                Dias com disponibilidade de técnico destacados · Hoje:
+                <span id="hojeTexto"></span>
+              </p>
+            </div>
+
+            <!-- HORÁRIOS -->
+            <div class="painel-agendamento horarios-painel">
+              <h3 id="tituloHorarios">Selecione um dia primeiro</h3>
+
+              <div class="horarios-grid" id="horarios"></div>
+            </div>
+          </div>
+
+          <!-- ENDEREÇO -->
+          <div class="campo-area">
+            <label for="endereco"> Endereço de atendimento </label>
+
             <input
               type="text"
-              id="servico"
-              value="Carregando serviço..."
-              readonly
+              id="endereco"
+              placeholder="Rua, número, bairro — Sorocaba, SP"
             />
+          </div>
+
+          <!-- DESCRIÇÃO -->
+          <div class="campo-area">
+            <label for="descricao">
+              Descreva o problema
+              <span>(mínimo 10 caracteres)</span>
+            </label>
+
+            <textarea
+              id="descricao"
+              placeholder="Ex: O ar condicionado não resfria, faz barulho ao ligar. Há 3 anos de uso..."
+            ></textarea>
+          </div>
+
+          <!-- UPLOAD -->
+          <div class="upload-area">
+            <i data-lucide="image"></i>
+
+            <strong> Anexar fotos ou vídeos </strong>
+
+            <span> JPG, PNG, MP4 · até 5 MB </span>
+
+            <input type="file" id="arquivo" accept="image/*,video/*" multiple />
+          </div>
+
+          <!-- BOTÕES -->
+          <div class="botoes-etapa">
+            <button type="button" class="botao-voltar" id="botaoVoltar">
+              ← Voltar
+            </button>
+
+            <button type="button" class="botao-revisar" id="botaoRevisar">
+              Revisar Agendamento →
+            </button>
           </div>
         </section>
 
-        <!-- DATA -->
+        <!-- ========================= -->
+        <!-- ETAPA 3 -->
+        <!-- ========================= -->
 
-        <section class="secao">
-          <h2>Escolha a data</h2>
+        <section class="confirmacao escondido" id="tela-etapa-3">
+          <div class="confirmacao-card">
+            <div class="confirmacao-icone">
+              <i data-lucide="calendar-check"></i>
+            </div>
 
-          <label for="data"> Data do atendimento </label>
+            <h2>Revise seu agendamento</h2>
 
-          <input type="date" id="data" />
-        </section>
+            <p>Confira todas as informações antes de confirmar.</p>
 
-        <!-- HORÁRIOS -->
+            <div class="resumo-agendamento">
+              <div class="resumo-linha">
+                <span>Serviço</span>
+                <strong id="resumoServico"></strong>
+              </div>
 
-        <section class="secao">
-          <h2>Horários disponíveis</h2>
+              <div class="resumo-linha">
+                <span>Data</span>
+                <strong id="resumoData"></strong>
+              </div>
 
-          <div class="horarios" id="horarios">
-            <div class="mensagem-horarios">
-              Selecione uma data para consultar os horários disponíveis.
+              <div class="resumo-linha">
+                <span>Horário</span>
+                <strong id="resumoHorario"></strong>
+              </div>
+
+              <div class="resumo-linha">
+                <span>Endereço</span>
+                <strong id="resumoEndereco"></strong>
+              </div>
+
+              <div class="resumo-linha descricao-resumo">
+                <span>Descrição</span>
+                <strong id="resumoDescricao"></strong>
+              </div>
+            </div>
+
+            <div class="botoes-etapa">
+              <button type="button" class="botao-voltar" id="voltarDetalhes">
+                ← Alterar
+              </button>
+
+              <button
+                type="button"
+                class="botao-confirmar"
+                id="confirmarAgendamento"
+              >
+                Confirmar Agendamento ✓
+              </button>
             </div>
           </div>
         </section>
-
-        <!-- RESUMO -->
-
-        <div class="resumo">
-          <strong> Agendamento selecionado: </strong>
-
-          <span id="resumo"> Nenhuma data e horário selecionados. </span>
-        </div>
-
-        <!-- BOTÃO -->
-
-        <button type="button" class="botao" onclick="confirmarAgendamento()">
-          Confirmar Agendamento →
-        </button>
       </div>
-
-      <a href="javascript:history.back()" class="voltar-cliente">
-        ← Voltar para a Área do Cliente
-      </a>
-
-      <footer class="rodape">
-        © 2026 HVAC Lex Company ·
-
-        <a href="#" style="color: #94a3b8; text-decoration: none">
-          Privacidade
-        </a>
-      </footer>
     </main>
 
+    <script src="../js/agendamento.js"></script>
+
     <script>
-      /*
-       * ============================================
-       * VARIÁVEIS
-       * ============================================
-       */
-
-      let horarioSelecionado = "";
-
-      const data = document.getElementById("data");
-
-      const resumo = document.getElementById("resumo");
-
-      const servico = document.getElementById("servico");
-
-      const horariosContainer = document.getElementById("horarios");
-
-      /*
-       * ============================================
-       * DATA MÍNIMA
-       * ============================================
-       *
-       * Impede que o usuário escolha uma data
-       * anterior ao dia atual.
-       */
-
-      const hoje = new Date();
-
-      const ano = hoje.getFullYear();
-
-      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-
-      const dia = String(hoje.getDate()).padStart(2, "0");
-
-      data.min = `${ano}-${mes}-${dia}`;
-
-      /*
-       * ============================================
-       * CARREGAR SERVIÇO
-       * ============================================
-       *
-       * Por enquanto estamos buscando o serviço
-       * através da URL.
-       *
-       * Exemplo:
-       *
-       * agendamento.html?servico=Instalação
-       *
-       * Depois vamos substituir isso pela consulta
-       * ao banco de dados.
-       */
-
-      const parametros = new URLSearchParams(window.location.search);
-
-      const servicoURL = parametros.get("servico");
-
-      if (servicoURL) {
-        servico.value = servicoURL;
-      } else {
-        servico.value = "Serviço da solicitação";
-      }
-
-      /*
-       * ============================================
-       * QUANDO ESCOLHER UMA DATA
-       * ============================================
-       */
-
-      data.addEventListener("change", function () {
-        horarioSelecionado = "";
-
-        atualizarResumo();
-
-        carregarHorarios(data.value);
-      });
-
-      /*
-       * ============================================
-       * CARREGAR HORÁRIOS
-       * ============================================
-       *
-       * ATENÇÃO:
-       *
-       * Esta função ainda está usando horários
-       * temporários.
-       *
-       * No próximo passo vamos trocar esta parte
-       * pela consulta ao PHP/banco de dados.
-       */
-
-      function carregarHorarios(dataSelecionada) {
-        horariosContainer.innerHTML = "";
-
-        if (!dataSelecionada) {
-          horariosContainer.innerHTML = `
-        <div class="mensagem-horarios">
-          Selecione uma data para consultar
-          os horários disponíveis.
-        </div>
-      `;
-
-          return;
-        }
-
-        /*
-         * HORÁRIOS TEMPORÁRIOS
-         *
-         * Depois serão carregados do banco.
-         */
-
-        const horariosDisponiveis = [
-          "08:00",
-          "09:00",
-          "10:00",
-          "11:00",
-          "13:00",
-          "14:00",
-          "15:00",
-          "16:00",
-        ];
-
-        horariosDisponiveis.forEach(function (hora) {
-          const botao = document.createElement("button");
-
-          botao.type = "button";
-
-          botao.className = "horario";
-
-          botao.textContent = hora;
-
-          botao.addEventListener("click", function () {
-            selecionarHorario(botao, hora);
-          });
-
-          horariosContainer.appendChild(botao);
-        });
-      }
-
-      /*
-       * ============================================
-       * SELECIONAR HORÁRIO
-       * ============================================
-       */
-
-      function selecionarHorario(botao, hora) {
-        const botoes = document.querySelectorAll(".horario");
-
-        botoes.forEach(function (item) {
-          item.classList.remove("selecionado");
-        });
-
-        botao.classList.add("selecionado");
-
-        horarioSelecionado = hora;
-
-        atualizarResumo();
-      }
-
-      /*
-       * ============================================
-       * ATUALIZAR RESUMO
-       * ============================================
-       */
-
-      function atualizarResumo() {
-        if (!data.value && !horarioSelecionado) {
-          resumo.textContent = "Nenhuma data e horário selecionados.";
-
-          return;
-        }
-
-        if (data.value && horarioSelecionado) {
-          const dataFormatada = data.value.split("-").reverse().join("/");
-
-          resumo.textContent = `${dataFormatada} às ${horarioSelecionado}`;
-
-          return;
-        }
-
-        if (data.value) {
-          const dataFormatada = data.value.split("-").reverse().join("/");
-
-          resumo.textContent = `${dataFormatada} — escolha um horário`;
-
-          return;
-        }
-
-        resumo.textContent = `Escolha uma data — ${horarioSelecionado}`;
-      }
-
-      /*
-       * ============================================
-       * CONFIRMAR AGENDAMENTO
-       * ============================================
-       */
-
-      function confirmarAgendamento() {
-        if (!servico.value) {
-          alert("Não foi possível identificar o serviço.");
-
-          return;
-        }
-
-        if (!data.value) {
-          alert("Selecione uma data.");
-
-          return;
-        }
-
-        if (!horarioSelecionado) {
-          alert("Selecione um horário.");
-
-          return;
-        }
-
-        const dataFormatada = data.value.split("-").reverse().join("/");
-
-        alert(
-          "Agendamento selecionado!\n\n" +
-            "Serviço: " +
-            servico.value +
-            "\n" +
-            "Data: " +
-            dataFormatada +
-            "\n" +
-            "Horário: " +
-            horarioSelecionado,
-        );
-      }
+      lucide.createIcons();
     </script>
-    ```
   </body>
 </html>
