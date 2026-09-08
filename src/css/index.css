@@ -182,6 +182,9 @@ header {
 /* "hamburguer" para telas pequenas */
 .menu-toggle {
   display: none;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 5px;
   width: 44px;
   height: 44px;
   padding: 0.65rem;
@@ -192,6 +195,33 @@ header {
   border: 0;
   border-radius: 0.75rem;
   cursor: pointer;
+}
+
+.menu-toggle span {
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.menu-toggle[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-toggle[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.menu-toggle:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: 3px;
 }
 
 /* INICIO (hero) */
@@ -385,12 +415,15 @@ header {
 }
 
 .svg {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 40px;
+  color: #fff;
 }
 
 .svg-whatsapp {
   color: #f5f6fa;
+  height: 40px;
+  width: 30px;
 }
 
 .btn-atendimento {
@@ -1489,6 +1522,7 @@ label[for="form-problema"] {
     left: -1.5rem;
     right: -1.5rem;
     max-height: 0;
+    visibility: hidden;
     padding-inline: 1.5rem;
     overflow: hidden;
     flex-direction: column;
@@ -1510,6 +1544,7 @@ label[for="form-problema"] {
   .nav-menu.open,
   .nav-menu.ativo {
     max-height: 360px;
+    visibility: visible;
     padding-block: 1rem;
     opacity: 1;
     pointer-events: auto;

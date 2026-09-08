@@ -1,3 +1,42 @@
+// Menu de navegação mobile: o CSS cuida do visual, o JS alterna o estado.
+const menuToggle = document.querySelector(".menu-toggle");
+const menuPrincipal = document.getElementById("menu-principal");
+const telaMobile = window.matchMedia("(max-width: 860px)");
+
+if (menuToggle && menuPrincipal) {
+  function definirMenuAberto(aberto) {
+    menuPrincipal.classList.toggle("open", aberto);
+    menuToggle.setAttribute("aria-expanded", String(aberto));
+    menuToggle.setAttribute(
+      "aria-label",
+      aberto ? "Fechar menu de navegação" : "Abrir menu de navegação",
+    );
+  }
+
+  menuToggle.addEventListener("click", () => {
+    definirMenuAberto(menuToggle.getAttribute("aria-expanded") !== "true");
+  });
+
+  menuPrincipal.addEventListener("click", (event) => {
+    if (event.target.closest("a")) definirMenuAberto(false);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && menuToggle.getAttribute("aria-expanded") === "true") {
+      definirMenuAberto(false);
+      menuToggle.focus();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!menuPrincipal.contains(event.target) && !menuToggle.contains(event.target)) {
+      definirMenuAberto(false);
+    }
+  });
+
+  telaMobile.addEventListener("change", () => definirMenuAberto(false));
+}
+
 // Mapa de ícones para #form-icone-svg, um por serviço
 const icones = {
   "ar-condicionado": document.querySelector(".svg-ar-condicionado"),
@@ -20,7 +59,6 @@ let servicoSelecionadoId = null;
 // --- Abrir: tira o display:none e dispara a transição ---
 function abrirPainel() {
   painel.classList.remove("escondido");
-
   // Sem isso, o navegador aplica display:flex E max-height final no
   // mesmo frame, e a transição é "pulada" (não há estado anterior pra animar a partir).
   // Dois requestAnimationFrame garantem que o navegador já pintou o estado
@@ -28,6 +66,7 @@ function abrirPainel() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       painel.classList.add("mostrar");
+      painel.focus();
     });
   });
 }
@@ -88,37 +127,38 @@ const PORTFOLIO = [
   {
     img: "https://images.unsplash.com/photo-1757219525975-03b5984bc6e8?w=700&h=500&fit=crop&auto=format",
     title: "Instalação Split Residencial 18.000 BTU",
+    description: "",
     location: "Sorocaba, SP",
     category: "Ar Condicionado",
-    accent: C.cyan,
+    accent: "--var(--ciano)",
   },
   {
     img: "https://images.unsplash.com/photo-1785682118449-21da8825754d?w=700&h=500&fit=crop&auto=format",
     title: "Manutenção Preventiva Industrial",
     location: "Votorantim, SP",
     category: "Eletromecânica",
-    accent: C.flameMagenta,
+    accent: "--var(--chama-magenta)",
   },
   {
     img: "https://images.unsplash.com/photo-1698479603408-1a66a6d9e80f?w=700&h=500&fit=crop&auto=format",
     title: "Sistema VRF Comercial — 60 TR",
     location: "São Roque, SP",
     category: "Refrigeração",
-    accent: C.flameBlue,
+    accent: "--var(--chama-azul)",
   },
   {
     img: "https://images.unsplash.com/photo-1773844389459-110d2b5e18e2?w=700&h=500&fit=crop&auto=format",
     title: "Equipa Técnica Certificada",
     location: "Sorocaba, SP",
-    category: "Equipa",
-    accent: C.flameViolet,
+    category: "Equipe",
+    accent: "--var(--chama-violeta)",
   },
   {
     img: "https://images.unsplash.com/photo-1681042803902-f79c240d8f03?w=700&h=500&fit=crop&auto=format",
     title: "Climatização Comercial — Rede de Lojas",
     location: "Itu, SP",
     category: "Ar Condicionado",
-    accent: C.cyan,
+    accent: "--var(--ciano)",
   },
 ];
 
@@ -129,17 +169,17 @@ function renderizarPortfolio() {
   const html = PORTFOLIO.map(
     (item) => `
     <article class="card-portfolio">
-      <img class="imagem-portfolio" src="${item.imagem}" alt="${item.titulo}" loading="lazy">
+      <img class="imagem-portfolio" src="${item.img}" alt="${item.tittle}" loading="lazy">
 
-      <span class="badge-categoria ${item.corBadge}">${item.categoria}</span>
+      <span class="badge-categoria ${item.corBadge}">${item.category}</span>
 
       <div class="overlay-portfolio">
-        <h3 class="titulo-portfolio">${item.titulo}</h3>
+        <h3 class="titulo-portfolio" style="background-color: var(${item.accent});">${item.title}</h3>
         <p class="local-portfolio">
           <svg class="icone-pin" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.7 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
           </svg>
-          ${item.local}
+          ${item.location}
         </p>
       </div>
     </article>

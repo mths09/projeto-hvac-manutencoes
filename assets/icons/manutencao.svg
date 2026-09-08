@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 56 56"
+  fill="#7b1fa2"
+>
+  <path
+    d="M34 9c7 0 13 6 11 12L31 35 23 43c-2 2-6 2-8 0s-2-6 0-8l8-8 14-14c-1-2-3-4-3-4z"
+    fill="#7b1fa2"
+    fill-opacity=".12"
+    stroke="#7b1fa2"
+    stroke-width="2.4"
+    stroke-linejoin="round"
+  />
+  <circle
+    cx="17"
+    cy="39"
+    r="4.5"
+    fill="#7b1fa2"
+    fill-opacity=".25"
+    stroke="#7b1fa2"
+    stroke-width="2"
+  />
+</svg>

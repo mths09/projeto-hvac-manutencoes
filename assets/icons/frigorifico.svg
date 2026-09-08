@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 56 56"
+  fill="#00e5ff"
+>
+  <rect
+    x="13"
+    y="5"
+    width="30"
+    height="46"
+    rx="5"
+    fill="#00e5ff"
+    fill-opacity=".12"
+    stroke="#00e5ff"
+    stroke-width="2.4"
+  />
+  <line
+    x1="13"
+    y1="23"
+    x2="43"
+    y2="23"
+    stroke="#00e5ff"
+    stroke-width="2.4"
+  />
+  <rect
+    x="37"
+    y="12"
+    width="2.5"
+    height="7"
+    rx="1.25"
+    fill="#00e5ff"
+  />
+  <rect
+    x="37"
+    y="29"
+    width="2.5"
+    height="11"
+    rx="1.25"
+    fill="#00e5ff"
+  />
+</svg>
