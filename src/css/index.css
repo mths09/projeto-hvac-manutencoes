@@ -1048,20 +1048,6 @@ label[for="form-problema"] {
   font-weight: 900;
 }
 
-.badge-categoria.cyan {
-  color: var(--azul-marinho-mais-escuro);
-  background: var(--ciano);
-}
-.badge-categoria.magenta {
-  background: var(--chama-magenta);
-}
-.badge-categoria.azul {
-  background: var(--chama-azul);
-}
-.badge-categoria.roxo {
-  background: var(--chama-violeta);
-}
-
 .overlay-portfolio {
   position: absolute;
   inset: 0;

@@ -22,14 +22,20 @@ if (menuToggle && menuPrincipal) {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && menuToggle.getAttribute("aria-expanded") === "true") {
+    if (
+      event.key === "Escape" &&
+      menuToggle.getAttribute("aria-expanded") === "true"
+    ) {
       definirMenuAberto(false);
       menuToggle.focus();
     }
   });
 
   document.addEventListener("click", (event) => {
-    if (!menuPrincipal.contains(event.target) && !menuToggle.contains(event.target)) {
+    if (
+      !menuPrincipal.contains(event.target) &&
+      !menuToggle.contains(event.target)
+    ) {
       definirMenuAberto(false);
     }
   });
@@ -122,6 +128,34 @@ cards.forEach((card) => {
   });
 });
 
+// CATEGORIA
+const CATEGORIAS = [
+  {
+    id: "ar-condicionado",
+    nome: "Ar Condicionado",
+    cor: "var(--ciano)",
+    corTexto: "var(--azul-marinho-mais-escuro)",
+  },
+  {
+    id: "eletromecanica",
+    nome: "Eletromecânica",
+    cor: "var(--chama-magenta)",
+    corTexto: "var(--azul-marinho-mais-escuro)",
+  },
+  {
+    id: "refrigeracao",
+    nome: "Refrigeração",
+    cor: "var(--chama-azul)",
+    corTexto: "var(--ciano-palido)",
+  },
+  {
+    id: "equipe",
+    nome: "Equipe",
+    cor: "var(--chama-violeta)",
+    corTexto: "var(--ciano-palido)",
+  },
+];
+
 // PORTFOLIO
 const PORTFOLIO = [
   {
@@ -129,36 +163,31 @@ const PORTFOLIO = [
     title: "Instalação Split Residencial 18.000 BTU",
     description: "",
     location: "Sorocaba, SP",
-    category: "Ar Condicionado",
-    accent: "--var(--ciano)",
+    categoryId: "ar-condicionado",
   },
   {
     img: "https://images.unsplash.com/photo-1785682118449-21da8825754d?w=700&h=500&fit=crop&auto=format",
     title: "Manutenção Preventiva Industrial",
     location: "Votorantim, SP",
-    category: "Eletromecânica",
-    accent: "--var(--chama-magenta)",
+    categoryId: "eletromecanica",
   },
   {
     img: "https://images.unsplash.com/photo-1698479603408-1a66a6d9e80f?w=700&h=500&fit=crop&auto=format",
     title: "Sistema VRF Comercial — 60 TR",
     location: "São Roque, SP",
-    category: "Refrigeração",
-    accent: "--var(--chama-azul)",
+    categoryId: "refrigeracao",
   },
   {
     img: "https://images.unsplash.com/photo-1773844389459-110d2b5e18e2?w=700&h=500&fit=crop&auto=format",
     title: "Equipa Técnica Certificada",
     location: "Sorocaba, SP",
-    category: "Equipe",
-    accent: "--var(--chama-violeta)",
+    categoryId: "equipe",
   },
   {
     img: "https://images.unsplash.com/photo-1681042803902-f79c240d8f03?w=700&h=500&fit=crop&auto=format",
     title: "Climatização Comercial — Rede de Lojas",
     location: "Itu, SP",
-    category: "Ar Condicionado",
-    accent: "--var(--ciano)",
+    categoryId: "ar-condicionado",
   },
 ];
 
@@ -166,15 +195,30 @@ const PORTFOLIO = [
 function renderizarPortfolio() {
   const grid = document.getElementById("portfolio-grid");
 
-  const html = PORTFOLIO.map(
-    (item) => `
-    <article class="card-portfolio">
-      <img class="imagem-portfolio" src="${item.img}" alt="${item.tittle}" loading="lazy">
+  const html = PORTFOLIO.map((item) => {
+    const categoria = CATEGORIAS.find((cat) => {
+      return cat.id === item.categoryId; // cat: representa a categoria examinada no momento
+    });
 
-      <span class="badge-categoria ${item.corBadge}">${item.category}</span>
+    // Se o find() falhar
+    const nomeCategoria = categoria ? categoria.nome : "Sem categoria";
+    const corCategoria = categoria
+      ? categoria.cor
+      : "var(--azul-marinho-claro)";
+    const corTextoCategoria = categoria
+      ? categoria.corTexto
+      : "var(--ciano-palido)";
+
+    return `
+    <article class="card-portfolio">
+      <img class="imagem-portfolio" src="${item.img}" alt="${item.title}" loading="lazy">
+
+      <span class="badge-categoria" style="background-color: ${corCategoria}; color: ${corTextoCategoria}">
+        ${nomeCategoria}
+      </span>
 
       <div class="overlay-portfolio">
-        <h3 class="titulo-portfolio" style="background-color: var(${item.accent});">${item.title}</h3>
+        <h3 class="titulo-portfolio">${item.title}</h3>
         <p class="local-portfolio">
           <svg class="icone-pin" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.7 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
@@ -183,8 +227,8 @@ function renderizarPortfolio() {
         </p>
       </div>
     </article>
-  `,
-  ).join("");
+  `;
+  }).join("");
 
   grid.innerHTML = html;
 }
