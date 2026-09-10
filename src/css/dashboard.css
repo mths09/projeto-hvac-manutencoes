@@ -1,0 +1,68 @@
+:root {
+  --azul-marinho-mais-escuro: #05091e;
+  --azul-marinho-escuro: #08112e;
+  --azul-marinho: #0d1b4b;
+  --azul-marinho-medio: #12255e;
+  --azul-marinho-claro: #1a3470;
+  --ciano: #00e5ff;
+  --ciano-escuro: #00b8d4;
+  --ciano-palido: #e0faff;
+  --chama-azul: #1565c0;
+  --chama-violeta: #7b1fa2;
+  --chama-magenta: #e040fb;
+  --chama-laranja: #ff9800;
+  --chama-dourada: #ffd600;
+  --sucesso: #25d366;
+  --perigo: #ff5252;
+  --gradiente-chama: linear-gradient(
+    135deg,
+    #1565c0 0%,
+    #7b1fa2 35%,
+    #e040fb 65%,
+    #ff9800 88%,
+    #ffd600 100%
+  );
+  --gradiente-frio: linear-gradient(135deg, #00e5ff, #0099cc);
+  --gradiente-destaque: linear-gradient(
+    145deg,
+    #05091e 0%,
+    #0d1b4b 55%,
+    #12255e 100%
+  );
+  --fonte-titulos: "Nunito", sans-serif;
+  --fonte-corpo: "Open Sans", sans-serif;
+  --container: 1280px;
+  --altura-cabecalho: 80px;
+  --espacamento-secao: clamp(5rem, 7vw, 7rem);
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+header {
+  background: var(--azul-marinho-escuro);
+  width: 100%;
+}
+body {
+  background: var(--azul-marinho-mais-escuro);
+  font-family: var(--fonte-corpo);
+  min-width: 320px;
+  overflow-x: hidden;
+  color: var(--azul-marinho);
+  background: var(--azul-marinho-mais-escuro);
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--fonte-titulos);
+}
