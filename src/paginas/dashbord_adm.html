@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HVAC Lex Company — Painel Administrativo</title>
+    <link rel="stylesheet" href="../css/dashboardAdmin.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><img src="/assets/logoHVAC.png" /></div>
+        <div>
+          <div class="brand-title">PAINEL ADMINISTRATIVO</div>
+          <small>HVAC Lex Company</small>
+        </div>
+      </div>
+      <div class="actions">
+        <button
+          class="notification"
+          id="notifications"
+          aria-label="Ver pedidos pendentes"
+        >
+          🔔 <span class="count" id="notification-count">3</span>
+        </button>
+        <button class="primary" id="new-order">+ Novo Pedido</button>
+        <div class="profile">
+  <div class="avatar">AD</div>
+
+  <div>
+    <strong>Admin</strong>
+    <button type="button" id="logout-btn" class="logout-btn">
+      Sair →
+    </button>
+  </div>
+</div>
+    </header>
+
+    <nav aria-label="Navegação principal">
+      <button class="tab active" data-page="overview">◉ Visão Geral</button>
+      <button class="tab" data-page="requests">
+        ▤ Solicitações <span class="count" id="pending-count">3</span>
+      </button>
+      <button class="tab" data-page="history">▪ Histórico</button>
+      <button class="tab" data-page="schedule">▦ Agenda</button>
+      <button class="tab" data-page="portfolio">▣ Portfólio</button>
+    </nav>
+
+    <main id="content"></main>
+
+    <dialog id="order-dialog" aria-labelledby="dialog-title">
+      <h2 id="dialog-title">Novo pedido</h2>
+      <form id="order-form">
+        <label>
+          Nome do cliente
+          <input
+            name="client"
+            required
+            maxlength="80"
+            placeholder="Ex.: Ana Silva"
+          />
+        </label>
+        <div class="form-grid">
+          <label>
+            Equipamento
+            <select name="equipment">
+              <option>Ar Condicionado</option>
+              <option>Geladeira</option>
+              <option>Câmara Fria</option>
+              <option>Freezer</option>
+              <option>Elétrica</option>
+            </select>
+          </label>
+          <label>
+            Técnico
+            <select name="technician">
+              <option>Ricardo Lopes</option>
+              <option>Paulo Henrique</option>
+              <option>Marcos Silva</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>Data <input type="date" name="date" required /></label>
+          <label>Horário <input type="time" name="time" required /></label>
+        </div>
+        <label class="checkbox">
+          <input type="checkbox" name="urgent" /> Pedido urgente
+        </label>
+        <div class="form-actions">
+          <button type="button" class="secondary" id="cancel-order">
+            Cancelar
+          </button>
+          <button type="submit" class="primary">Cadastrar pedido</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+  <script src="../js/dashboardAdmin.js"></script>
+</html>
