@@ -1,28 +1,270 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HVAC Manutenções Sorocaba - Área do Cliente</title>
-    <link rel="icon" href="./assets/logoHVAC.png" />
+    <link rel="icon" href="../../assets/logoHVAC.png" />
     <link rel="stylesheet" href="../css/dashboard.css" />
   </head>
 
   <body>
-    <header class="cabecalho">
+    <header>
       <div class="header-interno">
-        <a href="#inicio">
-          <img src="./assets/logoHVAC.png" alt="Logo HVAC Manutenções" />
-        </a>
+        <div class="logo-header">
+          <a href="../../index.html">
+            <img src="../../assets/logoHVAC.png" alt="HVAC Manutenções" />
+          </a>
+          <span class="titulo-logo-header"> HVAC Lex Company</span>
+          <p class="descricao-logo-header">Área do Cliente</p>
+        </div>
 
-        <div class="notificacao">
-          <img
-            src="./assets/icons/notificacao.svg"
-            alt="Icone Notificação"
-            class="svg-notificacao"
-          />
+        <div class="acoes">
+          <button type="button" class="notificacao" aria-label="notificações">
+            <img
+              src="../../assets/icons/sino.svg"
+              alt="Notificação"
+              class="svg-notificacao"
+            />
+          </button>
+
+          <div class="usuario">
+            <!-- <img src="" alt="Avatar" class="avatar-usuario" /> -->
+            <span class="avatar-usuario" id="avatar-usuario" aria-hidden="true">
+              MM
+            </span>
+            <span class="nome-usuario"> Matheus Miranda</span>
+            <p class="email-usuario">matheus@exemplo.com</p>
+            <!-- NOTA: Colocar dados do usuario logado -->
+          </div>
+
+          <!-- NOTA: Usar botão para encerrar sessão do usuário -->
+          <button type="button" class="botao-sair" aria-label="Sair">
+            <img src="../../assets/icons/saida.svg" alt="" />
+            <span class="texto-sair"> Sair </span>
+          </button>
         </div>
       </div>
     </header>
+
+    <main class="container dashboard">
+      <section class="conteudo-inicial" aria-labelledby="titulo-dashboard">
+        <h1 id="titulo-dashboard">Bem-vindo, Cliente! 👋</h1>
+        <p>Acompanhe seus serviços e atendimentos em Sorocaba e região!</p>
+
+        <!-- NOTA: puxar valores reais do banco depois -->
+        <div class="resumo" role="group" aria-label="Resumo dos serviços">
+          <div class="card-indicador indicador-total">
+            <strong> 3 </strong>
+            <span> Total de Serviços </span>
+          </div>
+
+          <div class="card-indicador indicador-andamento">
+            <strong> 1 </strong>
+            <span> Em Andamento </span>
+          </div>
+
+          <div class="card-indicador indicador-concluidos">
+            <strong> 1 </strong>
+            <span> Concluídos </span>
+          </div>
+
+          <div class="card-indicador indicador-agendados">
+            <strong> 1 </strong>
+            <span> Agendados </span>
+          </div>
+        </div>
+
+        <div class="colunas-dashboard">
+          <div class="coluna-principal">
+            <section aria-labelledby="titulo-andamento">
+              <h2 id="titulo-andamento" class="titulo-secao">
+                <!-- titulo laranja -->
+                ● Serviço em Andamento
+              </h2>
+
+              <article class="cartao servico-ativo">
+                <!-- Informações do serviço em andamento -->
+                <h3 class="titulo-cartao">Eletromecânica</h3>
+                <p class="etiqueta-laranja" id="etiqueta-andamento">
+                  ● Em andamento
+                </p>
+                <span class="servico-cartao">
+                  SRV-002 - Iniciado em 10/09/2026
+                </span>
+                <p class="descricao-cartao">
+                  Revisão completa do quadro elétrico e substituição de
+                  disjuntores queimados. Necessária a instalação de DPS.
+                </p>
+
+                <div class="tecnico">
+                  <!-- Informações do técnico -->
+                  <span class="foto-tecnico"> RS </span>
+                  <span class="nome-tecnico"> Roberto Silva </span>
+                  <p class="descricao-tecnico">Técnico Responsável - ⭐ 4.9</p>
+
+                  <a
+                    href="https://wa.me/5511943870287"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span class="texto-whasapp"> WhatsApp</span>
+                  </a>
+                </div>
+
+                <ol class="progresso-servico" aria-label="Etapas do serviço">
+                  <li class="etapa etapa-preenchida">Solicitado</li>
+                  <li class="etapa etapa-preenchida">Técnico Atribuído</li>
+
+                  <li class="etapa etapa-preenchida" aria-current="step">
+                    Em andamento
+                  </li>
+
+                  <li class="etapa">Concluído</li>
+                </ol>
+
+                <a href="#detalhes-servico">
+                  <!-- Adicionar referencia para outra tela-->
+                  <span> Ver Detalhes Completos → </span>
+                </a>
+              </article>
+            </section>
+
+            <section aria-labelledby="titulo-historico">
+              <h2 id="titulo-historico" class="titulo-secao">
+                Histórico de Serviços
+              </h2>
+
+              <ul class="lista-servicos">
+                <!-- Cada <li> representa um serviço -->
+                <li>
+                  <a href="#detalhes-servico" class="servico-historico">
+                    <span class="titulo-servico">
+                      Frigorífico / Geladeira
+                    </span>
+                    <p class="etiqueta-ciano" id="etiqueta-agendado">
+                      ● Agendado
+                    </p>
+                    <p class="descricao-servico">
+                      SRV-003 - 22/08/2026 às 10:00 - Orçamento pendente
+                    </p>
+                    <img
+                      src="../../assets/icons/maior-que.svg"
+                      alt=""
+                      class="seta-direita"
+                    />
+                  </a>
+                </li>
+                <li>
+                  <a href="#detalhes-servico" class="servico-historico">
+                    <span class="titulo-servico"> Ar Condicionado </span>
+                    <p class="etiqueta-verde" id="etiqueta-concluido">
+                      ● Concluído
+                    </p>
+                    <p class="descricao-servico">
+                      SRV-001 - 15/01/2026 às 09:00 - R$ 280,00
+                    </p>
+                    <img
+                      src="../../assets/icons/maior-que.svg"
+                      alt="Seta para direita"
+                      class="seta-direita"
+                    />
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <aside
+            class="coluna-lateral"
+            aria-label="Informações e ações do cliente"
+          >
+            <section class="cartao">
+              <h2 class="titulo-secao">Ações Rápidas</h2>
+
+              <!-- Botão de novo agendamento -->
+              <a href="./agendamento.html" class="botao btn-agendamento">
+                <img
+                  src="../../assets/icons/calendario.svg"
+                  alt="Icone calendário"
+                />
+                <span class="texto-btn-agendamento"> Novo Agendamento </span>
+              </a>
+              <!-- Botão Suporte WhatsApp -->
+              <a
+                href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20um%20suporte%20personalizado!"
+                class="botao btn-whatsapp"
+              >
+                <img
+                  src="../../assets/icons/whatsapp.svg"
+                  alt="Ícone do WhatsApp"
+                />
+                <span class="texto-btn-whatsapp"> Suporte WhatsApp </span>
+              </a>
+              <!-- Botão de Contato -->
+              <a href="tel:+5511943870287" class="botao btn-contato">
+                <img
+                  src="../../assets/icons/telefone.svg"
+                  alt="Ícone de telefone"
+                />
+                <span class="texto-btn-contato"> (11) 94387-0287 </span>
+              </a>
+            </section>
+
+            <section class="cartao">
+              <h2 class="titulo-secao">Meu Perfil</h2>
+              <div class="avatar-usuario avatar-perfil">
+                <!-- <img src="" alt="Avatar" class="avatar-usuario" /> -->
+                <span
+                  class="avatar-usuario"
+                  id="avatar-meu-perfil"
+                  aria-hidden="true"
+                >
+                  MM
+                </span>
+                <!-- adicionar foto do perfil -->
+              </div>
+              <p class="nome-usuario">Matheus Miranda</p>
+              <p class="tempo-cliente">Cliente desde: 10/09/2026</p>
+              <p class="email-usuario">📧 matheus@exemplo.com</p>
+              <p class="telefone-usuario">📱 (15) 94387-0287</p>
+              <p class="endereco-usuario">📍 Rua Exemplo, 123 - Sorocaba, SP</p>
+
+              <button type="button" class="botao btn-editar-perfil">
+                <span class="texto-btn-editar-perfil"> Editar Perfil </span>
+              </button>
+            </section>
+
+            <section class="cartao">
+              <h2 class="titulo-secao">Documentos</h2>
+              <!-- Links para os documentos: Nota Fiscal, Garantia Serviço e Relatório Técnico. -->
+              <div class="documentos">
+                <button class="botao btn-documento">
+                  <img src="../../assets/icons/prancheta.svg" alt="Prancheta" />
+                  <span class="texto-btn-documento">
+                    Nota Fiscal SRV-001.pdf
+                  </span>
+                  <img src="../../assets/icons/download.svg" alt="Download" />
+                </button>
+                <button class="botao btn-documento">
+                  <img src="../../assets/icons/prancheta.svg" alt="Prancheta" />
+                  <span class="texto-btn-documento">
+                    Garantia Serviço 001.pdf
+                  </span>
+                  <img src="../../assets/icons/download.svg" alt="Download" />
+                </button>
+                <button class="botao btn-documento">
+                  <img src="../../assets/icons/prancheta.svg" alt="Prancheta" />
+                  <span class="texto-btn-documento">
+                    Relatório Técnico 001.pdf
+                  </span>
+                  <img src="../../assets/icons/download.svg" alt="Download" />
+                </button>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
   </body>
 </html>
