@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none" aria-hidden="true">
+  <!-- Contorno da porta -->
+  <path d="M24 23V11C24 8.8 25.8 7 28 7H49C51.2 7 53 8.8 53 11V53C53 55.2 51.2 57 49 57H28C25.8 57 24 55.2 24 53V43"
+        stroke="currentColor"
+        stroke-width="3.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- Seta para a esquerda -->
+  <path d="M38 32H10M10 32L20 22M10 32L20 42"
+        stroke="currentColor"
+        stroke-width="3.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>
