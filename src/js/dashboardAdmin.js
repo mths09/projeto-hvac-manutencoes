@@ -1522,17 +1522,6 @@ content.addEventListener("change", (event) => {
   saveOrders();
   render();
 });
-document.querySelector("#logout-btn")?.addEventListener("click", () => {
-  // Use os mesmos nomes de chave usados pelo seu código de login.
-  const authKeys = ["usuarioLogado", "token"];
-
-  for (const key of authKeys) {
-    sessionStorage.removeItem(key);
-    localStorage.removeItem(key);
-  }
-
-  // Considera que login.html está na mesma pasta do HTML do painel.
-  window.location.replace("./login.html");
-});
+// A saída é enviada por POST ao PHP para encerrar a sessão.
 
 render();

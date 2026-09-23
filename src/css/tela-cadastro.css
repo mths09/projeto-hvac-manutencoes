@@ -1,0 +1,20 @@
+body.pagina-cadastro { overflow-x: hidden; overflow-y: auto; padding: 32px 16px; }
+.pagina-cadastro .conteudo-central { width: 100%; max-width: 600px; }
+.pagina-cadastro .card { padding: 28px 36px; }
+.pagina-cadastro .card img { width: 72px; height: 72px; margin-bottom: 4px; }
+.campos-cadastro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+.campo-inteiro { grid-column: 1 / -1; }
+.pagina-cadastro form input { width: 100%; min-width: 0; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.05); color: #fff; font-size: 14px; color-scheme: dark; }
+.pagina-cadastro form input:focus { outline: 2px solid #22d3ee; outline-offset: 2px; }
+.pagina-cadastro form input::placeholder { color: #a0aec0; }
+.pagina-cadastro .ajuda-cadastro { text-align: left; margin: 10px 0 0; font-size: 12px; }
+.pagina-cadastro .btn-cadastro { display: block; text-align: center; text-decoration: none; }
+.pagina-cadastro .btn-entrar:disabled { opacity: .65; cursor: wait; }
+#mensagem-cadastro { padding: 12px; border: 1px solid #fda4af; border-radius: 10px; color: #fecdd3; text-align: left; }
+#mensagem-cadastro.sucesso { border-color: #67e8f9; color: #a5f3fc; }
+@media (max-width: 520px) {
+  .pagina-cadastro .card { padding: 24px 20px; }
+  .campos-cadastro { grid-template-columns: minmax(0, 1fr); }
+  .pagina-cadastro .card h1 { font-size: 22px; }
+  .pagina-cadastro .wave-decor { opacity: .25; }
+}
