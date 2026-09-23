@@ -6,6 +6,7 @@
     <title>HVAC Manutenções Sorocaba - Área do Cliente</title>
     <link rel="icon" href="../../assets/logoHVAC.png" />
     <link rel="stylesheet" href="../css/dashboard.css" />
+    <script src="../js/dashboard.js" defer></script>
   </head>
 
   <body>
@@ -18,15 +19,66 @@
           <span class="titulo-logo-header"> HVAC Lex Company</span>
           <p class="descricao-logo-header">Área do Cliente</p>
         </div>
-
         <div class="acoes">
-          <button type="button" class="notificacao" aria-label="notificações">
-            <img
-              src="../../assets/icons/sino.svg"
-              alt="Notificação"
-              class="svg-notificacao"
-            />
-          </button>
+          <div class="area-notificacoes">
+            <button
+              type="button"
+              class="notificacao"
+              id="btn-notificacoes"
+              aria-controls="painel-notificacoes"
+              aria-label="notificações"
+              aria-expanded="false"
+            >
+              <img
+                src="../../assets/icons/sino.svg"
+                alt=""
+                class="svg-notificacao"
+              />
+              <!-- Contador de notificações -->
+              <span
+                class="contador-notificacoes"
+                aria-hidden="true"
+                hidden
+              ></span>
+            </button>
+
+            <!-- Painel de notificações -->
+            <section
+              class="painel-notificacoes"
+              id="painel-notificacoes"
+              aria-labelledby="titulo-notificacoes"
+              hidden
+            >
+              <div class="topo-notificacoes">
+                <h2 id="titulo-notificacoes">Notificações</h2>
+
+                <button
+                  type="button"
+                  id="fechar-notificacoes"
+                  aria-label="Fechar Notificações"
+                >
+                  x
+                </button>
+              </div>
+
+              <!-- Mostra as notificações via JavaScript -->
+              <ul class="lista-notificacoes" id="lista-notificacoes"></ul>
+              <!-- Se não tiver notificação-->
+              <p id="notificacoes-vazias" class="estado-vazio" hidden>
+                Você não tem notificações no momento.
+              </p>
+
+              <button type="button" class="marcar-lidas" id="marcar-lidas">
+                Marcar todas como lidas
+              </button>
+
+              <p
+                class="status-notificacoes"
+                id="status-notificacoes"
+                role="status"
+              ></p>
+            </section>
+          </div>
 
           <div class="usuario">
             <!-- <img src="" alt="Avatar" class="avatar-usuario" /> -->
@@ -83,7 +135,7 @@
                 ● Serviço em Andamento
               </h2>
 
-              <article class="cartao servico-ativo">
+              <article class="cartao servico-ativo" data-status="andamento">
                 <!-- Informações do serviço em andamento -->
                 <h3 class="titulo-cartao">Eletromecânica</h3>
                 <p class="etiqueta-laranja" id="etiqueta-andamento">
@@ -108,7 +160,7 @@
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span class="texto-whasapp"> WhatsApp</span>
+                    <span class="texto-whatsapp"> WhatsApp</span>
                   </a>
                 </div>
 
@@ -128,6 +180,11 @@
                   <span> Ver Detalhes Completos → </span>
                 </a>
               </article>
+
+              <!-- Se não tiver serviço em andamento -->
+              <p id="andamento-vazio" class="estado-vazio" hidden>
+                Nenhum serviço em andamento no momento.
+              </p>
             </section>
 
             <section aria-labelledby="titulo-historico">
@@ -137,7 +194,7 @@
 
               <ul class="lista-servicos">
                 <!-- Cada <li> representa um serviço -->
-                <li>
+                <li data-status="agendado">
                   <a href="#detalhes-servico" class="servico-historico">
                     <span class="titulo-servico">
                       Frigorífico / Geladeira
@@ -155,7 +212,7 @@
                     />
                   </a>
                 </li>
-                <li>
+                <li data-status="concluido">
                   <a href="#detalhes-servico" class="servico-historico">
                     <span class="titulo-servico"> Ar Condicionado </span>
                     <p class="etiqueta-verde" id="etiqueta-concluido">
@@ -172,6 +229,14 @@
                   </a>
                 </li>
               </ul>
+
+              <!-- Se não tiver serviços para consulta -->
+              <div id="historico-vazio" class="estado-vazio" hidden>
+                <p>Você ainda não possui outros serviços para consultar.</p>
+                <a href="./agendamento.html" class="link-estado-vazio">
+                  Novo Agendamento →
+                </a>
+              </div>
             </section>
           </div>
 
@@ -225,14 +290,14 @@
                 <!-- adicionar foto do perfil -->
               </div>
               <p class="nome-usuario">Matheus Miranda</p>
-              <p class="tempo-cliente">Cliente desde: 10/09/2026</p>
+              <p class="tempo-cliente">Cliente desde: 10/01/2026</p>
               <p class="email-usuario">📧 matheus@exemplo.com</p>
               <p class="telefone-usuario">📱 (15) 94387-0287</p>
               <p class="endereco-usuario">📍 Rua Exemplo, 123 - Sorocaba, SP</p>
 
-              <button type="button" class="botao btn-editar-perfil">
-                <span class="texto-btn-editar-perfil"> Editar Perfil </span>
-              </button>
+              <a href="./editar-perfil.html" class="botao btn-editar-perfil">
+                <span class="texto-btn-editar-perfil">Editar Perfil</span>
+              </a>
             </section>
 
             <section class="cartao">
@@ -261,6 +326,11 @@
                   <img src="../../assets/icons/download.svg" alt="Download" />
                 </button>
               </div>
+
+              <!-- Caso não tenha documentos -->
+              <p id="documentos-vazios" class="estado-vazio" hidden>
+                Seus documentos aparecerão aqui quando estiverem disponíveis.
+              </p>
             </section>
           </aside>
         </div>
