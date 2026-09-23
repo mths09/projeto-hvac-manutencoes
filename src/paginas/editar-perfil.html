@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Perfil | HVAC Manutenções</title>
+    <link rel="icon" href="../../assets/logoHVAC.png" />
+    <link rel="stylesheet" href="../css/editar-perfil.css" />
+  </head>
+
+  <body>
+    <header class="cabecalho">
+      <div class="container conteudo-cabecalho">
+        <a href="./dashboard.html" class="marca">
+          <img src="../../assets/logoHVAC.png" alt="HVAC Lex Company" />
+
+          <span class="marca-textos">
+            <strong> HVAC Lex Company </strong>
+            <span> Área do Cliente </span>
+          </span>
+        </a>
+
+        <a href="./dashboard.html" class="voltar"> ← Voltar ao dashboard</a>
+      </div>
+    </header>
+
+    <main class="container pagina-perfil">
+      <div class="titulo-pagina">
+        <h1>Editar Perfil</h1>
+        <p>Atualize suas informações pessoais e de contato.</p>
+      </div>
+
+      <section class="cartao-perfil" aria-labelledby="titulo-dados">
+        <div class="resumo-perfil">
+          <!-- pegar letras iniciais do nome e sobrenome do usuario -->
+          <span class="avatar-perfil" aria-hidden="true">MM</span>
+
+          <div>
+            <h2>Matheus Miranda</h2>
+            <p>Cliente desde janeiro de 2026</p>
+          </div>
+        </div>
+
+        <!-- mostrar dados do perfil -->
+        <form id="form-perfil">
+          <h2 id="titulo-dados" class="titulo-secao">Dados pessoais</h2>
+
+          <div class="campos-perfil">
+            <div class="campo campo-completo">
+              <label for="nome"> Nome Completo</label>
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                autocomplete="name"
+                value="Matheus Miranda"
+              />
+            </div>
+
+            <div class="campo">
+              <label for="email">E-mail</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                autocomplete="email"
+                value="matheus@exemplo.com"
+              />
+            </div>
+
+            <div class="campo">
+              <label for="telefone">Telefone</label>
+              <input
+                type="tel"
+                id="telefone"
+                name="telefone"
+                autocomplete="tel"
+                value="(15) 99618-4901"
+              />
+            </div>
+
+            <div class="campo campo-completo">
+              <label for="endereco"> Endereço </label>
+              <input
+                type="text"
+                id="endereco"
+                name="endereco"
+                autocomplete="street-address"
+                value="Rua exemplo, 327 - Sorocaba SP"
+                aria-describedby="ajuda-endereco"
+              />
+
+              <small id="ajuda-endereco">
+                Inclua rua, número, complemento, cidade e estado.
+              </small>
+            </div>
+          </div>
+
+          <p class="aviso-demonstracao" id="aviso-salvamento">
+            Tela em demonstração. O salvamento será habilitado em uma próxima
+            etapa.
+          </p>
+
+          <div class="acoes-formulario">
+            <a href="./dashboard.html" class="botao botao-secundario">
+              Cancelar
+            </a>
+
+            <button
+              type="button"
+              class="botao botao-primario"
+              aria-describedby="aviso-salvamento"
+              disabled
+            >
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
