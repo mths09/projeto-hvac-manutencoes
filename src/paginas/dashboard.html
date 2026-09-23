@@ -6,6 +6,7 @@
     <title>HVAC Manutenções Sorocaba - Área do Cliente</title>
     <link rel="icon" href="../../assets/logoHVAC.png" />
     <link rel="stylesheet" href="../css/dashboard.css" />
+    <script src="../js/perfil.js" defer></script>
     <script src="../js/dashboard.js" defer></script>
   </head>
 
@@ -91,10 +92,15 @@
           </div>
 
           <!-- NOTA: Usar botão para encerrar sessão do usuário -->
-          <button type="button" class="botao-sair" aria-label="Sair">
+          <a
+            href="./login.html"
+            type="button"
+            class="botao-sair"
+            aria-label="Sair"
+          >
             <img src="../../assets/icons/saida.svg" alt="" />
             <span class="texto-sair"> Sair </span>
-          </button>
+          </a>
         </div>
       </div>
     </header>
@@ -103,6 +109,7 @@
       <section class="conteudo-inicial" aria-labelledby="titulo-dashboard">
         <h1 id="titulo-dashboard">Bem-vindo, Cliente! 👋</h1>
         <p>Acompanhe seus serviços e atendimentos em Sorocaba e região!</p>
+        <p id="status-perfil" role="status"></p>
 
         <!-- NOTA: puxar valores reais do banco depois -->
         <div class="resumo" role="group" aria-label="Resumo dos serviços">

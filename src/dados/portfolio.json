@@ -1,0 +1,42 @@
+[
+  {
+    "img": "https://images.unsplash.com/photo-1757219525975-03b5984bc6e8?w=700&h=500&fit=crop&auto=format",
+    "title": "Instalação Split Residencial 18.000 BTU",
+    "description": "",
+    "location": "Sorocaba, SP",
+    "categoryId": "ar-condicionado",
+    "id": "portfolio-001"
+  },
+  {
+    "img": "https://images.unsplash.com/photo-1785682118449-21da8825754d?w=700&h=500&fit=crop&auto=format",
+    "title": "Manutenção Preventiva Industrial",
+    "location": "Votorantim, SP",
+    "categoryId": "eletromecanica",
+    "id": "portfolio-002",
+    "description": ""
+  },
+  {
+    "img": "https://images.unsplash.com/photo-1698479603408-1a66a6d9e80f?w=700&h=500&fit=crop&auto=format",
+    "title": "Sistema VRF Comercial — 60 TR",
+    "location": "São Roque, SP",
+    "categoryId": "ar-condicionado",
+    "id": "portfolio-003",
+    "description": ""
+  },
+  {
+    "img": "https://images.unsplash.com/photo-1773844389459-110d2b5e18e2?w=700&h=500&fit=crop&auto=format",
+    "title": "Equipe Técnica Certificada",
+    "location": "Sorocaba, SP",
+    "categoryId": "equipe",
+    "id": "portfolio-004",
+    "description": ""
+  },
+  {
+    "img": "https://images.unsplash.com/photo-1681042803902-f79c240d8f03?w=700&h=500&fit=crop&auto=format",
+    "title": "Climatização Comercial — Rede de Lojas",
+    "location": "Itu, SP",
+    "categoryId": "ar-condicionado",
+    "id": "portfolio-005",
+    "description": ""
+  }
+]

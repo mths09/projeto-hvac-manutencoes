@@ -156,60 +156,26 @@ const CATEGORIAS = [
   },
 ];
 
-// PORTFOLIO
-const PORTFOLIO = [
-  {
-    img: "https://images.unsplash.com/photo-1757219525975-03b5984bc6e8?w=700&h=500&fit=crop&auto=format",
-    title: "Instalação Split Residencial 18.000 BTU",
-    description: "",
-    location: "Sorocaba, SP",
-    categoryId: "ar-condicionado",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1785682118449-21da8825754d?w=700&h=500&fit=crop&auto=format",
-    title: "Manutenção Preventiva Industrial",
-    location: "Votorantim, SP",
-    categoryId: "eletromecanica",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1698479603408-1a66a6d9e80f?w=700&h=500&fit=crop&auto=format",
-    title: "Sistema VRF Comercial — 60 TR",
-    location: "São Roque, SP",
-    categoryId: "refrigeracao",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1773844389459-110d2b5e18e2?w=700&h=500&fit=crop&auto=format",
-    title: "Equipa Técnica Certificada",
-    location: "Sorocaba, SP",
-    categoryId: "equipe",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1681042803902-f79c240d8f03?w=700&h=500&fit=crop&auto=format",
-    title: "Climatização Comercial — Rede de Lojas",
-    location: "Itu, SP",
-    categoryId: "ar-condicionado",
-  },
-];
-
 // RENDERIZANDO O PORTFOLIO:
-function renderizarPortfolio() {
+function renderizarPortfolio(itens) {
   const grid = document.getElementById("portfolio-grid");
 
-  const html = PORTFOLIO.map((item) => {
-    const categoria = CATEGORIAS.find((cat) => {
-      return cat.id === item.categoryId; // cat: representa a categoria examinada no momento
-    });
+  const html = itens
+    .map((item) => {
+      const categoria = CATEGORIAS.find((cat) => {
+        return cat.id === item.categoryId; // cat: representa a categoria examinada no momento
+      });
 
-    // Se o find() falhar
-    const nomeCategoria = categoria ? categoria.nome : "Sem categoria";
-    const corCategoria = categoria
-      ? categoria.cor
-      : "var(--azul-marinho-claro)";
-    const corTextoCategoria = categoria
-      ? categoria.corTexto
-      : "var(--ciano-palido)";
+      // Se o find() falhar
+      const nomeCategoria = categoria ? categoria.nome : "Sem categoria";
+      const corCategoria = categoria
+        ? categoria.cor
+        : "var(--azul-marinho-claro)";
+      const corTextoCategoria = categoria
+        ? categoria.corTexto
+        : "var(--ciano-palido)";
 
-    return `
+      return `
     <article class="card-portfolio">
       <img class="imagem-portfolio" src="${item.img}" alt="${item.title}" loading="lazy">
 
@@ -228,9 +194,49 @@ function renderizarPortfolio() {
       </div>
     </article>
   `;
-  }).join("");
+    })
+    .join("");
 
   grid.innerHTML = html;
 }
 
-document.addEventListener("DOMContentLoaded", renderizarPortfolio);
+async function carregarPortfolio() {
+  const grid = document.querySelector("#portfolio-grid");
+
+  if (!grid) {
+    return;
+  }
+
+  grid.setAttribute("aria-busy", "true");
+  grid.textContent = "Carregando portfólio...";
+
+  try {
+    const resposta = await fetch("./src/dados/portfolio.json");
+
+    if (!resposta.ok) {
+      throw new Error(`Erro ao carregar o portfólio: ${resposta.status}`);
+    }
+
+    const itens = await resposta.json();
+
+    if (!Array.isArray(itens)) {
+      throw new Error("O portfólio precisa conter uma lista.");
+    }
+
+    if (itens.length === 0) {
+      grid.textContent = "Nenhum trabalho disponível no momento.";
+      return;
+    }
+
+    renderizarPortfolio(itens);
+  } catch (erro) {
+    grid.textContent =
+      "Não foi possível carregar o portfólio. Tente novamente mais tarde.";
+
+    console.error(erro);
+  } finally {
+    grid.setAttribute("aria-busy", "false");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", carregarPortfolio);

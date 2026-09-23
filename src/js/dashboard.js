@@ -192,3 +192,63 @@ function atualizarEstadosDashboard() {
 }
 
 atualizarEstadosDashboard();
+
+// coloca dados do perfil no html
+function exibirPerfilDashboard(perfil) {
+  const nomeExibido = perfil.nome.trim() || "Cliente";
+  const primeiroNome = nomeExibido.split(/\s+/)[0];
+  const iniciais = obterIniciais(perfil.nome);
+
+  // atualizando nome no cabeçalho e card perfil
+
+  document.querySelectorAll(".nome-usuario").forEach((elemento) => {
+    elemento.textContent = nomeExibido;
+  });
+
+  // email no cabecalho
+  document.querySelector(".usuario .email-usuario").textContent = perfil.email;
+
+  // email no cartão perfil
+  document.querySelector(".coluna-lateral .email-usuario").textContent =
+    `📧 ${perfil.email}`;
+
+  document.querySelector(".telefone-usuario").textContent =
+    `📱 ${perfil.telefone}`;
+
+  document.querySelector(".endereco-usuario").textContent =
+    `📍 ${perfil.endereco}`;
+
+  document.querySelector("#avatar-usuario").textContent = iniciais;
+  document.querySelector("#avatar-meu-perfil").textContent = iniciais;
+
+  document.querySelector("#titulo-dashboard").textContent =
+    `Bem-vindo, ${primeiroNome}! 👋`;
+}
+
+// carrega os dados e trata erros
+async function atualizarPerfilDashboard() {
+  const mensagem = document.querySelector("#status-perfil");
+
+  mensagem.textContent = "Carregando Perfil...";
+
+  try {
+    const perfil = await carregarPerfil();
+
+    exibirPerfilDashboard(perfil);
+    mensagem.textContent = "";
+  } catch (erro) {
+    mensagem.textContent =
+      "Não foi possível atualizar os dados do perfil. Recarregue a página.";
+
+    console.error(erro);
+  }
+}
+
+atualizarPerfilDashboard();
+
+// atualiza quando retorna pelo navegador
+window.addEventListener("pageshow", (evento) => {
+  if (evento.persisted) {
+    atualizarPerfilDashboard();
+  }
+});

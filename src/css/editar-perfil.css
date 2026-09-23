@@ -272,6 +272,7 @@ img {
 .botao-primario {
   background: var(--gradiente-frio);
   color: #05091e;
+  cursor: pointer;
 }
 
 .botao:disabled {
