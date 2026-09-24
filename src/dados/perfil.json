@@ -1,0 +1,25 @@
+[
+  {
+    "id": "perfil-001",
+    "nome": "Matheus Miranda",
+    "email": "matheus@exemplo.com",
+    "telefone": "(15) 99618-4901",
+    "endereco": "Rua Exemplo, 327 - Sorocaba, SP"
+  },
+
+  {
+    "id": "perfil-002",
+    "nome": "Guilherme Ferreira",
+    "email": "guilherme@exemplo.com",
+    "telefone": "(15) 99781-0203",
+    "endereco": "Rua Exemplo, 453 - Barueri, SP"
+  },
+
+  {
+    "id": "perfil-003",
+    "nome": "Lucas Oliveira",
+    "email": "lucas@exemplo.com",
+    "telefone": "(15) 99782-8778",
+    "endereco": "Rua Exemplo, 500 - Osasco, SP"
+  }
+]

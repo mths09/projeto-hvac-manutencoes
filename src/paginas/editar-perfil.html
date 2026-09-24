@@ -6,6 +6,8 @@
     <title>Editar Perfil | HVAC Manutenções</title>
     <link rel="icon" href="../../assets/logoHVAC.png" />
     <link rel="stylesheet" href="../css/editar-perfil.css" />
+    <script src="../js/perfil.js" defer></script>
+    <script src="../js/editar-perfil.js" defer></script>
   </head>
 
   <body>
@@ -42,7 +44,7 @@
         </div>
 
         <!-- mostrar dados do perfil -->
-        <form id="form-perfil">
+        <form id="form-perfil" novalidate>
           <h2 id="titulo-dados" class="titulo-secao">Dados pessoais</h2>
 
           <div class="campos-perfil">
@@ -96,9 +98,8 @@
             </div>
           </div>
 
-          <p class="aviso-demonstracao" id="aviso-salvamento">
-            Tela em demonstração. O salvamento será habilitado em uma próxima
-            etapa.
+          <p class="aviso-demonstracao" id="aviso-salvamento" role="status">
+            Os dados desta demonstração serão salvos apenas neste navegador.
           </p>
 
           <div class="acoes-formulario">
@@ -107,10 +108,9 @@
             </a>
 
             <button
-              type="button"
+              type="submit"
               class="botao botao-primario"
               aria-describedby="aviso-salvamento"
-              disabled
             >
               Salvar Alterações
             </button>
