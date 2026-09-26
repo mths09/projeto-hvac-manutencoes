@@ -211,7 +211,7 @@ async function carregarPortfolio() {
   grid.textContent = "Carregando portfólio...";
 
   try {
-    const resposta = await fetch("./src/dados/portfolio.json");
+    const resposta = await fetch("./frontend/src/dados/portfolio.json");
 
     if (!resposta.ok) {
       throw new Error(`Erro ao carregar o portfólio: ${resposta.status}`);
