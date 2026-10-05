@@ -1,14 +1,18 @@
 <?php
 
-$host = "localhost";
-$usuario = "root";
-$senha = "";
-$banco = "hvac_db";
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$conexao = new mysqli($host, $usuario, $senha, $banco);
+// Nomes próprios para não sobrescrever os dados do login.
+$dbHost = 'localhost';
+$dbUsuario = 'root';
+$dbSenha = '';
+$dbNome = 'hvac_db';
 
-if ($conexao->connect_error) {
-    die("Erro na conexão com o banco: " . $conexao->connect_error);
-}
+$conexao = new mysqli(
+    $dbHost,
+    $dbUsuario,
+    $dbSenha,
+    $dbNome
+);
 
-$conexao->set_charset("utf8mb4");
+$conexao->set_charset('utf8mb4');
