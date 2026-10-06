@@ -1,2 +1,3 @@
 .vscode/
 banco/
+hvac_db.sql
