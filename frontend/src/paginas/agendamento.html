@@ -262,7 +262,38 @@
               <div class="horarios-grid" id="horarios"></div>
             </div>
           </div>
+          <!-- DADOS DO CLIENTE -->
+          <div class="campo-area">
+            <label for="nomeCompleto">Nome completo</label>
+            <input
+              type="text"
+              id="nomeCompleto"
+              placeholder="Digite seu nome completo"
+              autocomplete="name"
+            />
+          </div>
 
+          <div class="campo-area">
+            <label for="telefone">Telefone</label>
+            <input
+              type="tel"
+              id="telefone"
+              placeholder="(15) 99999-9999"
+              autocomplete="tel"
+              maxlength="15"
+            />
+          </div>
+          <!-- TÉCNICO DE PREFERÊNCIA -->
+          <div class="campo-area">
+            <label for="tecnico">
+              Técnico de preferência
+              <span>(opcional)</span>
+            </label>
+
+            <select id="tecnico">
+              <option value="">Sem preferência</option>
+            </select>
+          </div>
           <!-- ENDEREÇO -->
           <div class="campo-area">
             <label for="endereco"> Endereço de atendimento </label>
@@ -325,6 +356,22 @@
             <p>Confira todas as informações antes de confirmar.</p>
 
             <div class="resumo-agendamento">
+              <div class="resumo-linha">
+                <span>Nome completo</span>
+                <strong id="resumoNomeCompleto"></strong>
+              </div>
+
+              <div class="resumo-linha">
+                <span>Telefone</span>
+                <strong id="resumoTelefone"></strong>
+              </div>
+
+              <!-- TÉCNICO DE PREFERÊNCIA -->
+              <div class="resumo-linha">
+                <span>Técnico de preferência</span>
+                <strong id="resumoTecnico">Sem preferência</strong>
+              </div>
+
               <div class="resumo-linha">
                 <span>Serviço</span>
                 <strong id="resumoServico"></strong>

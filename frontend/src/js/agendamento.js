@@ -42,6 +42,31 @@ const endereco = document.getElementById("endereco");
 
 const descricao = document.getElementById("descricao");
 
+const nomeCompleto = document.getElementById("nomeCompleto");
+
+const telefone = document.getElementById("telefone");
+
+/* ========================= */
+/* MÁSCARA DO TELEFONE */
+/* ========================= */
+
+telefone.addEventListener("input", () => {
+  let numeros = telefone.value.replace(/\D/g, "");
+
+  // Limita a 11 números: DDD + celular
+  numeros = numeros.slice(0, 11);
+
+  if (numeros.length > 7) {
+    telefone.value = `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
+  } else if (numeros.length > 2) {
+    telefone.value = `(${numeros.slice(0, 2)}) ${numeros.slice(2)}`;
+  } else if (numeros.length > 0) {
+    telefone.value = `(${numeros}`;
+  } else {
+    telefone.value = "";
+  }
+});
+
 /* ========================= */
 /* DATA ATUAL */
 /* ========================= */
@@ -274,6 +299,36 @@ function gerarHorarios() {
 /* ========================= */
 
 botaoRevisar.addEventListener("click", () => {
+  // Validação do nome completo
+  if (nomeCompleto.value.trim() === "") {
+    alert("Informe seu nome completo.");
+    nomeCompleto.focus();
+    return;
+  }
+
+  // Verifica se foi informado nome e sobrenome
+  const partesNome = nomeCompleto.value.trim().split(/\s+/);
+
+  if (partesNome.length < 2) {
+    alert("Informe seu nome completo, incluindo nome e sobrenome.");
+    nomeCompleto.focus();
+    return;
+  }
+
+  // Validação do telefone
+  const numerosTelefone = telefone.value.replace(/\D/g, "");
+
+  if (numerosTelefone.length !== 11) {
+    alert("Informe um telefone válido com DDD. Exemplo: (15) 99999-9999.");
+    telefone.focus();
+    return;
+  }
+
+  // Continua com as validações que já existiam
+  if (!dataSelecionada) {
+    alert("Selecione uma data para o atendimento.");
+    return;
+  }
   if (!dataSelecionada) {
     alert("Selecione uma data para o atendimento.");
 
@@ -318,6 +373,12 @@ botaoRevisar.addEventListener("click", () => {
 /* ========================= */
 
 function preencherResumo() {
+  document.getElementById("resumoNomeCompleto").textContent =
+    nomeCompleto.value.trim();
+
+  document.getElementById("resumoTelefone").textContent = telefone.value.trim();
+
+  document.getElementById("resumoServico").textContent = servicoSelecionado;
   document.getElementById("resumoServico").textContent = servicoSelecionado;
 
   document.getElementById("resumoData").textContent =
