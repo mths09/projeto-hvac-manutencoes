@@ -22,6 +22,12 @@ async function carregarPerfil() {
     const textoSalvo = localStorage.getItem(CHAVE_PERFIL);
 
     if (textoSalvo !== null) {
+      const perfilSalvo = JSON.parse(textoSalvo);
+
+      if (!temEstruturaDePerfil(perfilSalvo)) {
+        throw new Error("O perfil salvo possui uma estrutura inválida.");
+      }
+
       return perfilSalvo;
     }
   } catch (erro) {

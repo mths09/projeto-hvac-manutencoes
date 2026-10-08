@@ -152,7 +152,14 @@
                 name="nome"
                 autocomplete="name"
                 required
+                aria-describedby="erro-nome"
               />
+
+              <small
+                id="erro-nome"
+                class="erro-campo"
+                aria-live="polite"
+              ></small>
             </div>
             <div class="campo-inteiro">
               <label for="email">E-mail</label>
@@ -162,7 +169,14 @@
                 name="email"
                 autocomplete="email"
                 required
+                aria-describedby="erro-email"
               />
+
+              <small
+                id="erro-email"
+                class="erro-campo"
+                aria-live="polite"
+              ></small>
             </div>
             <div>
               <label for="telefone">Telefone com DDD</label>
@@ -173,7 +187,14 @@
                 autocomplete="tel"
                 placeholder="(15) 99999-9999"
                 required
+                aria-describedby="erro-telefone"
               />
+
+              <small
+                id="erro-telefone"
+                class="erro-campo"
+                aria-live="polite"
+              ></small>
             </div>
             <div>
               <label for="data_nascimento">Data de nascimento</label>
@@ -183,7 +204,14 @@
                 name="data_nascimento"
                 autocomplete="bday"
                 required
+                aria-describedby="erro-data_nascimento"
               />
+
+              <small
+                id="erro-data_nascimento"
+                class="erro-campo"
+                aria-live="polite"
+              ></small>
             </div>
             <div>
               <label for="senha">Senha</label>
@@ -193,9 +221,15 @@
                 name="senha"
                 autocomplete="new-password"
                 minlength="8"
-                aria-describedby="ajuda-senha"
+                aria-describedby="ajuda-senha erro-senha"
                 required
               />
+
+              <small
+                id="erro-senha"
+                class="erro-campo"
+                aria-live="polite"
+              ></small>
             </div>
             <div>
               <label for="confirmar_senha">Confirme a senha</label>
@@ -206,6 +240,7 @@
                 autocomplete="new-password"
                 minlength="8"
                 required
+                aria-describedby="erro-confirmar_senha"
               />
             </div>
           </div>

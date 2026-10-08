@@ -33,15 +33,15 @@ formularioLogin.addEventListener("submit", async (evento) => {
       body: new FormData(formularioLogin),
       credentials: "same-origin",
       headers: {
-        Accept: "application/json"
-      }
+        Accept: "application/json",
+      },
     });
 
     const tipoConteudo = resposta.headers.get("content-type") || "";
 
     if (!tipoConteudo.includes("application/json")) {
       throw new Error(
-        "O servidor retornou uma resposta inesperada. Confira o arquivo login.php."
+        "Não foi possível entrar agora. Tente novamente mais tarde.",
       );
     }
 
@@ -50,33 +50,25 @@ formularioLogin.addEventListener("submit", async (evento) => {
     try {
       dados = await resposta.json();
     } catch {
-      throw new Error(
-        "Não foi possível ler a resposta do servidor. Tente novamente."
-      );
+      throw new Error("Não foi possível entrar. Tente novamente.");
     }
 
     // Ler a mensagem também quando o PHP retornar 401 ou 422.
     if (!resposta.ok || dados?.sucesso !== true) {
-      throw new Error(
-        dados?.mensagem || "Não foi possível entrar na conta."
-      );
+      throw new Error(dados?.mensagem || "Não foi possível entrar na conta.");
     }
 
-    mostrarMensagemLogin(
-      "Login realizado! Abrindo seu painel...",
-      "sucesso"
-    );
+    mostrarMensagemLogin("Login realizado! Abrindo seu painel...", "sucesso");
 
     window.location.replace("./dashboard.html");
     redirecionando = true;
-
   } catch (erro) {
-    const texto = erro instanceof TypeError
-      ? "Não foi possível conectar ao servidor. Confira se o PHP está rodando."
-      : erro.message;
+    const texto =
+      erro instanceof TypeError
+        ? "Não foi possível conectar ao servidor."
+        : erro.message;
 
     mostrarMensagemLogin(texto, "erro");
-
   } finally {
     formularioLogin.setAttribute("aria-busy", "false");
 
@@ -87,3 +79,19 @@ formularioLogin.addEventListener("submit", async (evento) => {
     }
   }
 });
+
+function validarSenhaLogin(valor) {
+  if (valor === "") {
+    return "Informe sua senha.";
+  }
+
+  if (new TextEncoder().encode(valor).length > 72) {
+    return "A senha ultrapassa o tamanho permitido.";
+  }
+
+  if (valor.includes("\0")) {
+    return "A senha contém um caractere não permitido.";
+  }
+
+  return "";
+}

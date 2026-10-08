@@ -452,3 +452,69 @@ function atualizarIcones() {
     lucide.createIcons();
   }
 }
+
+function validarDescricao(valor) {
+  const tamanho = Array.from(valor.trim()).length;
+
+  if (tamanho < 10) {
+    return "Descreva o problema com pelo menos 10 caracteres.";
+  }
+
+  if (tamanho > 2000) {
+    return "Use no máximo 2.000 caracteres na descrição.";
+  }
+
+  return "";
+}
+
+// impedir horario que ja passou
+function validarHorarioSelecionado() {
+  if (
+    !(dataSelecionada instanceof Date) ||
+    Number.isNaN(dataSelecionada.getTime())
+  ) {
+    return "Selecione uma data válida.";
+  }
+
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(horarioSelecionado)) {
+    return "Selecione um horário válido.";
+  }
+
+  const [hora, minuto] = horarioSelecionado.split(":").map(Number);
+  const atendimento = new Date(dataSelecionada);
+
+  atendimento.setHours(hora, minuto, 0, 0);
+
+  if (atendimento <= new Date()) {
+    return "Escolha uma data e um horário futuros.";
+  }
+
+  return "";
+}
+
+function validarArquivos(lista) {
+  const formatos = /\.(jpe?g|png|mp4)$/i;
+  const limitePorArquivo = 5 * 1024 * 1024;
+
+  for (const arquivo of lista) {
+    if (!formatos.test(arquivo.name)) {
+      return `O arquivo "${arquivo.name}" deve ser JPG, PNG ou MP4.`;
+    }
+
+    if (arquivo.size === 0) {
+      return `O arquivo "${arquivo.name}" está vazio.`;
+    }
+
+    if (arquivo.size > limitePorArquivo) {
+      return `O arquivo "${arquivo.name}" ultrapassa 5 MB.`;
+    }
+  }
+
+  return "";
+}
+
+const campoArquivo = document.querySelector("#arquivo");
+
+campoArquivo.addEventListener("change", () => {
+  mostrarErro(campoArquivo, validarArquivos(campoArquivo.files));
+});

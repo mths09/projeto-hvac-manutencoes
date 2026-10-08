@@ -240,3 +240,5 @@ async function carregarPortfolio() {
 }
 
 document.addEventListener("DOMContentLoaded", carregarPortfolio);
+
+// VALIDAÇÃO DO FORMULÁRIO

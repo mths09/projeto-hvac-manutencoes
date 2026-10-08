@@ -10,6 +10,22 @@ const campoEmail = document.querySelector("#email");
 const campoTelefone = document.querySelector("#telefone");
 const campoEndereco = document.querySelector("#endereco");
 
+let perfilCarregado = false;
+
+function validarEndereco(valor, obrigatorio = false) {
+  const endereco = valor.trim();
+
+  if (obrigatorio && endereco === "") {
+    return "Informe o endereço do atendimento.";
+  }
+
+  if (Array.from(endereco).length > 500) {
+    return "Use no máximo 500 caracteres no endereço.";
+  }
+
+  return "";
+}
+
 async function preencherFormulario() {
   perfilCarregado = false;
   botaoSalvar.disabled = true;
@@ -52,6 +68,19 @@ formularioPerfil.addEventListener("submit", (evento) => {
   evento.preventDefault();
 
   if (!perfilCarregado) {
+    return;
+  }
+
+  mostrarErro(campoNome, validarNome(campoNome.value));
+  mostrarErro(campoEmail, validarEmail(campoEmail));
+  mostrarErro(campoTelefone, validarTelefone(campoTelefone.value));
+  mostrarErro(campoEndereco, validarEndereco(campoEndereco.value));
+
+  const primeiroInvalido = formularioPerfil.querySelector(":invalid");
+
+  if (primeiroInvalido) {
+    avisoSalvamento.textContent = "Confira os campos destacados.";
+    primeiroInvalido.focus();
     return;
   }
 

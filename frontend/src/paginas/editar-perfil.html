@@ -56,7 +56,14 @@
                 name="nome"
                 autocomplete="name"
                 value="Matheus Miranda"
+                aria-describedby="erro-nome"
               />
+
+              <small
+                id="erro-nome"
+                class="erro-campo_perfil"
+                aria-live="polite"
+              ></small>
             </div>
 
             <div class="campo">
@@ -67,7 +74,14 @@
                 name="email"
                 autocomplete="email"
                 value="matheus@exemplo.com"
+                aria-describedby="erro-email"
               />
+
+              <small
+                id="erro-email"
+                class="erro-campo_perfil"
+                aria-live="polite"
+              ></small>
             </div>
 
             <div class="campo">
@@ -79,6 +93,12 @@
                 autocomplete="tel"
                 value="(15) 99618-4901"
               />
+
+              <small
+                id="erro-telefone"
+                class="erro-campo_perfil"
+                aria-live="polite"
+              ></small>
             </div>
 
             <div class="campo campo-completo">
@@ -89,8 +109,14 @@
                 name="endereco"
                 autocomplete="street-address"
                 value="Rua exemplo, 327 - Sorocaba SP"
-                aria-describedby="ajuda-endereco"
+                aria-describedby="ajuda-endereco erro-endereco"
               />
+
+              <small
+                id="erro-telefone"
+                class="erro-campo_perfil"
+                aria-live="polite"
+              ></small>
 
               <small id="ajuda-endereco">
                 Inclua rua, número, complemento, cidade e estado.
