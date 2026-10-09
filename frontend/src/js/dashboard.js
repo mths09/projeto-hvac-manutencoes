@@ -1,86 +1,307 @@
-// dados ficticios, apenas para demonstrar
-const notificacoes = [
-  {
-    titulo: "Técnico atribuído",
-    mensagem: "Roberto Silva será responsável pelo serviço SRV-002.",
-    lida: false,
-  },
-  {
-    titulo: "Serviço em andamento",
-    mensagem: "O atendimento de eletromecânica foi iniciado.",
-    lida: false,
-  },
-  {
-    titulo: "Documento disponível",
-    mensagem: "A nota fiscal do serviço SRV-001 está disponível.",
-    lida: false,
-  },
-];
-
-// Elementos do HTML que serão controlados.
 const areaNotificacoes = document.querySelector(".area-notificacoes");
 const botaoNotificacoes = document.querySelector("#btn-notificacoes");
 const painelNotificacoes = document.querySelector("#painel-notificacoes");
+const botaoFechar = document.querySelector("#fechar-notificacoes");
 const listaNotificacoes = document.querySelector("#lista-notificacoes");
 const contadorNotificacoes = document.querySelector(".contador-notificacoes");
-const botaoFechar = document.querySelector("#fechar-notificacoes");
-const botaoMarcarLidas = document.querySelector("#marcar-lidas");
 const statusNotificacoes = document.querySelector("#status-notificacoes");
-const mensagemNotificacoesVazias = document.querySelector(
-  "#notificacoes-vazias",
-);
 
-// Criando itens da lista usando dados do HTML
-function renderizarNotificacoes() {
-  listaNotificacoes.replaceChildren();
-  const semNotificacoes = notificacoes.length === 0;
+const listaHistorico = document.querySelector(".lista-servicos");
+const listaAndamento = document.querySelector("#servicos-andamento");
+const listaDocumentos = document.querySelector(".documentos");
 
-  mensagemNotificacoesVazias.hidden = !semNotificacoes;
-  listaNotificacoes.hidden = semNotificacoes;
-  botaoMarcarLidas.hidden = semNotificacoes;
+const statusDashboard = document.querySelector("#status-dashboard");
+const botaoRecarregar = document.querySelector("#recarregar-dashboard");
 
-  // limpa uma confirmação de renderização anterior
-  statusNotificacoes.textContent = "";
+let carregandoDashboard = false;
+let controleDashboard = null;
 
-  notificacoes.forEach((notificacao) => {
-    const item = document.createElement("li");
-    item.classList.add("item-notificacao");
-    item.classList.toggle("nao-lida", !notificacao.lida); // adiciona ou remove classe
+// Cria elementos usando texto, sem interpretar os dados como HTML.
+function criarElemento(tag, classe, texto) {
+  const elemento = document.createElement(tag);
 
-    const titulo = document.createElement("h3");
-    titulo.textContent = notificacao.titulo;
+  if (classe) {
+    elemento.className = classe;
+  }
 
-    const mensagem = document.createElement("p");
-    mensagem.textContent = notificacao.mensagem;
+  if (texto !== undefined && texto !== null) {
+    elemento.textContent = texto;
+  }
 
-    const estado = document.createElement("span");
-    estado.className = "estado-notificacao";
-    estado.textContent = notificacao.lida ? "Lida" : "Não Lida";
+  return elemento;
+}
 
-    item.append(titulo, mensagem, estado);
-    listaNotificacoes.append(item);
-  });
+function formatarData(valor) {
+  const data = String(valor || "").slice(0, 10);
 
-  const quantidade = notificacoes.filter(
-    (notificacao) => !notificacao.lida,
-  ).length;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+    return "Data não informada";
+  }
 
-  contadorNotificacoes.textContent = quantidade;
-  contadorNotificacoes.hidden = quantidade === 0; // esconde se as notificacoes forem 0
-  botaoMarcarLidas.disabled = quantidade === 0; // desativa o botao se não tem notificacoes lidas
+  return data.split("-").reverse().join("/");
+}
 
-  botaoNotificacoes.setAttribute(
-    "aria-label",
-    `Notificações: ${quantidade} não lidas`,
+function criarEtiqueta(servico) {
+  const classes = {
+    EM_ANDAMENTO: "etiqueta-laranja",
+    CONCLUIDO: "etiqueta-verde",
+    AGENDADO: "etiqueta-ciano",
+    SOLICITADO: "etiqueta-ciano",
+  };
+
+  return criarElemento(
+    "p",
+    classes[servico.status] || "descricao-servico",
+    servico.status_nome
   );
 }
 
-function abrirPainel() {
-  painelNotificacoes.hidden = false;
-  botaoNotificacoes.setAttribute("aria-expanded", "true");
-  botaoFechar.focus();
+// Mostra apenas os serviços recebidos do banco.
+function renderizarServicos(servicos) {
+  listaAndamento.replaceChildren();
+  listaHistorico.replaceChildren();
+
+  for (const servico of servicos) {
+    const emAndamento = servico.status === "EM_ANDAMENTO";
+
+    const cartao = criarElemento(
+      "article",
+      emAndamento ? "cartao servico-ativo" : "servico-historico"
+    );
+
+    cartao.dataset.servicoId = servico.id;
+
+    cartao.append(
+      criarElemento(
+        "h3",
+        emAndamento ? "titulo-cartao" : "titulo-servico",
+        servico.tipo
+      ),
+      criarEtiqueta(servico),
+      criarElemento(
+        "p",
+        "descricao-servico",
+        `${servico.protocolo} · Solicitado em ${formatarData(servico.criado_em)}`
+      )
+    );
+
+    if (servico.descricao) {
+      cartao.append(
+        criarElemento("p", "descricao-cartao", servico.descricao)
+      );
+    }
+
+    if (emAndamento) {
+      listaAndamento.append(cartao);
+    } else {
+      const item = criarElemento("li");
+      item.append(cartao);
+      listaHistorico.append(item);
+    }
+  }
+
+  document.querySelector("#andamento-vazio").hidden =
+    listaAndamento.children.length > 0;
+
+  listaHistorico.hidden = listaHistorico.children.length === 0;
+
+  const historicoVazio = document.querySelector("#historico-vazio");
+
+  historicoVazio.hidden = listaHistorico.children.length > 0;
+
+  historicoVazio.querySelector("p").textContent =
+    servicos.length === 0
+      ? "Você ainda não possui pedidos."
+      : "Você não possui outros pedidos além dos serviços em andamento.";
 }
 
+function renderizarDocumentos(documentos) {
+  listaDocumentos.replaceChildren();
+
+  for (const documento of documentos) {
+    const item = criarElemento("article", "estado-vazio");
+
+    item.append(
+      criarElemento("strong", "", documento.titulo),
+      criarElemento(
+        "p",
+        "",
+        `${documento.protocolo} · ${formatarData(documento.emitido_em)}`
+      )
+    );
+
+    listaDocumentos.append(item);
+  }
+
+  listaDocumentos.hidden = documentos.length === 0;
+
+  document.querySelector("#documentos-vazios").hidden =
+    documentos.length > 0;
+}
+
+function renderizarNotificacoes(notificacoes) {
+  listaNotificacoes.replaceChildren();
+
+  for (const notificacao of notificacoes) {
+    const item = criarElemento("li", "item-notificacao");
+
+    item.classList.toggle("nao-lida", !notificacao.lida);
+
+    item.append(
+      criarElemento("h3", "", notificacao.titulo),
+      criarElemento("p", "", notificacao.mensagem),
+      criarElemento(
+        "span",
+        "estado-notificacao",
+        notificacao.lida ? "Lida" : "Não lida"
+      )
+    );
+
+    listaNotificacoes.append(item);
+  }
+
+  const naoLidas = notificacoes.filter((item) => !item.lida).length;
+
+  contadorNotificacoes.textContent = naoLidas;
+  contadorNotificacoes.hidden = naoLidas === 0;
+
+  listaNotificacoes.hidden = notificacoes.length === 0;
+
+  document.querySelector("#notificacoes-vazias").hidden =
+    notificacoes.length > 0;
+
+  botaoNotificacoes.setAttribute(
+    "aria-label",
+    `Notificações: ${naoLidas} não lidas`
+  );
+
+  statusNotificacoes.textContent = "";
+}
+
+// Remove dados antigos durante saída ou falha de carregamento.
+// O traço significa que os dados ainda não foram confirmados.
+function limparDashboard() {
+  document.querySelectorAll(".card-indicador strong").forEach((campo) => {
+    campo.textContent = "—";
+  });
+
+  [
+    listaAndamento,
+    listaHistorico,
+    listaDocumentos,
+    listaNotificacoes,
+  ].forEach((lista) => {
+    lista.replaceChildren();
+  });
+
+  document
+    .querySelectorAll(
+      "#andamento-vazio, #historico-vazio, #documentos-vazios, #notificacoes-vazias"
+    )
+    .forEach((elemento) => {
+      elemento.hidden = true;
+    });
+
+  contadorNotificacoes.hidden = true;
+}
+
+// Busca os pedidos do usuário conectado.
+async function carregarDashboard(exibirCarregamento = false) {
+  if (carregandoDashboard) {
+    return;
+  }
+
+  carregandoDashboard = true;
+  controleDashboard = new AbortController();
+
+  if (exibirCarregamento) {
+    statusDashboard.textContent = "Carregando seus pedidos…";
+  }
+
+  botaoRecarregar.hidden = true;
+
+  try {
+    const resposta = await fetch("../../../backend/dashboard_cliente.php", {
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+      signal: controleDashboard.signal,
+    });
+
+    if (resposta.status === 401) {
+      limparDashboard();
+      limparDadosPerfil();
+      window.location.replace("./login.html");
+      return;
+    }
+
+    if (!resposta.ok) {
+      throw new Error(`Falha ao carregar o painel: ${resposta.status}`);
+    }
+
+    const dados = await resposta.json();
+
+    const chaves = [
+      "total",
+      "andamento",
+      "concluidos",
+      "agendados",
+    ];
+
+    const resumoValido =
+      dados?.resumo &&
+      chaves.every(
+        (chave) =>
+          Number.isSafeInteger(dados.resumo[chave]) &&
+          dados.resumo[chave] >= 0
+      );
+
+    const listasValidas =
+      Array.isArray(dados?.servicos) &&
+      Array.isArray(dados?.documentos) &&
+      Array.isArray(dados?.notificacoes);
+
+    if (dados?.sucesso !== true || !resumoValido || !listasValidas) {
+      throw new Error("Resposta inválida do painel.");
+    }
+
+    // Atualiza os quatro contadores com os valores do banco.
+    for (const chave of chaves) {
+      document.querySelector(
+        `.indicador-${chave} strong`
+      ).textContent = dados.resumo[chave];
+    }
+
+    renderizarServicos(dados.servicos);
+    renderizarDocumentos(dados.documentos);
+    renderizarNotificacoes(dados.notificacoes);
+
+    statusDashboard.textContent = "";
+  } catch (erro) {
+    if (erro.name === "AbortError") {
+      return;
+    }
+
+    // Falha de conexão não deve aparecer como zero pedidos.
+    limparDashboard();
+
+    statusDashboard.textContent =
+      "Não foi possível carregar seus pedidos. Tente novamente.";
+
+    statusNotificacoes.textContent =
+      "Não foi possível carregar as notificações.";
+
+    botaoRecarregar.hidden = false;
+
+    console.error(erro);
+  } finally {
+    carregandoDashboard = false;
+  }
+}
+
+// Painel de notificações.
 function fecharPainel(devolverFoco = false) {
   painelNotificacoes.hidden = true;
   botaoNotificacoes.setAttribute("aria-expanded", "false");
@@ -90,20 +311,21 @@ function fecharPainel(devolverFoco = false) {
   }
 }
 
-// Clique no sino alterna entre aberto e fechado
 botaoNotificacoes.addEventListener("click", () => {
-  if (painelNotificacoes.hidden) {
-    abrirPainel();
-  } else {
-    fecharPainel();
+  if (!painelNotificacoes.hidden) {
+    fecharPainel(true);
+    return;
   }
+
+  painelNotificacoes.hidden = false;
+  botaoNotificacoes.setAttribute("aria-expanded", "true");
+  botaoFechar.focus();
 });
 
 botaoFechar.addEventListener("click", () => {
   fecharPainel(true);
 });
 
-// Fecha ao clicar fora da area de notificacao
 document.addEventListener("click", (evento) => {
   if (!areaNotificacoes.contains(evento.target)) {
     fecharPainel();
@@ -116,7 +338,6 @@ document.addEventListener("keydown", (evento) => {
   }
 });
 
-// não puxa o foco de volta quando sair usando tab
 areaNotificacoes.addEventListener("focusout", (evento) => {
   if (
     evento.relatedTarget &&
@@ -126,89 +347,17 @@ areaNotificacoes.addEventListener("focusout", (evento) => {
   }
 });
 
-// marca como lida quando o botao é acionado
-botaoMarcarLidas.addEventListener("click", () => {
-  notificacoes.forEach((notificacao) => {
-    notificacao.lida = true;
-  });
-
-  botaoFechar.focus();
-  renderizarNotificacoes();
-
-  statusNotificacoes.textContent = "Todas as notificações foram lidas.";
-});
-
-// preenche a lista ao carregar pagina
-renderizarNotificacoes();
-
-// ESTADOS DOS SERVIÇOS
-
-function atualizarEstadosDashboard() {
-  const servicoAtivo = document.querySelector(".servico-ativo");
-  const listaHistorico = document.querySelector(".lista-servicos");
-  const listaDocumentos = document.querySelector(".documentos");
-
-  const itensHistorico = listaHistorico.querySelectorAll(
-    ":scope > li[data-status]",
-  );
-
-  const documentos = listaDocumentos.querySelectorAll(".btn-documento");
-
-  // serviço em andamento: verifica se existe cartão
-  document.querySelector("#andamento-vazio").hidden = servicoAtivo !== null;
-
-  // histórico: mostra a mensagem somente se não houver itens
-  const semHistorico = itensHistorico.length === 0;
-
-  listaHistorico.hidden = semHistorico;
-  document.querySelector("#historico-vazio").hidden = !semHistorico;
-
-  // documentos: verifica a quantidade de botões existentes
-  const semDocumentos = documentos.length === 0;
-
-  listaDocumentos.hidden = semDocumentos;
-  document.querySelector("#documentos-vazios").hidden = !semDocumentos;
-
-  // cartoes para calcular indicadores
-  const servicos = [...itensHistorico];
-
-  if (servicoAtivo) {
-    servicos.push(servicoAtivo);
-  }
-
-  function contarStatus(status) {
-    return servicos.filter((servico) => servico.dataset.status === status)
-      .length;
-  }
-
-  document.querySelector(".indicador-andamento strong").textContent =
-    contarStatus("andamento");
-
-  document.querySelector(".indicador-concluidos strong").textContent =
-    contarStatus("concluido");
-
-  document.querySelector(".indicador-agendados strong").textContent =
-    contarStatus("agendado");
-}
-
-atualizarEstadosDashboard();
-
-// coloca dados do perfil no html
+// Preenche o perfil com os dados recebidos do PHP.
 function exibirPerfilDashboard(perfil) {
-  const nomeExibido = perfil.nome.trim() || "Cliente";
-  const primeiroNome = nomeExibido.split(/\s+/)[0];
-  const iniciais = obterIniciais(perfil.nome);
-
-  // atualizando nome no cabeçalho e card perfil
+  const nome = perfil.nome.trim() || "Cliente";
 
   document.querySelectorAll(".nome-usuario").forEach((elemento) => {
-    elemento.textContent = nomeExibido;
+    elemento.textContent = nome;
   });
 
-  // email no cabecalho
-  document.querySelector(".usuario .email-usuario").textContent = perfil.email;
+  document.querySelector(".usuario .email-usuario").textContent =
+    perfil.email;
 
-  // email no cartão perfil
   document.querySelector(".coluna-lateral .email-usuario").textContent =
     `📧 ${perfil.email}`;
 
@@ -218,18 +367,20 @@ function exibirPerfilDashboard(perfil) {
   document.querySelector(".endereco-usuario").textContent =
     `📍 ${perfil.endereco}`;
 
-  document.querySelector("#avatar-usuario").textContent = iniciais;
-  document.querySelector("#avatar-meu-perfil").textContent = iniciais;
+  document.querySelector("#avatar-usuario").textContent =
+    obterIniciais(nome);
+
+  document.querySelector("#avatar-meu-perfil").textContent =
+    obterIniciais(nome);
 
   document.querySelector("#titulo-dashboard").textContent =
-    `Bem-vindo, ${primeiroNome}! 👋`;
+    `Bem-vindo, ${nome.split(/\s+/)[0]}! 👋`;
 }
 
-// carrega os dados e trata erros
 async function atualizarPerfilDashboard() {
   const mensagem = document.querySelector("#status-perfil");
 
-  mensagem.textContent = "Carregando Perfil...";
+  mensagem.textContent = "Carregando perfil…";
 
   try {
     const perfil = await carregarPerfil();
@@ -238,17 +389,45 @@ async function atualizarPerfilDashboard() {
     mensagem.textContent = "";
   } catch (erro) {
     mensagem.textContent =
-      "Não foi possível atualizar os dados do perfil. Recarregue a página.";
+      "Não foi possível carregar seu perfil. Recarregue a página.";
 
     console.error(erro);
   }
 }
 
-atualizarPerfilDashboard();
+botaoRecarregar.addEventListener("click", () => {
+  carregarDashboard(true);
+});
 
-// atualiza quando retorna pelo navegador
+// Carregamento inicial.
+atualizarPerfilDashboard();
+carregarDashboard(true);
+
+// Atualiza ao retornar à aba.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    carregarDashboard();
+  }
+});
+
+// Atualiza quando a página é restaurada pelo navegador.
 window.addEventListener("pageshow", (evento) => {
   if (evento.persisted) {
     atualizarPerfilDashboard();
+    carregarDashboard(true);
   }
 });
+
+// Limpa os dados ao sair da página.
+window.addEventListener("pagehide", () => {
+  controleDashboard?.abort();
+  limparDashboard();
+  limparDadosPerfil();
+});
+
+// Atualiza automaticamente enquanto o painel estiver visível.
+setInterval(() => {
+  if (document.visibilityState === "visible") {
+    carregarDashboard();
+  }
+}, 30000);

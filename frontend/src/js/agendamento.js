@@ -1,520 +1,783 @@
-let servicoSelecionado = "Ar Condicionado";
-let dataSelecionada = "";
-let horarioSelecionado = "";
+(() => {
+  "use strict";
 
-/* ========================= */
-/* ELEMENTOS */
-/* ========================= */
+  const API = "../../../backend/agendamento.php";
 
-const cardsServico = document.querySelectorAll(".servico-card");
+  const elemento = (id) => document.getElementById(id);
 
-const botaoContinuar = document.getElementById("botaoContinuar");
-
-const telaEtapa1 = document.getElementById("tela-etapa-1");
-const telaEtapa2 = document.getElementById("tela-etapa-2");
-const telaEtapa3 = document.getElementById("tela-etapa-3");
-
-const etapa1 = document.getElementById("etapa-1");
-const etapa2 = document.getElementById("etapa-2");
-const etapa3 = document.getElementById("etapa-3");
-
-const nomeServicoEscolhido = document.getElementById("nomeServicoEscolhido");
-
-const alterarServico = document.getElementById("alterarServico");
-
-const calendario = document.getElementById("calendario");
-
-const horariosContainer = document.getElementById("horarios");
-
-const tituloHorarios = document.getElementById("tituloHorarios");
-
-const hojeTexto = document.getElementById("hojeTexto");
-
-const botaoVoltar = document.getElementById("botaoVoltar");
-
-const botaoRevisar = document.getElementById("botaoRevisar");
-
-const voltarDetalhes = document.getElementById("voltarDetalhes");
-
-const confirmarAgendamento = document.getElementById("confirmarAgendamento");
-
-const endereco = document.getElementById("endereco");
-
-const descricao = document.getElementById("descricao");
-
-const nomeCompleto = document.getElementById("nomeCompleto");
-
-const telefone = document.getElementById("telefone");
-
-/* ========================= */
-/* MÁSCARA DO TELEFONE */
-/* ========================= */
-
-telefone.addEventListener("input", () => {
-  let numeros = telefone.value.replace(/\D/g, "");
-
-  // Limita a 11 números: DDD + celular
-  numeros = numeros.slice(0, 11);
-
-  if (numeros.length > 7) {
-    telefone.value = `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
-  } else if (numeros.length > 2) {
-    telefone.value = `(${numeros.slice(0, 2)}) ${numeros.slice(2)}`;
-  } else if (numeros.length > 0) {
-    telefone.value = `(${numeros}`;
-  } else {
-    telefone.value = "";
-  }
-});
-
-/* ========================= */
-/* DATA ATUAL */
-/* ========================= */
-
-const hoje = new Date();
-
-const anoAtual = hoje.getFullYear();
-
-const mesAtual = hoje.getMonth();
-
-const diaHoje = hoje.getDate();
-
-const nomesMeses = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
-
-hojeTexto.textContent = `${String(diaHoje).padStart(
-  2,
-  "0",
-)}/${String(mesAtual + 1).padStart(2, "0")}`;
-
-/* ========================= */
-/* SELEÇÃO DE SERVIÇO */
-/* ========================= */
-
-cardsServico.forEach((card) => {
-  card.addEventListener("click", () => {
-    cardsServico.forEach((item) => {
-      item.classList.remove("selecionado");
-    });
-
-    card.classList.add("selecionado");
-
-    servicoSelecionado = card.dataset.servico;
-
-    botaoContinuar.textContent = `Continuar — ${servicoSelecionado} →`;
-  });
-});
-
-/* ========================= */
-/* IR PARA ETAPA 2 */
-/* ========================= */
-
-botaoContinuar.addEventListener("click", () => {
-  nomeServicoEscolhido.textContent = servicoSelecionado;
-
-  telaEtapa1.classList.add("escondido");
-
-  telaEtapa2.classList.remove("escondido");
-
-  telaEtapa3.classList.add("escondido");
-
-  etapa1.classList.remove("ativa");
-  etapa1.classList.add("concluida");
-
-  etapa2.classList.add("ativa");
-
-  etapa3.classList.remove("ativa");
-
-  gerarCalendario();
-
-  atualizarIcones();
-});
-
-/* ========================= */
-/* ALTERAR SERVIÇO */
-/* ========================= */
-
-alterarServico.addEventListener("click", () => {
-  telaEtapa2.classList.add("escondido");
-
-  telaEtapa1.classList.remove("escondido");
-
-  etapa2.classList.remove("ativa");
-
-  etapa1.classList.remove("concluida");
-  etapa1.classList.add("ativa");
-});
-
-botaoVoltar.addEventListener("click", () => {
-  telaEtapa2.classList.add("escondido");
-
-  telaEtapa1.classList.remove("escondido");
-
-  etapa2.classList.remove("ativa");
-
-  etapa1.classList.remove("concluida");
-  etapa1.classList.add("ativa");
-});
-
-/* ========================= */
-/* CALENDÁRIO */
-/* ========================= */
-
-function gerarCalendario() {
-  calendario.innerHTML = "";
-
-  const tituloMes = document.getElementById("tituloMes");
-
-  tituloMes.textContent = `${nomesMeses[mesAtual]} ${anoAtual}`;
-
-  const primeiroDia = new Date(anoAtual, mesAtual, 1).getDay();
-
-  const ultimoDia = new Date(anoAtual, mesAtual + 1, 0).getDate();
-
-  /* ESPAÇOS ANTES DO DIA 1 */
-
-  for (let i = 0; i < primeiroDia; i++) {
-    const espaco = document.createElement("div");
-
-    calendario.appendChild(espaco);
-  }
-
-  /* DIAS */
-
-  for (let dia = 1; dia <= ultimoDia; dia++) {
-    const botao = document.createElement("button");
-
-    botao.type = "button";
-
-    botao.textContent = dia;
-
-    botao.classList.add("dia");
-
-    /*
-      Por enquanto estamos simulando
-      os dias disponíveis.
-
-      Depois vamos puxar isso
-      diretamente do banco.
-    */
-
-    const disponivel = dia >= diaHoje && dia <= diaHoje + 14;
-
-    if (disponivel) {
-      botao.classList.add("disponivel");
-    } else {
-      botao.disabled = true;
-    }
-
-    botao.addEventListener("click", () => selecionarDia(dia, botao));
-
-    calendario.appendChild(botao);
-  }
-}
-
-/* ========================= */
-/* SELECIONAR DIA */
-/* ========================= */
-
-function selecionarDia(dia, botao) {
-  document.querySelectorAll(".dia").forEach((item) => {
-    item.classList.remove("selecionado");
-  });
-
-  botao.classList.add("selecionado");
-
-  dataSelecionada = new Date(anoAtual, mesAtual, dia);
-
-  horarioSelecionado = "";
-
-  tituloHorarios.textContent = `Horários para ${String(dia).padStart(
-    2,
-    "0",
-  )}/${String(mesAtual + 1).padStart(2, "0")}`;
-
-  gerarHorarios();
-}
-
-/* ========================= */
-/* HORÁRIOS */
-/* ========================= */
-
-function gerarHorarios() {
-  horariosContainer.innerHTML = "";
-
-  /*
-    Horários simulados.
-
-    Posteriormente estes horários
-    serão buscados do banco de dados.
-  */
-
-  const horarios = [
-    "09:00",
-    "10:00",
-    "11:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
+  const cards = [
+    ...document.querySelectorAll(".servico-card")
   ];
 
-  horarios.forEach((horario) => {
+  const tipos = {
+    "Ar Condicionado": "AR_CONDICIONADO",
+    "Frigorífico / Geladeira": "REFRIGERACAO",
+    "Iluminação": "ILUMINACAO",
+    "Manutenção Preventiva": "MANUTENCAO_PREVENTIVA",
+    "Eletromecânica": "ELETROMECANICA"
+  };
+
+  let dados = null;
+  let servico = "AR_CONDICIONADO";
+  let urgente = false;
+  let dia = "";
+  let horario = "";
+  let mes = null;
+  let pedido = null;
+  let enviando = false;
+  let carregando = false;
+  let incerto = false;
+  let concluido = false;
+
+  // Mensagens exibidas na própria página.
+  const aviso = document.createElement("p");
+
+  aviso.id = "mensagem-agendamento";
+  aviso.setAttribute("role", "status");
+  aviso.tabIndex = -1;
+  aviso.hidden = true;
+
+  aviso.style.cssText =
+    "padding:14px;margin:16px 0;border:1px solid;" +
+    "border-radius:10px;line-height:1.6";
+
+  document.querySelector(".titulo-area").append(aviso);
+
+  const tentar = document.createElement("button");
+
+  tentar.type = "button";
+  tentar.className = "botao-voltar";
+  tentar.textContent = "Recarregar";
+  tentar.hidden = true;
+
+  aviso.after(tentar);
+
+  const linkPedidos = document.createElement("a");
+
+  linkPedidos.href = "./dashboard.html";
+  linkPedidos.textContent = "Consultar Meus Pedidos →";
+  linkPedidos.style.color = "#8ff3d5";
+  linkPedidos.hidden = true;
+
+  tentar.after(linkPedidos);
+
+  function mensagem(texto, erro = false, focar = true) {
+    aviso.textContent = texto;
+    aviso.hidden = !texto;
+    aviso.style.color = erro ? "#ffb4b4" : "#b7fff0";
+
+    if (focar && texto) {
+      aviso.focus();
+    }
+  }
+
+  function etapa(numero) {
+    for (let i = 1; i <= 3; i++) {
+      elemento(`tela-etapa-${i}`).classList.toggle(
+        "escondido",
+        i !== numero
+      );
+
+      elemento(`etapa-${i}`).classList.toggle(
+        "ativa",
+        i === numero
+      );
+
+      elemento(`etapa-${i}`).classList.toggle(
+        "concluida",
+        i < numero
+      );
+    }
+
+    window.lucide?.createIcons();
+  }
+
+  function nomeServico() {
+    return dados?.servicos.find(
+      (item) => item.codigo === servico
+    )?.nome || "Ar Condicionado";
+  }
+
+  function atualizarServico() {
+    for (const card of cards) {
+      const marcado =
+        tipos[card.dataset.servico] === servico ||
+        (!tipos[card.dataset.servico] && urgente);
+
+      card.classList.toggle("selecionado", marcado);
+
+      card.setAttribute(
+        "aria-pressed",
+        String(marcado)
+      );
+    }
+
+    const texto =
+      nomeServico() + (urgente ? " · Urgente" : "");
+
+    elemento("nomeServicoEscolhido").textContent = texto;
+
+    elemento("botaoContinuar").textContent =
+      `Continuar — ${texto} →`;
+  }
+
+  // Urgência é uma prioridade adicional ao tipo de serviço.
+  for (const card of cards) {
+    if (!tipos[card.dataset.servico]) {
+      card.querySelector("h3").textContent =
+        "Prioridade urgente";
+
+      card.querySelector("p").textContent =
+        "Marque junto com o tipo de serviço. A equipe avaliará a urgência.";
+    }
+
+    card.addEventListener("click", () => {
+      if (tipos[card.dataset.servico]) {
+        servico = tipos[card.dataset.servico];
+      } else {
+        urgente = !urgente;
+      }
+
+      atualizarServico();
+    });
+  }
+
+  // A equipe definirá o técnico.
+  elemento("tecnico").disabled = true;
+
+  elemento("tecnico").options[0].textContent =
+    "A equipe definirá o técnico";
+
+  elemento("resumoTecnico").textContent =
+    "A equipe definirá o técnico";
+
+  // Upload será implementado em outra etapa.
+  elemento("arquivo").disabled = true;
+
+  const upload = document.querySelector(".upload-area");
+  const avisoAnexo = document.createElement("p");
+
+  avisoAnexo.textContent =
+    "Fotos e vídeos ainda não são enviados nesta etapa.";
+
+  avisoAnexo.style.cssText =
+    "padding:16px;font-size:12px;text-align:center";
+
+  upload.replaceChildren(avisoAnexo);
+
+  elemento("nomeCompleto").maxLength = 150;
+  elemento("endereco").maxLength = 500;
+  elemento("descricao").maxLength = 2000;
+
+  elemento("telefone").addEventListener("input", (evento) => {
+    evento.target.value = evento.target.value.replace(
+      /[^\d()+\s-]/g,
+      ""
+    );
+  });
+
+  // Navegação entre os meses.
+  const navegacao = document.createElement("div");
+
+  navegacao.style.cssText =
+    "display:flex;justify-content:space-between;margin-bottom:12px";
+
+  const botoesMes = [
+    ["← Mês anterior", -1],
+    ["Próximo mês →", 1]
+  ];
+
+  for (const [rotulo, deslocamento] of botoesMes) {
     const botao = document.createElement("button");
 
     botao.type = "button";
-
-    botao.textContent = horario;
-
-    botao.classList.add("horario");
+    botao.className = "alterar-servico";
+    botao.textContent = rotulo;
 
     botao.addEventListener("click", () => {
-      document.querySelectorAll(".horario").forEach((item) => {
-        item.classList.remove("selecionado");
-      });
+      if (!dados) return;
 
-      botao.classList.add("selecionado");
+      const proximo = new Date(
+        mes.getFullYear(),
+        mes.getMonth() + deslocamento,
+        1
+      );
 
-      horarioSelecionado = horario;
+      const [ano, numeroMes] = dados.hoje
+        .split("-")
+        .map(Number);
+
+      const minimo = new Date(ano, numeroMes - 1, 1);
+      const maximo = new Date(ano, numeroMes + 1, 1);
+
+      if (proximo >= minimo && proximo <= maximo) {
+        mes = proximo;
+        calendario();
+      }
     });
 
-    horariosContainer.appendChild(botao);
-  });
-}
-
-/* ========================= */
-/* REVISAR AGENDAMENTO */
-/* ========================= */
-
-botaoRevisar.addEventListener("click", () => {
-  // Validação do nome completo
-  if (nomeCompleto.value.trim() === "") {
-    alert("Informe seu nome completo.");
-    nomeCompleto.focus();
-    return;
+    navegacao.append(botao);
   }
 
-  // Verifica se foi informado nome e sobrenome
-  const partesNome = nomeCompleto.value.trim().split(/\s+/);
+  elemento("tituloMes").before(navegacao);
 
-  if (partesNome.length < 2) {
-    alert("Informe seu nome completo, incluindo nome e sobrenome.");
-    nomeCompleto.focus();
-    return;
+  function calendario() {
+    if (!dados) return;
+
+    const area = elemento("calendario");
+
+    area.replaceChildren();
+
+    elemento("tituloMes").textContent =
+      mes.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric"
+      });
+
+    for (let i = 0; i < mes.getDay(); i++) {
+      area.append(document.createElement("span"));
+    }
+
+    const ultimo = new Date(
+      mes.getFullYear(),
+      mes.getMonth() + 1,
+      0
+    ).getDate();
+
+    for (let numero = 1; numero <= ultimo; numero++) {
+      const ano = mes.getFullYear();
+
+      const numeroMes = String(
+        mes.getMonth() + 1
+      ).padStart(2, "0");
+
+      const numeroDia = String(numero).padStart(2, "0");
+
+      const data = `${ano}-${numeroMes}-${numeroDia}`;
+
+      const livre = dados.horarios.some(
+        (item) => item.inicio.slice(0, 10) === data
+      );
+
+      const botao = document.createElement("button");
+
+      botao.type = "button";
+      botao.className = "dia";
+      botao.textContent = numero;
+      botao.disabled = !livre;
+
+      botao.classList.toggle("disponivel", livre);
+
+      botao.classList.toggle(
+        "selecionado",
+        data === dia
+      );
+
+      botao.setAttribute(
+        "aria-label",
+        data.split("-").reverse().join("/")
+      );
+
+      botao.addEventListener("click", () => {
+        dia = data;
+        horario = "";
+
+        calendario();
+        horarios();
+      });
+
+      area.append(botao);
+    }
   }
 
-  // Validação do telefone
-  const numerosTelefone = telefone.value.replace(/\D/g, "");
+  function horarios() {
+    const area = elemento("horarios");
 
-  if (numerosTelefone.length !== 11) {
-    alert("Informe um telefone válido com DDD. Exemplo: (15) 99999-9999.");
-    telefone.focus();
-    return;
+    area.replaceChildren();
+
+    elemento("tituloHorarios").textContent = dia
+      ? `Horários para ${dia.split("-").reverse().join("/")}`
+      : "Selecione um dia primeiro";
+
+    const horariosDoDia = dados.horarios.filter(
+      (item) => item.inicio.slice(0, 10) === dia
+    );
+
+    for (const item of horariosDoDia) {
+      const botao = document.createElement("button");
+
+      botao.type = "button";
+      botao.className = "horario";
+      botao.textContent = item.inicio.slice(11, 16);
+
+      botao.classList.toggle(
+        "selecionado",
+        horario === item.id
+      );
+
+      botao.addEventListener("click", () => {
+        horario = item.id;
+        horarios();
+      });
+
+      area.append(botao);
+    }
   }
 
-  // Continua com as validações que já existiam
-  if (!dataSelecionada) {
-    alert("Selecione uma data para o atendimento.");
-    return;
+  async function requisicao(opcoes = {}) {
+    const controle = new AbortController();
+
+    const limite = setTimeout(
+      () => controle.abort(),
+      20000
+    );
+
+    try {
+      const resposta = await fetch(API, {
+        credentials: "same-origin",
+        cache: "no-store",
+        ...opcoes,
+        headers: {
+          Accept: "application/json"
+        },
+        signal: controle.signal
+      });
+
+      const json = await resposta.json();
+
+      if (!resposta.ok || json.sucesso !== true) {
+        const erro = new Error(
+          json.mensagem ||
+          "Não foi possível concluir a solicitação."
+        );
+
+        erro.status = resposta.status;
+        erro.codigo = json.codigo;
+
+        throw erro;
+      }
+
+      return json;
+    } finally {
+      clearTimeout(limite);
+    }
   }
-  if (!dataSelecionada) {
-    alert("Selecione uma data para o atendimento.");
 
-    return;
+  async function carregar() {
+    if (carregando) return false;
+
+    carregando = true;
+    elemento("botaoContinuar").disabled = true;
+    tentar.hidden = true;
+
+    try {
+      dados = await requisicao();
+
+      if (
+        !Array.isArray(dados.horarios) ||
+        !Array.isArray(dados.servicos) ||
+        !dados.usuario?.id
+      ) {
+        throw new Error(
+          "O servidor retornou dados incompletos."
+        );
+      }
+
+      const [ano, numeroMes] = dados.hoje
+        .split("-")
+        .map(Number);
+
+      mes ||= new Date(ano, numeroMes - 1, 1);
+
+      elemento("hojeTexto").textContent =
+        dados.hoje.split("-").reverse().join("/");
+
+      if (!elemento("nomeCompleto").value) {
+        elemento("nomeCompleto").value = dados.usuario.nome;
+      }
+
+      if (!elemento("telefone").value) {
+        elemento("telefone").value =
+          dados.usuario.telefone || "";
+      }
+
+      for (const card of cards) {
+        if (tipos[card.dataset.servico]) {
+          card.disabled = !dados.servicos.some(
+            (tipo) =>
+              tipo.codigo === tipos[card.dataset.servico]
+          );
+        }
+      }
+
+      if (
+        !dados.servicos.some(
+          (tipo) => tipo.codigo === servico
+        )
+      ) {
+        servico = dados.servicos[0]?.codigo || "";
+      }
+
+      atualizarServico();
+      calendario();
+      horarios();
+
+      mensagem(
+        dados.horarios.length
+          ? "Selecione um horário. O pedido ficará aguardando aprovação da equipe."
+          : "Não há horários disponíveis nos próximos 60 dias. Entre em contato com a equipe.",
+        false,
+        false
+      );
+
+      elemento("botaoContinuar").disabled = !servico;
+
+      return true;
+    } catch (erro) {
+      if (erro.status === 401) {
+        window.location.replace("./login.html");
+      }
+
+      mensagem(
+        erro.message ||
+        "Não foi possível carregar os horários.",
+        true
+      );
+
+      tentar.hidden = false;
+
+      return false;
+    } finally {
+      carregando = false;
+    }
   }
 
-  if (!horarioSelecionado) {
-    alert("Selecione um horário.");
+  // Guarda somente um envio pendente por cliente nesta aba.
+  function guardarPendente(valor) {
+    const chave =
+      `hvac.agendamento.pendente.${dados.usuario.id}`;
 
-    return;
+    if (valor) {
+      sessionStorage.setItem(
+        chave,
+        JSON.stringify(valor)
+      );
+    } else {
+      sessionStorage.removeItem(chave);
+    }
   }
 
-  if (endereco.value.trim() === "") {
-    alert("Informe o endereço do atendimento.");
+  function resumo() {
+    const valores = {
+      resumoNomeCompleto: pedido.campos.nome,
+      resumoTelefone: pedido.campos.telefone,
 
-    return;
+      resumoServico:
+        pedido.nomeServico +
+        (pedido.campos.urgente === "1" ? " · Urgente" : ""),
+
+      resumoData: pedido.inicio
+        .slice(0, 10)
+        .split("-")
+        .reverse()
+        .join("/"),
+
+      resumoHorario: pedido.inicio.slice(11, 16),
+      resumoEndereco: pedido.campos.endereco,
+      resumoDescricao: pedido.campos.descricao
+    };
+
+    for (const [id, valor] of Object.entries(valores)) {
+      elemento(id).textContent = valor;
+    }
+
+    elemento("confirmarAgendamento").textContent =
+      "Enviar pedido ✓";
+
+    elemento("voltarDetalhes").disabled = incerto;
+
+    etapa(3);
   }
 
-  if (descricao.value.trim().length < 10) {
-    alert("Descreva o problema com pelo menos 10 caracteres.");
-
-    return;
-  }
-
-  preencherResumo();
-
-  telaEtapa2.classList.add("escondido");
-
-  telaEtapa3.classList.remove("escondido");
-
-  etapa2.classList.remove("ativa");
-
-  etapa2.classList.add("concluida");
-
-  etapa3.classList.add("ativa");
-
-  atualizarIcones();
-});
-
-/* ========================= */
-/* PREENCHER RESUMO */
-/* ========================= */
-
-function preencherResumo() {
-  document.getElementById("resumoNomeCompleto").textContent =
-    nomeCompleto.value.trim();
-
-  document.getElementById("resumoTelefone").textContent = telefone.value.trim();
-
-  document.getElementById("resumoServico").textContent = servicoSelecionado;
-  document.getElementById("resumoServico").textContent = servicoSelecionado;
-
-  document.getElementById("resumoData").textContent =
-    dataSelecionada.toLocaleDateString("pt-BR");
-
-  document.getElementById("resumoHorario").textContent = horarioSelecionado;
-
-  document.getElementById("resumoEndereco").textContent = endereco.value;
-
-  document.getElementById("resumoDescricao").textContent = descricao.value;
-}
-
-/* ========================= */
-/* VOLTAR PARA DETALHES */
-/* ========================= */
-
-voltarDetalhes.addEventListener("click", () => {
-  telaEtapa3.classList.add("escondido");
-
-  telaEtapa2.classList.remove("escondido");
-
-  etapa3.classList.remove("ativa");
-
-  etapa2.classList.remove("concluida");
-
-  etapa2.classList.add("ativa");
-
-  atualizarIcones();
-});
-
-/* ========================= */
-/* CONFIRMAR */
-/* ========================= */
-
-confirmarAgendamento.addEventListener("click", () => {
-  alert(
-    "Agendamento confirmado!\n\n" +
-      "Serviço: " +
-      servicoSelecionado +
-      "\nData: " +
-      dataSelecionada.toLocaleDateString("pt-BR") +
-      "\nHorário: " +
-      horarioSelecionado,
+  elemento("botaoContinuar").addEventListener(
+    "click",
+    () => {
+      if (dados) etapa(2);
+    }
   );
 
-  /*
-      PRÓXIMA ETAPA:
-
-      Aqui vamos substituir o alert
-      por uma requisição para o PHP.
-
-      O PHP irá salvar:
-
-      - usuário
-      - serviço
-      - data
-      - horário
-      - endereço
-      - descrição
-      - arquivos
-      - status do agendamento
-    */
-});
-
-/* ========================= */
-/* ATUALIZAR ÍCONES */
-/* ========================= */
-
-function atualizarIcones() {
-  if (typeof lucide !== "undefined") {
-    lucide.createIcons();
-  }
-}
-
-function validarDescricao(valor) {
-  const tamanho = Array.from(valor.trim()).length;
-
-  if (tamanho < 10) {
-    return "Descreva o problema com pelo menos 10 caracteres.";
+  for (const id of ["botaoVoltar", "alterarServico"]) {
+    elemento(id).addEventListener(
+      "click",
+      () => etapa(1)
+    );
   }
 
-  if (tamanho > 2000) {
-    return "Use no máximo 2.000 caracteres na descrição.";
-  }
-
-  return "";
-}
-
-// impedir horario que ja passou
-function validarHorarioSelecionado() {
-  if (
-    !(dataSelecionada instanceof Date) ||
-    Number.isNaN(dataSelecionada.getTime())
-  ) {
-    return "Selecione uma data válida.";
-  }
-
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(horarioSelecionado)) {
-    return "Selecione um horário válido.";
-  }
-
-  const [hora, minuto] = horarioSelecionado.split(":").map(Number);
-  const atendimento = new Date(dataSelecionada);
-
-  atendimento.setHours(hora, minuto, 0, 0);
-
-  if (atendimento <= new Date()) {
-    return "Escolha uma data e um horário futuros.";
-  }
-
-  return "";
-}
-
-function validarArquivos(lista) {
-  const formatos = /\.(jpe?g|png|mp4)$/i;
-  const limitePorArquivo = 5 * 1024 * 1024;
-
-  for (const arquivo of lista) {
-    if (!formatos.test(arquivo.name)) {
-      return `O arquivo "${arquivo.name}" deve ser JPG, PNG ou MP4.`;
+  elemento("voltarDetalhes").addEventListener(
+    "click",
+    () => {
+      if (!enviando && !incerto && !concluido) {
+        etapa(2);
+      }
     }
+  );
 
-    if (arquivo.size === 0) {
-      return `O arquivo "${arquivo.name}" está vazio.`;
+  elemento("botaoRevisar").addEventListener(
+    "click",
+    async () => {
+      if (carregando || enviando) return;
+
+      const nome = elemento("nomeCompleto").value
+        .trim()
+        .replace(/\s+/g, " ");
+
+      const telefone = elemento("telefone").value
+        .replace(/\D/g, "");
+
+      const endereco = elemento("endereco").value.trim();
+      const descricao = elemento("descricao").value.trim();
+
+      let erro = "";
+
+      if (
+        nome.split(" ").length < 2 ||
+        [...nome].length > 150
+      ) {
+        erro =
+          "Informe nome e sobrenome, com até 150 caracteres.";
+      } else if (!/^\d{10,11}$/.test(telefone)) {
+        erro =
+          "Informe o telefone com DDD, com 10 ou 11 números.";
+      } else if (
+        [...endereco].length < 10 ||
+        [...endereco].length > 500
+      ) {
+        erro =
+          "Informe o endereço completo, entre 10 e 500 caracteres.";
+      } else if (
+        [...descricao].length < 10 ||
+        [...descricao].length > 2000
+      ) {
+        erro =
+          "Descreva o problema usando entre 10 e 2.000 caracteres.";
+      } else if (!horario) {
+        erro = "Selecione a data e o horário.";
+      }
+
+      if (erro) {
+        mensagem(erro, true);
+        return;
+      }
+
+      elemento("botaoRevisar").disabled = true;
+
+      const ok = await carregar();
+
+      elemento("botaoRevisar").disabled = false;
+
+      if (!ok) return;
+
+      const vaga = dados.horarios.find(
+        (item) => item.id === horario
+      );
+
+      if (!vaga) {
+        horario = "";
+
+        mensagem(
+          "Esse horário não está mais disponível. Escolha outro.",
+          true
+        );
+
+        return;
+      }
+
+      pedido = {
+        protocolo: dados.protocolo,
+        inicio: vaga.inicio,
+        nomeServico: nomeServico(),
+
+        campos: {
+          tipo_servico: servico,
+          disponibilidade: horario,
+          nome,
+          telefone,
+          endereco,
+          descricao,
+          urgente: urgente ? "1" : "0"
+        }
+      };
+
+      mensagem(
+        "Confira os dados. O horário ficará pendente de aprovação.",
+        false,
+        false
+      );
+
+      linkPedidos.hidden = true;
+
+      resumo();
     }
+  );
 
-    if (arquivo.size > limitePorArquivo) {
-      return `O arquivo "${arquivo.name}" ultrapassa 5 MB.`;
+  elemento("confirmarAgendamento").addEventListener(
+    "click",
+    async () => {
+      if (enviando || !pedido) return;
+
+      if (concluido) {
+        window.location.assign("./dashboard.html");
+        return;
+      }
+
+      try {
+        guardarPendente(pedido);
+      } catch {
+        mensagem(
+          "Permita o armazenamento deste site no navegador para enviar o pedido com segurança contra duplicação.",
+          true
+        );
+
+        return;
+      }
+
+      enviando = true;
+      incerto = true;
+
+      elemento("confirmarAgendamento").disabled = true;
+      elemento("voltarDetalhes").disabled = true;
+
+      elemento("confirmarAgendamento").textContent =
+        "Enviando…";
+
+      mensagem(
+        "Enviando seu pedido…",
+        false,
+        false
+      );
+
+      const formulario = new FormData();
+
+      for (const [chave, valor] of Object.entries(pedido.campos)) {
+        formulario.append(chave, valor);
+      }
+
+      formulario.append("protocolo", pedido.protocolo);
+      formulario.append("csrf", dados.csrf);
+
+      try {
+        const retorno = await requisicao({
+          method: "POST",
+          body: formulario
+        });
+
+        concluido = true;
+        incerto = false;
+
+        try {
+          guardarPendente(null);
+        } catch {
+          // O pedido já foi confirmado pelo servidor.
+        }
+
+        mensagem(
+          `${retorno.mensagem} Protocolo: ${retorno.protocolo}`
+        );
+
+        elemento("confirmarAgendamento").textContent =
+          "Ver meus pedidos →";
+
+        elemento("voltarDetalhes").hidden = true;
+      } catch (erro) {
+        if (erro.status === 401) {
+          window.location.replace("./login.html");
+          return;
+        }
+
+        if (
+          [400, 422].includes(erro.status) ||
+          erro.codigo === "HORARIO_INDISPONIVEL"
+        ) {
+          incerto = false;
+
+          try {
+            guardarPendente(null);
+          } catch {
+            // A interface ainda permite corrigir os dados.
+          }
+
+          elemento("voltarDetalhes").disabled = false;
+
+          mensagem(
+            erro.message +
+            " Clique em Alterar para corrigir e revisar novamente.",
+            true
+          );
+        } else {
+          linkPedidos.hidden = false;
+
+          const texto = erro.status === 403
+            ? erro.message
+            : "Não foi possível confirmar a resposta do servidor.";
+
+          mensagem(
+            texto +
+            " Consulte Meus Pedidos no dashboard ou tente reenviar este mesmo pedido. Não crie outro antes de conferir.",
+            true
+          );
+        }
+
+        elemento("confirmarAgendamento").textContent =
+          "Tentar enviar novamente";
+      } finally {
+        enviando = false;
+        elemento("confirmarAgendamento").disabled = false;
+      }
+    }
+  );
+
+  tentar.addEventListener("click", () => carregar());
+
+  async function iniciar() {
+    if (!(await carregar())) return;
+
+    try {
+      const chave =
+        `hvac.agendamento.pendente.${dados.usuario.id}`;
+
+      const salvo = sessionStorage.getItem(chave);
+
+      if (!salvo) return;
+
+      const anterior = JSON.parse(salvo);
+
+      if (
+        !/^SRV-[a-f0-9]{24}$/.test(anterior.protocolo) ||
+        !anterior.campos ||
+        typeof anterior.inicio !== "string"
+      ) {
+        return;
+      }
+
+      pedido = anterior;
+      incerto = true;
+      linkPedidos.hidden = false;
+
+      resumo();
+
+      elemento("confirmarAgendamento").textContent =
+        "Verificar / reenviar pedido";
+
+      mensagem(
+        "Há um envio sem confirmação neste navegador. Verifique ou reenvie o mesmo pedido para evitar duplicação."
+      );
+    } catch {
+      mensagem(
+        "Não foi possível recuperar o último envio. Confira Meus Pedidos antes de enviar novamente.",
+        true
+      );
     }
   }
 
-  return "";
-}
-
-const campoArquivo = document.querySelector("#arquivo");
-
-campoArquivo.addEventListener("change", () => {
-  mostrarErro(campoArquivo, validarArquivos(campoArquivo.files));
-});
+  iniciar();
+})();

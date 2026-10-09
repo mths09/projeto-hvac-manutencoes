@@ -1,134 +1,49 @@
 const formCadastro = document.getElementById("form-cadastro");
+const nomeCadastro = formCadastro.elements.namedItem("nome");
+const emailCadastro = formCadastro.elements.namedItem("email");
+const telefoneCadastro = formCadastro.elements.namedItem("telefone");
+const nascimento = document.getElementById("data_nascimento");
 const senhaCadastro = document.getElementById("senha");
 const confirmarSenha = document.getElementById("confirmar_senha");
-const nascimento = document.getElementById("data_nascimento");
 const mensagem = document.getElementById("mensagem-cadastro");
+const botao = formCadastro.querySelector('[type="submit"]');
+const textoOriginalBotao = botao.textContent;
+
+let enviandoCadastro = false;
+let cadastroConcluido = false;
 
 const hoje = new Date();
-nascimento.max = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+nascimento.max = [
+  hoje.getFullYear(),
+  String(hoje.getMonth() + 1).padStart(2, "0"),
+  String(hoje.getDate()).padStart(2, "0"),
+].join("-");
 
-function validarSenhas() {
-  const senha = senhaCadastro.value;
-  const quantidadeCaracteres = Array.from(senha).length;
-  const quantidadeBytes = new TextEncoder().encode(senha).length;
+formCadastro.noValidate = true;
 
-  let erroSenha = "";
-
-  if (quantidadeCaracteres < 8) {
-    erroSenha = "Use uma senha com pelo menos 8 caracteres.";
-  } else if (quantidadeBytes > 72) {
-    erroSenha = "A senha ultrapassou o limite permitido. Reduza o tamanho.";
-  } else if (senha.includes("\0")) {
-    erroSenha = "A senha contém um caractere não permitido.";
-  }
-
-  mostrarErro(senhaCadastro, erroSenha);
-
-  const erroConfirmacao =
-    confirmarSenha.value === "" || confirmarSenha.value !== senha
-      ? "A confirmação precisa ser igual à senha."
-      : "";
-
-  mostrarErro(confirmarSenha, erroConfirmacao);
+function exibirMensagem(texto, sucesso = false) {
+  mensagem.textContent = texto;
+  mensagem.classList.toggle("sucesso", sucesso);
+  mensagem.hidden = false;
 }
 
-senhaCadastro.addEventListener("input", validarSenhas);
-confirmarSenha.addEventListener("input", validarSenhas);
+function mostrarErro(campo, texto) {
+  const elementoErro = document.getElementById(`erro-${campo.id}`);
+  campo.setCustomValidity(texto);
 
-formCadastro.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  if (!validarCadastroNaTela()) {
-    return;
+  if (texto) {
+    campo.setAttribute("aria-invalid", "true");
+  } else {
+    campo.removeAttribute("aria-invalid");
   }
 
-  const nome = formCadastro.elements.namedItem("nome");
-  const telefone = formCadastro.elements.namedItem("telefone");
-
-  mostrarErro(nome, validarNome(nome.value));
-  mostrarErro(telefone, validarTelefone(telefone.value));
-
-  validarSenhas();
-
-  if (!formCadastro.reportValidity()) {
-    return;
+  if (elementoErro) {
+    elementoErro.textContent = texto;
   }
-
-  let enviandoCadastro = false;
-
-  const botao = formCadastro.querySelector('[type="submit"]');
-  botao.disabled = true;
-  botao.textContent = "Criando sua conta…";
-  mensagem.hidden = true;
-  mensagem.classList.remove("sucesso");
-  try {
-    const resposta = await fetch(formCadastro.action, {
-      method: "POST",
-      body: new FormData(formCadastro),
-      headers: { Accept: "application/json" },
-    });
-
-    if (!resposta.headers.get("content-type")?.includes("application/json")) {
-      throw new Error(
-        "Não foi possível acessar o cadastro. Abra o site pelo servidor PHP (XAMPP).",
-      );
-    }
-
-    const dados = await resposta.json();
-
-    if (!resposta.ok || dados?.sucesso !== true) {
-      aplicarErrosRecebidos(formCadastro, dados?.erros);
-
-      mensagem.textContent =
-        typeof dados?.mensagem === "string"
-          ? dados.mensagem
-          : "Não foi possível concluir o cadastro.";
-
-      mensagem.hidden = false;
-      return;
-    }
-  } catch (erro) {
-    mensagem.textContent =
-      "Não foi possível concluir a solicitação. Tente novamente.";
-
-    mensagem.hidden = false;
-  } finally {
-    enviandoCadastro = false;
-    botao.disabled = false;
-    formCadastro.setAttribute("aria-busy", "false");
-  }
-});
-
-// Tratando Falha no envio
-function aplicarErrosRecebidos(formulario, erros) {
-  if (!erros || typeof erros !== "object" || Array.isArray(erros)) {
-    return;
-  }
-
-  let primeiroCampo = null;
-
-  for (const [nome, texto] of Object.entries(erros)) {
-    const campo = formulario.elements.namedItem(nome);
-
-    if (!(campo instanceof HTMLInputElement)) {
-      continue;
-    }
-
-    if (typeof texto !== "string") {
-      continue;
-    }
-
-    mostrarErro(campo, texto);
-    primeiroCampo ??= campo;
-  }
-
-  primeiroCampo?.focus();
 }
-
-// VALIDANDO FORMULÁRIO
 
 function validarNome(valor) {
-  const nome = valor.trim(); // remove espaços das extremidades
+  const nome = valor.trim();
   const tamanho = Array.from(nome).length;
 
   if (tamanho < 2 || tamanho > 150) {
@@ -139,7 +54,23 @@ function validarNome(valor) {
     return "O nome contém caracteres não permitidos.";
   }
 
-  // /[\p{C}<>]/u.test(nome): verifica caracteres rejeitados pelo php.
+  return "";
+}
+
+function validarEmail(campo) {
+  campo.value = campo.value.trim();
+
+  if (campo.value === "") {
+    return "Informe seu e-mail.";
+  }
+
+  if (new TextEncoder().encode(campo.value).length > 254) {
+    return "O e-mail ultrapassa o tamanho permitido.";
+  }
+
+  if (campo.validity.typeMismatch) {
+    return "Informe um e-mail válido. Ex.: nome@empresa.com";
+  }
 
   return "";
 }
@@ -164,28 +95,6 @@ function validarTelefone(valor) {
   return "";
 }
 
-function validarEmail(campo) {
-  campo.value = campo.value.trim();
-
-  if (campo.value === "") {
-    return "Informe seu e-mail.";
-  }
-
-  const tamanhoBytes = new TextEncoder().encode(campo.value).length;
-
-  if (tamanhoBytes > 254) {
-    return "O e-mail ultrapassa o tamanho permitido.";
-  }
-
-  if (campo.validity.typeMismatch) {
-    return "Informe um e-mail válido: Ex: nome@empresa.com";
-  }
-
-  return "";
-
-  // typeMissmatch: informa se o valor não corresponde ao tipo do campo
-}
-
 function validarNascimento(campo) {
   if (campo.validity.badInput) {
     return "Informe uma data válida.";
@@ -201,47 +110,54 @@ function validarNascimento(campo) {
     return "Informe uma data válida.";
   }
 
-  if (data.getUTCFullYear() < 100) {
+  if (data.getUTCFullYear() < 1000) {
     return "Informe um ano válido, com quatro dígitos.";
   }
 
   const agora = new Date();
+  const limite = Date.UTC(
+    agora.getFullYear(), agora.getMonth(), agora.getDate()
+  );
 
-  // compara o dia
-  const hoje = Date.UTC(agora.getFullYear(), agora.getMonth(), agora.getDate());
-
-  if (data.getTime() > hoje) {
+  if (data.getTime() > limite) {
     return "A data de nascimento não pode estar no futuro.";
   }
 
   return "";
 }
 
+function validarSenhas() {
+  const senha = senhaCadastro.value;
+  let erroSenha = "";
+
+  if (Array.from(senha).length < 8) {
+    erroSenha = "Use uma senha com pelo menos 8 caracteres.";
+  } else if (new TextEncoder().encode(senha).length > 72) {
+    erroSenha = "A senha ultrapassou o limite permitido. Reduza o tamanho.";
+  } else if (senha.includes("\0")) {
+    erroSenha = "A senha contém um caractere não permitido.";
+  }
+
+  mostrarErro(senhaCadastro, erroSenha);
+  mostrarErro(
+    confirmarSenha,
+    confirmarSenha.value === "" || confirmarSenha.value !== senha
+      ? "A confirmação precisa ser igual à senha."
+      : ""
+  );
+}
+
 function validarCadastroNaTela() {
-  const campos = formCadastro.elements;
-
-  mostrarErro(
-    campos.namedItem("nome"),
-    validarNome(campos.namedItem("nome").value),
-  );
-
-  mostrarErro(
-    campos.namedItem("email"),
-    validarEmail(campos.namedItem("email")),
-  );
-
-  mostrarErro(
-    campos.namedItem("telefone"),
-    validarTelefone(campos.namedItem("telefone").value),
-  );
-
+  mostrarErro(nomeCadastro, validarNome(nomeCadastro.value));
+  mostrarErro(emailCadastro, validarEmail(emailCadastro));
+  mostrarErro(telefoneCadastro, validarTelefone(telefoneCadastro.value));
   mostrarErro(nascimento, validarNascimento(nascimento));
-
   validarSenhas();
 
   const primeiroInvalido = formCadastro.querySelector(":invalid");
 
   if (primeiroInvalido) {
+    exibirMensagem(primeiroInvalido.validationMessage);
     primeiroInvalido.focus();
     return false;
   }
@@ -249,45 +165,124 @@ function validarCadastroNaTela() {
   return true;
 }
 
-// Apresentando o erro
-function mostrarErro(campo, mensagem) {
-  const elementoErro = document.getElementById(`erro-${campo.id}`);
-
-  campo.setCustomValidity(mensagem);
-
-  if (mensagem) {
-    campo.setAttribute("aria-invalid", "true");
-  } else {
-    campo.removeAttribute("aria-invalid");
+function aplicarErrosRecebidos(erros) {
+  if (!erros || typeof erros !== "object" || Array.isArray(erros)) {
+    return;
   }
 
-  if (elementoErro) {
-    elementoErro.textContent = mensagem;
+  let primeiroCampo = null;
+
+  for (const [nome, texto] of Object.entries(erros)) {
+    const campo = formCadastro.elements.namedItem(nome);
+
+    if (!(campo instanceof HTMLInputElement) || typeof texto !== "string") {
+      continue;
+    }
+
+    mostrarErro(campo, texto);
+    if (texto) primeiroCampo ??= campo;
   }
+
+  primeiroCampo?.focus();
 }
 
-formCadastro.noValidate = true;
-
-// tratar erros em tempo real
 function acompanharCampo(campo, validar) {
   campo.addEventListener("blur", () => {
-    mostrarErro(campo, validar());
+    if (!enviandoCadastro && !cadastroConcluido) {
+      mostrarErro(campo, validar());
+    }
   });
-
   campo.addEventListener("input", () => {
-    if (campo.getAttribute("aria-invalid") === true) {
+    if (!cadastroConcluido && campo.getAttribute("aria-invalid") === "true") {
       mostrarErro(campo, validar());
     }
   });
 }
 
-const emailCadastro = formCadastro.elements.namedItem("email");
-const telefoneCadastro = formCadastro.elements.namedItem("telefone");
-
+acompanharCampo(nomeCadastro, () => validarNome(nomeCadastro.value));
 acompanharCampo(emailCadastro, () => validarEmail(emailCadastro));
-
-acompanharCampo(telefoneCadastro, () =>
-  validarTelefone(telefoneCadastro.value),
-);
-
+acompanharCampo(telefoneCadastro, () => validarTelefone(telefoneCadastro.value));
 acompanharCampo(nascimento, () => validarNascimento(nascimento));
+senhaCadastro.addEventListener("input", validarSenhas);
+confirmarSenha.addEventListener("input", validarSenhas);
+
+// Uma nova edição permite iniciar outro cadastro.
+formCadastro.addEventListener("input", () => {
+  if (cadastroConcluido) {
+    cadastroConcluido = false;
+    mensagem.hidden = true;
+    mensagem.classList.remove("sucesso");
+  }
+});
+
+formCadastro.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (enviandoCadastro || cadastroConcluido) return;
+
+  mensagem.hidden = true;
+  mensagem.classList.remove("sucesso");
+
+  if (!validarCadastroNaTela()) return;
+
+  enviandoCadastro = true;
+  botao.disabled = true;
+  botao.textContent = "Criando sua conta…";
+  formCadastro.setAttribute("aria-busy", "true");
+
+  try {
+    const resposta = await fetch(formCadastro.action, {
+      method: "POST",
+      credentials: "same-origin",
+      body: new FormData(formCadastro),
+      headers: { Accept: "application/json" },
+    });
+
+    const tipoConteudo = resposta.headers.get("content-type") || "";
+
+    if (!tipoConteudo.includes("application/json")) {
+      throw new Error("O servidor não retornou JSON no cadastro.");
+    }
+
+    const dados = await resposta.json();
+
+    if (!dados || typeof dados !== "object" || Array.isArray(dados)) {
+      throw new Error("O servidor retornou uma resposta inválida.");
+    }
+
+    if (!resposta.ok || dados.sucesso !== true) {
+      aplicarErrosRecebidos(dados.erros);
+      exibirMensagem(
+        typeof dados.mensagem === "string"
+          ? dados.mensagem
+          : "Não foi possível concluir o cadastro."
+      );
+      return;
+    }
+
+    // Só confirma depois que o PHP informa que salvou a conta.
+    cadastroConcluido = true;
+    formCadastro.reset();
+    formCadastro.querySelectorAll("input").forEach((campo) => {
+      mostrarErro(campo, "");
+    });
+
+    exibirMensagem(
+      "Cadastro realizado com sucesso! Clique em Entrar na conta abaixo.",
+      true
+    );
+
+    formCadastro.querySelector('a[href="./login.html"]')?.focus();
+  } catch (erro) {
+    console.error("Falha ao confirmar cadastro:", erro);
+    exibirMensagem(
+      "Não foi possível confirmar o cadastro. Verifique sua conexão. " +
+      "Se você já enviou seus dados, tente entrar na conta antes de cadastrar novamente."
+    );
+  } finally {
+    enviandoCadastro = false;
+    botao.disabled = false;
+    botao.textContent = textoOriginalBotao;
+    formCadastro.setAttribute("aria-busy", "false");
+  }
+});
