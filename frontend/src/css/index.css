@@ -224,32 +224,50 @@ header {
   outline-offset: 3px;
 }
 
+.fundo-continuo {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(
+    180deg,
+    #05091e 0%,
+    #0d1b4b 30%,
+    #12255e 60%,
+    var(--azul-marinho-escuro) 100%
+  );
+}
+
+/* pontinhos brancos no fundo*/
+.fundo-continuo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.09) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+}
+
+.fundo-continuo--portfolio {
+  background: linear-gradient(
+    180deg,
+    var(--azul-marinho-escuro) 0%,
+    var(--azul-marinho) 50%,
+    var(--azul-marinho-mais-escuro) 100%
+  );
+}
+
 /* INICIO (hero) */
 #inicio {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   min-height: calc(92vh - var(--altura-cabecalho));
-  background: var(--gradiente-destaque);
   color: #f5f6fa;
   padding: clamp(5rem, 7vw, 6rem) 1.5rem;
-}
-
-/* Cria uma camada decorativa antes do conteudo de inicio 
-  ::before - cria a textura pontilhada sobre o fundo da seção
-*/
-#inicio::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -3;
-  pointer-events: none;
-  background-image: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.04) 1px,
-    transparent 1px
-  );
-  background-size: 28px 28px;
 }
 
 /* Segunda camada decorativa após o conteúdo 
@@ -285,6 +303,8 @@ header {
       rgba(21, 101, 192, 0.62) 77.5% 80%,
       transparent 80.5%
     );
+  -webkit-mask-image: linear-gradient(to bottom, #000 75%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 75%, transparent 100%);
 }
 
 /* Decoração do fundo (efeitos) */
@@ -549,7 +569,6 @@ header {
 #servicos {
   padding: var(--espacamento-secao) 1.5rem;
   color: #fff;
-  background: #0b1535;
   text-align: center;
 }
 
@@ -592,6 +611,10 @@ header {
   text-align: left;
 }
 
+.grade-cards a {
+  text-decoration: none;
+}
+
 .card-item {
   position: relative;
   width: 100%;
@@ -613,22 +636,19 @@ header {
 }
 
 .card-item:hover {
-  transform: translateY(-4px);
-  border-color: rgba(0, 229, 255, 0.45);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  transform: scale(1.02);
+  background: rgba(0, 229, 255, 0.14);
+  border-color: var(--ciano);
+  box-shadow: 0 20px 40px rgba(0, 229, 255, 0.2);
+}
+
+.card-item:hover .subtitulo-servico {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .card-item:focus-visible {
   outline: 2px solid #22d3ee;
   outline-offset: 2px;
-}
-
-/* Estado selecionado (classe adicionada via JS) */
-.card-item.selecionado {
-  transform: scale(1.02);
-  background: rgba(0, 229, 255, 0.14);
-  border-color: var(--cyan);
-  box-shadow: 0 20px 40px rgba(0, 229, 255, 0.2);
 }
 
 .card-topo {
@@ -681,13 +701,6 @@ header {
     background 0.2s ease;
 }
 
-/* Animação da seta */
-.card-item.selecionado .svg-seta {
-  transform: rotate(90deg);
-  color: var(--azul-marinho-mais-escuro);
-  background: var(--gradiente-frio);
-}
-
 .titulo-servico {
   margin-bottom: 0.5rem;
   color: #f5f6fa;
@@ -702,10 +715,6 @@ header {
   color: rgba(255, 255, 255, 0.5);
   font-size: 1rem;
   line-height: 1.7;
-}
-
-.card-item.selecionado .subtitulo-servico {
-  color: rgba(255, 255, 255, 0.75);
 }
 
 .servico-rodape {
@@ -723,246 +732,6 @@ header {
 
 /* ------ FORMULARIO ------*/
 
-/* Classe que liga/desliga o formulário */
-#painel-formulario.escondido {
-  display: none;
-}
-
-#painel-formulario {
-  max-height: 0;
-  margin-top: 0;
-  padding: 0 2rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 0 1rem;
-  overflow: hidden;
-  opacity: 0;
-  color: var(--azul-marinho);
-  background: #f0f6ff;
-  border: 1px solid rgba(0, 229, 255, 0.25);
-  border-radius: 1.5rem;
-  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.28);
-  text-align: left;
-  pointer-events: none;
-  transform: translateY(-12px);
-  transition:
-    max-height 0.45s ease,
-    margin-top 0.35s ease,
-    padding 0.35s ease,
-    opacity 0.3s ease,
-    transform 0.35s ease;
-}
-
-/* Animação de abrir — o JS adiciona
-    depois de remover "escondido" */
-#painel-formulario.mostrar {
-  max-height: 1600px;
-  margin-top: 2rem;
-  padding: 2rem;
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-#form-icone-svg {
-  width: 56px;
-  height: 56px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--ciano-escuro);
-  background: rgba(13, 27, 75, 0.08);
-  border-radius: 1rem;
-}
-
-#form-icone-svg svg {
-  width: 30px;
-  height: 30px;
-}
-
-.form-cabecalho {
-  flex: 1;
-  min-width: 210px;
-}
-
-.titulo-form {
-  margin-bottom: 0.25rem;
-  color: var(--azul-marinho);
-  font-size: 1.5rem;
-  font-weight: 900;
-}
-
-.subtitulo-form {
-  font-size: 0.85rem;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-/* Quebra do formulário para ocupar 100% da largura */
-.form-servicos {
-  flex-basis: 100%;
-  margin-top: 1.75rem;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem 1rem;
-}
-
-/* Emparelhando: nome e telefone ficam lado a lado
-  (coluna 1 e coluna 2); o resto ocupa a largura toda. */
-label[for="form-nome"] {
-  grid-column: 1;
-  grid-row: 1;
-}
-#form-nome {
-  grid-column: 1;
-  grid-row: 2;
-}
-label[for="form-telefone"] {
-  grid-column: 2;
-  grid-row: 1;
-}
-#form-telefone {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-label[for="form-endereco"] {
-  grid-column: 1 / -1;
-  grid-row: 3;
-}
-#form-endereco {
-  grid-column: 1 / -1;
-  grid-row: 4;
-}
-label[for="form-problema"] {
-  grid-column: 1 / -1;
-  grid-row: 5;
-}
-#form-problema {
-  grid-column: 1 / -1;
-  grid-row: 6;
-}
-.upload-box {
-  grid-column: 1 / -1;
-  grid-row: 7;
-}
-.btn-enviar {
-  grid-column: 1 / -1;
-  grid-row: 8;
-}
-
-/* ELEMENTOS DO FORMULÁRIO */
-.form-servicos label {
-  color: var(--azul-marinho);
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-
-.form-servicos input,
-.form-servicos textarea {
-  width: 100%;
-  padding: 0.85rem 1rem;
-  color: #1f2937;
-  background: #fff;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.form-servicos textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.form-servicos input:focus,
-.form-servicos textarea:focus {
-  outline: 0;
-  border-color: var(--ciano-escuro);
-  box-shadow: 0 0 0 4px rgba(0, 184, 212, 0.13);
-}
-
-/* --- Input invisível. Aparece apenas o label: <label class="upload-box"> --- */
-.upload-arquivo {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.upload-box {
-  grid-column: 1 / -1;
-  grid-row: 7;
-  min-height: 155px;
-  margin-top: 0.75rem;
-  padding: 1.75rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed rgba(0, 184, 212, 0.35);
-  border-radius: 1rem;
-  text-align: center;
-  cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.upload-box:hover {
-  border-color: var(--ciano-escuro);
-  background: rgba(0, 184, 212, 0.04);
-}
-.anexo-arquivos {
-  color: var(--azul-marinho);
-  font-family: var(--fonte-titulos);
-  font-size: 1rem;
-  font-weight: 900;
-}
-.tipo-arquivos {
-  font-size: 0.8rem;
-  color: #9aa1b4;
-  margin-top: 0.25rem;
-}
-
-.form-servicos button[type="submit"],
-.btn-enviar {
-  grid-column: 1 / -1;
-  grid-row: 8;
-  width: 100%;
-  margin-top: 0.75rem;
-  padding: 1.2rem;
-  color: #fff;
-  background: var(--azul-marinho);
-  border: 0;
-  border-radius: 1rem;
-  font-family: var(--fonte-titulos);
-  font-size: 1.1rem;
-  font-weight: 900;
-  cursor: pointer;
-  transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.form-servicos button[type="submit"]:hover,
-.btn-enviar:hover {
-  color: var(--azul-marinho-escuro);
-  background: var(--gradiente-frio);
-  transform: translateY(-2px);
-}
-
 /*----------------------------------
   ------  PORTFOLIO
 ------------------------------------*/
@@ -975,7 +744,6 @@ label[for="form-problema"] {
   grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
   column-gap: 3rem;
   color: #fff;
-  background: var(--azul-marinho-escuro);
 }
 
 .texto-section {
@@ -1124,7 +892,6 @@ label[for="form-problema"] {
   margin-inline: calc(50% - 50vw);
   padding: 4rem 1.5rem;
   overflow: hidden;
-  background: var(--azul-marinho-escuro);
 }
 
 .faixa-status::before,
@@ -1194,22 +961,7 @@ label[for="form-problema"] {
   padding: var(--espacamento-secao) 1.5rem;
   overflow: hidden;
   color: #fff;
-  background: var(--azul-marinho-mais-escuro);
   text-align: center;
-}
-
-#contatos::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  background-image: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.03) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
 }
 
 #contatos::after {
@@ -1267,37 +1019,72 @@ label[for="form-problema"] {
   color: var(--ciano) !important;
 }
 
-.subtitulo-contatos {
-  max-width: 600px;
-  margin: 0 auto 2.5rem;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: clamp(1rem, 1.5vw, 1.25rem);
-  line-height: 1.7;
+/* ADICIONAR ESTILO CARDS: atendimento e agendar*/
+
+.grid-atendimento {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 80px 24px;
+  max-width: 1184px;
+  margin: 0 auto;
+  gap: 24px;
 }
 
-.botao-whatsapp {
-  min-height: 60px;
-  margin-inline: auto;
-  padding: 1rem 2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
+/* --- CARDS ---*/
+/* card atendimento */
+.atendimentos {
+  flex: 1 1 440px;
+  padding: 36px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--ciano-escuro);
+  border-radius: 30px;
+}
+
+.atendimentos h3 {
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.atendimentos p {
+  margin-top: 16px;
+}
+
+.atendimentos-observacao {
+  margin-top: 8px;
+  color: #4a5d78;
+}
+
+/* card agendar */
+.agendar {
+  flex: 1 1 440px;
+  padding: 36px;
+  border-radius: 24px;
+  background: var(--gradiente-destaque);
   color: #fff;
-  background: var(--sucesso);
-  border-radius: 1rem;
-  font-family: var(--fonte-titulos);
-  font-size: 1.25rem;
-  font-weight: 900;
-  text-decoration: none;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
 }
 
-.botao-whatsapp:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(37, 211, 102, 0.25);
+.titulo-agendar {
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.descricao-agendar {
+  font-size: 18px;
+}
+
+.agendar-botao {
+  align-self: flex-start;
+  background: var(--gradiente-frio);
+  color: #0a1630;
+  box-shadow: none;
+  border-radius: 50px;
+  padding: 1.5rem;
+  text-decoration: none;
+  margin-top: 25px;
 }
 
 .info-cards {
@@ -1346,7 +1133,7 @@ label[for="form-problema"] {
 .footer {
   padding: 3.5rem max(1.5rem, calc((100vw - var(--container)) / 2)) 1.5rem;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 3fr 1fr 1fr 1fr;
   gap: 2.5rem;
   color: #fff;
   background: var(--azul-marinho-mais-escuro);
@@ -1373,7 +1160,7 @@ label[for="form-problema"] {
 .footer-coluna-titulo {
   margin-bottom: 1.25rem;
   color: #fff;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1389,13 +1176,20 @@ label[for="form-problema"] {
 
 .footer a {
   color: rgba(255, 255, 255, 0.4);
-  font-size: 0.875rem;
+  font-size: 1rem;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .footer a:hover {
   color: var(--ciano);
+}
+
+.footer-dados {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .footer-fundo {
@@ -1588,6 +1382,103 @@ label[for="form-problema"] {
 
   .portfolio-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.whatsapp-flutuante {
+  position: fixed;
+  right: max(1.5rem, env(safe-area-inset-right));
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 60px;
+  min-width: 60px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--sucesso);
+  box-shadow: 0 10px 25px -5px rgba(37, 211, 102, 0.55);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    gap 0.25 ease;
+}
+
+/* anel em volta do botão*/
+.whatsapp-flutuante::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--sucesso);
+  animation: whatsapp-pulso 2.4s ease-out infinite;
+}
+
+.whatsapp-flutuante-icone {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* texto aparece quando passa o mouse */
+.whatsapp-flutuante-texto {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-width 0.25 ease,
+    opacity 0.2s ease;
+}
+
+.whatsapp-flutuante:hover,
+.whatsapp-flutuante:focus-visible {
+  gap: 10px;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px -5px rgba(37, 211, 102, 0.7);
+}
+
+.whatsapp-flutuante:hover .whatsapp-flutuante-texto,
+.whatsapp-flutuante:focus-visible .whatsapp-flutuante-texto {
+  max-width: 140px;
+  opacity: 1;
+}
+
+.whatsapp-flutuante:focus-visible {
+  outline: 3px solid var(--ciano);
+  outline-offset: 3px;
+}
+
+/* entra no fim da pagina para nao cobrir textos */
+.footer {
+  padding-bottom: 5.5rem;
+}
+
+@keyframes whatsapp-pulso {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .whatsapp-flutuante {
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    height: 56px;
+    min-width: 56px;
+    padding: 0 12px;
   }
 }
 
