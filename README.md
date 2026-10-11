@@ -19,7 +19,7 @@ modernização do processo de atendimento, principalmente para organização da 
 
 ![Página inicial](docs/img/home.jpeg)
 ![Agendamento](docs/img/agendamento.jpeg)
-![Agendamento](docs/img/dashboard.jpeg)
+![Dashboard](docs/img/dashboard.jpeg)
 
 🔗 Site online: Indisponível (por enquanto)
 
