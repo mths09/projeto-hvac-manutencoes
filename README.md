@@ -9,7 +9,7 @@
 
 ## 📌 Sobre o projeto
 
-Projeto de TCC do curso [nome do curso] da [nome da Etec].
+Projeto de TCC do curso Técnico em Desenvolvimento de Sistemas da Etec Fernando Prestes.
 A partir da entrevista realizada com o profissional da área de eletromecânica e refrigeração, identificamos a alta demanda
 e o grande público-alvo que a empresa alcança. Percebemos também que todo contato com clientes era realizado via telefone e os
 agendamentos eram feitos de forma  manual, por ordem de chegada das mensagens. Dessa forma, nossa equipe percebeu a necessidade de
