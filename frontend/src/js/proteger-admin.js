@@ -11,7 +11,7 @@ if (botaoSairAdmin) {
         cache: 'no-store'
       });
     } finally {
-      window.location.replace('./login.html?area=admin');
+      window.location.replace('./login.html');
     }
   });
 }
@@ -27,7 +27,7 @@ if (botaoSairAdmin) {
 
     const dados = await resposta.json();
     if (!resposta.ok || dados?.sucesso !== true) {
-      window.location.replace('./login.html?area=admin');
+      window.location.replace('./login.html');
       return;
     }
 
@@ -45,6 +45,6 @@ if (botaoSairAdmin) {
 
     document.documentElement.style.visibility = 'visible';
   } catch {
-    window.location.replace('./login.html?area=admin');
+    window.location.replace('./login.html');
   }
 })();

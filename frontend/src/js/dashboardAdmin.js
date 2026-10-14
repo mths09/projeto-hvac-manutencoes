@@ -1,82 +1,24 @@
-const STORAGE_KEY = "hvac-lex-orders-v1";
-
-// Data de referência da imagem. Para usar a data real, troque por:
-// const TODAY = localDate();
-const TODAY = "2026-09-12";
-
-const technicians = [
-  { name: "Alex ", initials: "RL", specialty: "Ar Condicionado" },
-];
-
-const initialOrders = [
-  {
-    id: "SRV-001",
-    client: "João Santos",
-    equipment: "Ar Condicionado",
-    technician: "Ricardo Lopes",
-    date: "2026-09-10",
-    time: "10:00",
-    status: "Concluído",
-    urgent: false,
-  },
-  {
-    id: "SRV-002",
-    client: "Maria Souza",
-    equipment: "Geladeira",
-    technician: "Paulo Henrique",
-    date: "2026-09-12",
-    time: "14:00",
-    status: "Em Andamento",
-    urgent: true,
-  },
-  {
-    id: "SRV-003",
-    client: "Carlos Oliveira",
-    equipment: "Ar Condicionado",
-    technician: "Ricardo Lopes",
-    date: "2026-09-15",
-    time: "09:00",
-    status: "Solicitado",
-    urgent: false,
-  },
-  {
-    id: "SRV-004",
-    client: "Ana Lima",
-    equipment: "Elétrica",
-    technician: "Marcos Silva",
-    date: "2026-09-11",
-    time: "11:00",
-    status: "Concluído",
-    urgent: false,
-  },
-  {
-    id: "SRV-006",
-    client: "Fernanda Costa",
-    equipment: "Geladeira",
-    technician: "Paulo Henrique",
-    date: "2026-09-14",
-    time: "15:00",
-    status: "Solicitado",
-    urgent: true,
-  },
-  {
-    id: "SRV-010",
-    client: "Beatriz Ramos",
-    equipment: "Câmara Fria",
-    technician: "Ricardo Lopes",
-    date: "2026-09-18",
-    time: "09:00",
-    status: "Solicitado",
-    urgent: true,
-  },
-];
-
-const statuses = ["Solicitado", "Em Andamento", "Concluído"];
-let orders = loadOrders();
+const API = "../../../backend/solicitacoes_admin.php";
+const STORAGE_KEY = "hvac-agenda-v1";
+const STATUS_LABELS = {
+  SOLICITADO: "Solicitado",
+  AGENDADO: "Agendado",
+  EM_ANDAMENTO: "Em Andamento",
+  CONCLUIDO: "Concluído",
+  CANCELADO: "Cancelado",
+};
+const statuses = Object.values(STATUS_LABELS);
+const TODAY = localDate();
+let orders = [];
+let technicians = [];
 let page = "overview";
 let search = "";
 let filter = "Todos";
-let storageWarning = false;
+let adminCsrf = "";
+let adminLoading = true;
+let adminError = "";
+let adminMessage = "";
+let adminMessageError = false;
 
 const content = document.querySelector("#content");
 const dialog = document.querySelector("#order-dialog");
@@ -91,32 +33,114 @@ function localDate() {
   ].join("-");
 }
 
-function loadOrders() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (
-      Array.isArray(saved) &&
-      saved.every(
-        (order) =>
-          order &&
-          ["id", "client", "equipment", "technician", "date", "time"].every(
-            (key) => typeof order[key] === "string",
-          ) &&
-          ["Solicitado", "Em Andamento", "Concluído"].includes(order.status),
-      )
-    )
-      return saved;
-  } catch {}
-  return initialOrders.map((order) => ({ ...order }));
+function normalizarPedido(pedido) {
+  const inicio = String(pedido.inicio_previsto || "");
+  const criado = String(pedido.criada_em || "");
+  const codigoStatus = String(pedido.status_codigo || "SOLICITADO");
+  return {
+    id: String(pedido.protocolo),
+    client: String(pedido.cliente || "Cliente"),
+    phone: String(pedido.telefone || ""),
+    equipment: String(pedido.servico || "Serviço"),
+    technician: String(pedido.tecnico || ""),
+    technicianId: String(pedido.tecnico_id || ""),
+    date: inicio ? inicio.slice(0, 10) : criado.slice(0, 10),
+    time: inicio ? inicio.slice(11, 16) : "—",
+    status: STATUS_LABELS[codigoStatus] || String(pedido.status_nome || codigoStatus),
+    statusCode: codigoStatus,
+    statusOptions: Array.isArray(pedido.status_permitidos)
+      ? pedido.status_permitidos.filter((codigo) => STATUS_LABELS[codigo])
+      : [],
+    urgent: Boolean(pedido.urgente),
+    createdAt: criado.slice(0, 10),
+    description: String(pedido.descricao || ""),
+    address: String(pedido.endereco || ""),
+    totalDocuments: Number(pedido.total_documentos) || 0,
+    attachments: [],
+  };
 }
 
-function saveOrders() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    storageWarning = false;
-  } catch {
-    storageWarning = true;
+async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
+  if (mostrarCarregamento) {
+    adminLoading = true;
+    adminError = "";
+    render();
   }
+  try {
+    const resposta = await fetch(API, {
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.pedidos) || !Array.isArray(dados.tecnicos)) {
+      throw new Error(dados?.mensagem || "Não foi possível carregar as solicitações.");
+    }
+    if (typeof dados.csrf !== "string") {
+      throw new Error("O servidor não forneceu a proteção de sessão do painel.");
+    }
+    orders = dados.pedidos.map(normalizarPedido);
+    technicians = dados.tecnicos.map((tecnico) => ({
+      id: String(tecnico.id),
+      name: String(tecnico.nome),
+      initials: iniciais(tecnico.nome),
+      specialty: "Equipe técnica",
+    }));
+    adminCsrf = dados.csrf;
+    adminError = "";
+    adminLoading = false;
+    if (mostrarCarregamento) render();
+  } catch (erro) {
+    adminLoading = false;
+    adminError = "Não foi possível carregar as solicitações do banco. Verifique o servidor e tente novamente.";
+    console.error(erro);
+    render();
+  }
+}
+
+async function enviarAcaoAdmin(pedido, acao, valores, controle) {
+  if (!adminCsrf) return;
+  const valorAnterior = controle.value;
+  controle.disabled = true;
+  adminMessage = "";
+  adminMessageError = false;
+  try {
+    const resposta = await fetch(API, {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ csrf: adminCsrf, protocolo: pedido.id, acao, ...valores }),
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || dados?.sucesso !== true) {
+      throw new Error(dados?.mensagem || "Não foi possível atualizar o pedido.");
+    }
+    adminMessage = dados.mensagem || "Alteração salva.";
+    await carregarSolicitacoesAdmin(false);
+    if (adminError) adminMessageError = true;
+  } catch (erro) {
+    controle.disabled = false;
+    controle.value = valorAnterior;
+    adminMessage = erro.message || "Não foi possível atualizar o pedido.";
+    adminMessageError = true;
+    console.error(erro);
+  }
+  render();
+}
+
+function iniciais(nome) {
+  const partes = String(nome || "").trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return "?";
+  return `${partes[0][0]}${partes.length > 1 ? partes.at(-1)[0] : ""}`.toUpperCase();
 }
 
 function escapeHTML(value) {
@@ -146,8 +170,10 @@ function sorted(list) {
 function badge(status) {
   const className = {
     Solicitado: "requested",
+    Agendado: "scheduled",
     "Em Andamento": "progress",
     Concluído: "done",
+    Cancelado: "cancelled",
   }[status];
   return `<span class="badge ${className}">${escapeHTML(status)}</span>`;
 }
@@ -172,7 +198,7 @@ function scheduleRow(order) {
           <strong>${escapeHTML(order.client)}</strong>
           <span class="muted">· ${escapeHTML(order.equipment)}</span>
           <div class="right">
-            <span class="muted">${escapeHTML(order.technician)}</span>
+            <span class="muted">${escapeHTML(order.technician || "Não atribuído")}</span>
             ${badge(order.status)}
           </div>
         </div>`;
@@ -181,11 +207,9 @@ function scheduleRow(order) {
 function renderOverview() {
   const todayOrders = sorted(orders.filter((order) => order.date === TODAY));
   const urgentOrders = sorted(
-    orders.filter((order) => order.urgent && order.status !== "Concluído"),
+    orders.filter((order) => order.urgent && !["CONCLUIDO", "CANCELADO"].includes(order.statusCode)),
   );
-  const pending = orders.filter(
-    (order) => order.status === "Solicitado",
-  ).length;
+  const pending = orders.filter((order) => order.statusCode === "SOLICITADO").length;
   const ongoing = orders.filter(
     (order) => order.status === "Em Andamento",
   ).length;
@@ -358,21 +382,15 @@ function renderRequests(history = false) {
     return;
   }
 
-  const requestStatuses = [
-    "Solicitado",
-    "Agendado",
-    "Em Andamento",
-    "Concluído",
-  ];
-
   const filters = [
     ["Todos", "Todos"],
     ["Solicitado", "Solicitados"],
     ["Agendado", "Agendados"],
     ["Em Andamento", "Em Andamento"],
+    ["Cancelado", "Cancelados"],
   ];
 
-  const activeOrders = orders.filter((order) => order.status !== "Concluído");
+  const activeOrders = orders.filter((order) => order.statusCode !== "CONCLUIDO");
 
   if (!filters.some(([value]) => value === filter)) {
     filter = "Todos";
@@ -384,6 +402,7 @@ function renderRequests(history = false) {
       Agendado: "sr-scheduled",
       "Em Andamento": "sr-progress",
       Concluído: "sr-done",
+      Cancelado: "sr-cancelled",
     };
 
     return `
@@ -396,18 +415,9 @@ function renderRequests(history = false) {
   function renderCard(order) {
     const currentTechnician = order.technician || "Não atribuído";
 
-    const technicianNames = [
-      ...new Set([
-        "Não atribuído",
-        ...technicians.map((technician) => technician.name),
-        currentTechnician,
-      ]),
-    ];
-
     const phone = order.phone || "";
-    const attachments = Array.isArray(order.attachments)
-      ? order.attachments
-      : [];
+    const documentCount = Number(order.totalDocuments) || 0;
+    const statusOptions = [...new Set([order.statusCode, ...order.statusOptions])];
 
     return `
       <article class="sr-card ${order.urgent ? "urgent-card" : ""}">
@@ -477,15 +487,13 @@ function renderRequests(history = false) {
               data-sr-status="${escapeHTML(order.id)}"
               aria-label="Status de ${escapeHTML(order.id)}"
             >
-              ${requestStatuses
-                .map(
-                  (status) => `
+              ${statusOptions
+                .map((codigo) => `
                 <option
-                  value="${status}"
-                  ${order.status === status ? "selected" : ""}
-                >${status}</option>
-              `,
-                )
+                  value="${escapeHTML(codigo)}"
+                  ${order.statusCode === codigo ? "selected" : ""}
+                >${escapeHTML(STATUS_LABELS[codigo])}</option>
+              `)
                 .join("")}
             </select>
           </label>
@@ -497,26 +505,25 @@ function renderRequests(history = false) {
               data-sr-technician="${escapeHTML(order.id)}"
               aria-label="Técnico de ${escapeHTML(order.id)}"
             >
-              ${technicianNames
-                .map(
-                  (name) => `
+              <option value="" ${order.technicianId === "" ? "selected" : ""}>Não atribuído</option>
+              ${technicians
+                .map((tecnico) => `
                 <option
-                  value="${escapeHTML(name)}"
-                  ${name === currentTechnician ? "selected" : ""}
-                >${escapeHTML(name)}</option>
-              `,
-                )
+                  value="${escapeHTML(tecnico.id)}"
+                  ${tecnico.id === order.technicianId ? "selected" : ""}
+                >${escapeHTML(tecnico.name)}</option>
+              `)
                 .join("")}
             </select>
           </label>
 
           <div class="sr-actions">
             ${
-              attachments.length
+              documentCount
                 ? `
               <span class="sr-files">
-                📎 ${attachments.length}
-                ${attachments.length === 1 ? "arquivo" : "arquivos"}
+                📎 ${documentCount}
+                ${documentCount === 1 ? "documento" : "documentos"}
               </span>
             `
                 : ""
@@ -527,10 +534,11 @@ function renderRequests(history = false) {
               data-sr-details="${escapeHTML(order.id)}"
             >Ver detalhes →</button>
 
-            <button
-              class="sr-delete"
-              data-sr-delete="${escapeHTML(order.id)}"
-            >Excluir</button>
+            ${
+              order.statusOptions.includes("CANCELADO")
+                ? `<button class="sr-delete" data-sr-delete="${escapeHTML(order.id)}">Cancelar</button>`
+                : ""
+            }
           </div>
         </footer>
       </article>
@@ -630,14 +638,11 @@ function renderRequests(history = false) {
     if (!order) return;
 
     if (statusId) {
-      if (!requestStatuses.includes(event.target.value)) return;
-      order.status = event.target.value;
+      if (!order.statusOptions.includes(event.target.value)) return;
+      void enviarAcaoAdmin(order, "status", { status: event.target.value }, event.target);
     } else {
-      order.technician = event.target.value;
+      void enviarAcaoAdmin(order, "tecnico", { tecnico_id: event.target.value }, event.target);
     }
-
-    saveOrders();
-    render();
   });
 
   list.addEventListener("click", (event) => {
@@ -651,13 +656,20 @@ function renderRequests(history = false) {
 
       if (!order) return;
 
-      if (!confirm(`Excluir o pedido ${order.id} de ${order.client}?`)) {
+      if (!order.statusOptions.includes("CANCELADO")) {
+        adminMessage = "Este pedido já foi encerrado e não pode ser cancelado.";
+        adminMessageError = true;
+        render();
         return;
       }
 
-      orders = orders.filter((item) => item.id !== order.id);
-      saveOrders();
-      render();
+      if (!confirm(`Cancelar o pedido ${order.id} de ${order.client}?`)) {
+        return;
+      }
+      const controle = list.querySelector(`[data-sr-status="${CSS.escape(order.id)}"]`);
+      if (controle) {
+        void enviarAcaoAdmin(order, "status", { status: "CANCELADO" }, controle);
+      }
       return;
     }
 
@@ -1088,7 +1100,7 @@ function renderSchedule() {
     return orders.filter(
       (order) =>
         order.date === date &&
-        ["Agendado", "Em Andamento"].includes(order.status),
+        ["SOLICITADO", "AGENDADO", "EM_ANDAMENTO"].includes(order.statusCode),
     );
   }
 
@@ -1421,9 +1433,7 @@ function renderPortfolio() {
 }
 
 function render() {
-  const pending = orders.filter(
-    (order) => order.status === "Solicitado",
-  ).length;
+  const pending = orders.filter((order) => order.statusCode === "SOLICITADO").length;
   document.querySelector("#pending-count").textContent = pending;
   document.querySelector("#notification-count").textContent = pending;
 
@@ -1434,16 +1444,30 @@ function render() {
     else tab.removeAttribute("aria-current");
   });
 
+  if (adminLoading) {
+    content.innerHTML = '<section class="panel"><div class="empty">Carregando solicitações do banco…</div></section>';
+    return;
+  }
+  if (adminError) {
+    content.innerHTML = `
+      <section class="panel" role="status">
+        <div class="empty">${escapeHTML(adminError)}</div>
+        <button type="button" class="primary" id="retry-admin-load">Tentar novamente</button>
+      </section>`;
+    content.querySelector("#retry-admin-load").addEventListener("click", () => carregarSolicitacoesAdmin());
+    return;
+  }
+
   if (page === "overview") renderOverview();
   if (page === "requests") renderRequests();
   if (page === "history") renderRequests(true);
   if (page === "schedule") renderSchedule();
   if (page === "portfolio") renderPortfolio();
 
-  if (storageWarning) {
+  if (adminMessage) {
     content.insertAdjacentHTML(
-      "beforeend",
-      '<p class="notice" role="status">O navegador não permitiu salvar os dados. As alterações permanecerão apenas nesta sessão.</p>',
+      "afterbegin",
+      `<p class="notice" role="status" style="${adminMessageError ? "border-color:#ff6b7a;color:#ff9aa5" : ""}">${escapeHTML(adminMessage)}</p>`,
     );
   }
 }
@@ -1479,49 +1503,17 @@ document.querySelector("#cancel-order").addEventListener("click", () => {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  const data = new FormData(form);
-  const client = String(data.get("client")).trim();
-  if (!client) {
-    form.elements.client.setCustomValidity("Informe o nome do cliente.");
-    form.elements.client.reportValidity();
-    return;
-  }
-
-  const nextId =
-    Math.max(
-      0,
-      ...orders.map((order) => Number(order.id.replace("SRV-", "")) || 0),
-    ) + 1;
-
-  orders.push({
-    id: `SRV-${String(nextId).padStart(3, "0")}`,
-    client,
-    equipment: String(data.get("equipment")),
-    technician: String(data.get("technician")),
-    date: String(data.get("date")),
-    time: String(data.get("time")),
-    status: "Solicitado",
-    urgent: data.has("urgent"),
-  });
-
-  saveOrders();
   dialog.close();
-  navigate("overview");
+  adminMessage = "O cadastro manual de pedidos ainda não está ligado ao banco. Os pedidos feitos pelos clientes aparecem nesta lista automaticamente.";
+  adminMessageError = false;
+  render();
 });
 
 form.elements.client.addEventListener("input", () => {
   form.elements.client.setCustomValidity("");
 });
 
-content.addEventListener("change", (event) => {
-  const id = event.target.dataset.orderId;
-  if (!id || !statuses.includes(event.target.value)) return;
-  const order = orders.find((item) => item.id === id);
-  if (!order) return;
-  order.status = event.target.value;
-  saveOrders();
-  render();
-});
 // A saída é enviada por POST ao PHP para encerrar a sessão.
 
 render();
+void carregarSolicitacoesAdmin();

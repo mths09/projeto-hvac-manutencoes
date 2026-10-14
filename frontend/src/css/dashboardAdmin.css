@@ -301,6 +301,11 @@ h1 {
   color: #9298af;
   background: #ffffff14;
 }
+.badge.cancelled,
+.sr-cancelled {
+  color: #ff6878;
+  background: #ff4b6022;
+}
 .badge.progress {
   color: var(--orange);
   background: #ffab0026;

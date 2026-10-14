@@ -4,127 +4,127 @@ declare(strict_types=1);
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
-
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-function responderDashboardCliente(int $status, array $dados): void
+function responderDashboard(int $status, array $dados): never
 {
     http_response_code($status);
-
-    echo json_encode(
-        $dados,
-        JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
-    );
-
+    echo json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     exit;
 }
 
-// Este endpoint apenas consulta os dados.
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
     header('Allow: GET');
-
-    responderDashboardCliente(405, [
-        'sucesso' => false,
-        'mensagem' => 'Método não permitido.'
-    ]);
+    responderDashboard(405, ['sucesso' => false, 'mensagem' => 'Método não permitido.']);
 }
 
 try {
-    $https = !empty($_SERVER['HTTPS'])
-        && $_SERVER['HTTPS'] !== 'off';
-
-    // Recupera a mesma sessão criada no login.
-    $sessaoIniciada = session_start([
+    $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    if (!session_start([
         'use_strict_mode' => true,
         'use_only_cookies' => true,
         'cookie_httponly' => true,
         'cookie_secure' => $https,
         'cookie_samesite' => 'Lax',
-        'cookie_path' => '/',
-        'read_and_close' => true
-    ]);
-
-    if (!$sessaoIniciada) {
-        throw new RuntimeException('Falha ao recuperar a sessão.');
+        'cookie_path' => '/'
+    ])) {
+        throw new RuntimeException('Falha ao iniciar sessão.');
     }
 
-    $idNaSessao = $_SESSION['usuario_id'] ?? null;
-
-    $idUsuario = is_int($idNaSessao) || is_string($idNaSessao)
-        ? (string) $idNaSessao
-        : '';
-
-    if (!preg_match('/^[1-9][0-9]{0,18}$/D', $idUsuario)) {
-        responderDashboardCliente(401, [
-            'sucesso' => false,
-            'mensagem' => 'Entre na sua conta para continuar.'
-        ]);
+    $idUsuario = filter_var(
+        $_SESSION['usuario_id'] ?? null,
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+    if ($idUsuario === false || $idUsuario === null) {
+        responderDashboard(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta para continuar.']);
     }
+
+    $_SESSION['csrf_dashboard'] ??= bin2hex(random_bytes(32));
+    $csrf = $_SESSION['csrf_dashboard'];
+    session_write_close();
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
     require_once __DIR__ . '/conexao.php';
 
-    // Confere se a conta da sessão continua ativa.
     $stmt = $conexao->prepare(
-        'SELECT id_usuario
+        'SELECT id_usuario, nome, email, telefone, perfil, ativo, criado_em
          FROM usuario
          WHERE id_usuario = ?
-           AND ativo = 1
          LIMIT 1'
     );
-
-    $stmt->bind_param('s', $idUsuario);
+    $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
-
     $usuario = $stmt->get_result()->fetch_assoc();
-
     $stmt->close();
 
-    if (!$usuario) {
+    if (!$usuario || (int) $usuario['ativo'] !== 1 || strtolower((string) $usuario['perfil']) !== 'cliente') {
         $conexao->close();
-
-        responderDashboardCliente(401, [
-            'sucesso' => false,
-            'mensagem' => 'Sua conta não está disponível. Faça login novamente.'
-        ]);
+        responderDashboard(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta de cliente para continuar.']);
     }
 
-    // Busca somente as solicitações do cliente conectado.
-    // Cada solicitação aparece uma única vez.
     $stmt = $conexao->prepare(
-        'SELECT
+        'SELECT endereco_informado
+         FROM endereco_usuario
+         WHERE id_usuario = ? AND ativo = 1
+         ORDER BY principal DESC, id_endereco_usuario DESC
+         LIMIT 1'
+    );
+    $stmt->bind_param('i', $idUsuario);
+    $stmt->execute();
+    $registroEndereco = $stmt->get_result()->fetch_assoc();
+    $endereco = $registroEndereco['endereco_informado'] ?? '';
+    $stmt->close();
+
+    $stmt = $conexao->prepare(
+        "SELECT
             s.id_solicitacao AS id,
             s.protocolo,
+            s.urgente,
+            s.nome_contato,
+            s.telefone_contato,
+            s.descricao_problema AS descricao,
+            s.criada_em AS criado_em,
             ts.nome AS tipo,
             ss.codigo AS status,
             ss.nome AS status_nome,
-            s.descricao_problema AS descricao,
-            s.criada_em AS criado_em
+            ea.endereco_informado AS endereco,
+            d.inicio_previsto,
+            t.nome AS tecnico,
+            t.telefone AS telefone_tecnico
          FROM solicitacao AS s
-         INNER JOIN tipo_servico AS ts
-            ON ts.id_tipo_servico = s.id_tipo_servico
-         INNER JOIN status_solicitacao AS ss
-            ON ss.id_status = s.id_status_atual
+         INNER JOIN tipo_servico AS ts ON ts.id_tipo_servico = s.id_tipo_servico
+         INNER JOIN status_solicitacao AS ss ON ss.id_status = s.id_status_atual
+         LEFT JOIN endereco_atendimento AS ea ON ea.id_solicitacao = s.id_solicitacao
+         LEFT JOIN agendamento AS a ON a.id_agendamento = (
+            SELECT a2.id_agendamento
+            FROM agendamento AS a2
+            WHERE a2.id_solicitacao = s.id_solicitacao
+              AND NOT EXISTS (
+                SELECT 1 FROM agendamento AS a3 WHERE a3.id_anterior = a2.id_agendamento
+              )
+            ORDER BY a2.id_agendamento DESC
+            LIMIT 1
+         )
+         LEFT JOIN disponibilidade AS d ON d.id_disponibilidade = a.id_disponibilidade
+         LEFT JOIN atribuicao_tecnica AS at ON at.id_atribuicao = (
+            SELECT at2.id_atribuicao
+            FROM atribuicao_tecnica AS at2
+            WHERE at2.id_solicitacao = s.id_solicitacao AND at2.fim_em IS NULL
+            ORDER BY at2.inicio_em DESC, at2.id_atribuicao DESC
+            LIMIT 1
+         )
+         LEFT JOIN tecnico AS t ON t.id_tecnico = at.id_tecnico AND t.ativo = 1
          WHERE s.id_cliente = ?
-         ORDER BY s.criada_em DESC, s.id_solicitacao DESC'
+         ORDER BY s.criada_em DESC, s.id_solicitacao DESC"
     );
-
-    $stmt->bind_param('s', $idUsuario);
+    $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
-
     $resultado = $stmt->get_result();
-
     $servicos = [];
-
-    $resumo = [
-        'total' => 0,
-        'andamento' => 0,
-        'concluidos' => 0,
-        'agendados' => 0
-    ];
+    $resumo = ['total' => 0, 'andamento' => 0, 'concluidos' => 0, 'agendados' => 0];
 
     while ($linha = $resultado->fetch_assoc()) {
         $servicos[] = [
@@ -133,86 +133,59 @@ try {
             'tipo' => (string) $linha['tipo'],
             'status' => (string) $linha['status'],
             'status_nome' => (string) $linha['status_nome'],
+            'urgente' => (bool) $linha['urgente'],
+            'nome_contato' => (string) $linha['nome_contato'],
+            'telefone_contato' => (string) ($linha['telefone_contato'] ?? ''),
             'descricao' => (string) ($linha['descricao'] ?? ''),
-            'criado_em' => (string) $linha['criado_em']
+            'criado_em' => (string) $linha['criado_em'],
+            'endereco' => (string) ($linha['endereco'] ?? ''),
+            'inicio_previsto' => (string) ($linha['inicio_previsto'] ?? ''),
+            'tecnico' => (string) ($linha['tecnico'] ?? ''),
+            'telefone_tecnico' => (string) ($linha['telefone_tecnico'] ?? '')
         ];
-
-        // Todo pedido entra no total.
         $resumo['total']++;
-
-        // Os outros contadores dependem do status atual.
-        switch ($linha['status']) {
-            case 'EM_ANDAMENTO':
-                $resumo['andamento']++;
-                break;
-
-            case 'CONCLUIDO':
-                $resumo['concluidos']++;
-                break;
-
-            case 'AGENDADO':
-                $resumo['agendados']++;
-                break;
-        }
+        if ($linha['status'] === 'EM_ANDAMENTO') $resumo['andamento']++;
+        if ($linha['status'] === 'CONCLUIDO') $resumo['concluidos']++;
+        if ($linha['status'] === 'AGENDADO') $resumo['agendados']++;
     }
-
     $stmt->close();
 
-    // Documentos liberados para este cliente.
     $stmt = $conexao->prepare(
-        'SELECT
-            d.id_documento AS id,
-            d.titulo,
-            d.tipo,
-            s.protocolo,
-            d.emitido_em
+        'SELECT d.id_documento AS id, d.titulo, d.tipo, d.emitido_em, s.protocolo
          FROM documento AS d
-         INNER JOIN solicitacao AS s
-            ON s.id_solicitacao = d.id_solicitacao
-         WHERE s.id_cliente = ?
-           AND d.disponivel_cliente = 1
-         ORDER BY d.emitido_em DESC, d.id_documento DESC'
+         INNER JOIN solicitacao AS s ON s.id_solicitacao = d.id_solicitacao
+         WHERE s.id_cliente = ? AND d.disponivel_cliente = 1
+         ORDER BY d.emitido_em DESC, d.id_documento DESC
+         LIMIT 50'
     );
-
-    $stmt->bind_param('s', $idUsuario);
+    $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
-
     $resultado = $stmt->get_result();
-
     $documentos = [];
-
     while ($linha = $resultado->fetch_assoc()) {
         $documentos[] = [
             'id' => (string) $linha['id'],
             'titulo' => (string) $linha['titulo'],
             'tipo' => (string) $linha['tipo'],
-            'protocolo' => (string) $linha['protocolo'],
-            'emitido_em' => (string) $linha['emitido_em']
+            'emitido_em' => (string) $linha['emitido_em'],
+            'protocolo' => (string) $linha['protocolo']
         ];
     }
-
     $stmt->close();
 
-    // Notificações destinadas ao cliente conectado.
     $stmt = $conexao->prepare(
-        'SELECT
-            id_notificacao AS id,
-            titulo,
-            mensagem,
-            lida_em,
-            criada_em
+        "SELECT id_notificacao AS id, titulo, mensagem, lida_em, criada_em
          FROM notificacao
          WHERE id_destinatario = ?
-         ORDER BY criada_em DESC, id_notificacao DESC'
+           AND canal IN ('SITE', 'APP')
+           AND status_envio IN ('ENVIADO', 'ENVIADA')
+         ORDER BY criada_em DESC, id_notificacao DESC
+         LIMIT 50"
     );
-
-    $stmt->bind_param('s', $idUsuario);
+    $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
-
     $resultado = $stmt->get_result();
-
     $notificacoes = [];
-
     while ($linha = $resultado->fetch_assoc()) {
         $notificacoes[] = [
             'id' => (string) $linha['id'],
@@ -222,27 +195,26 @@ try {
             'criada_em' => (string) $linha['criada_em']
         ];
     }
-
     $stmt->close();
     $conexao->close();
 
-    responderDashboardCliente(200, [
+    responderDashboard(200, [
         'sucesso' => true,
+        'csrf' => $csrf,
+        'usuario' => [
+            'nome' => (string) $usuario['nome'],
+            'email' => (string) $usuario['email'],
+            'telefone' => (string) $usuario['telefone'],
+            'endereco' => is_string($endereco) && trim($endereco) !== '' ? (string) $endereco : 'Endereço não cadastrado',
+            'criado_em' => (string) $usuario['criado_em']
+        ],
         'resumo' => $resumo,
         'servicos' => $servicos,
         'documentos' => $documentos,
         'notificacoes' => $notificacoes
     ]);
 } catch (Throwable $erro) {
-    error_log(
-        'Falha ao carregar dashboard do cliente: '
-        . get_class($erro)
-        . ' - código '
-        . $erro->getCode()
-    );
-
-    responderDashboardCliente(500, [
-        'sucesso' => false,
-        'mensagem' => 'Não foi possível carregar seus serviços e notificações. Tente novamente.'
-    ]);
+    if (isset($conexao) && $conexao instanceof mysqli) $conexao->close();
+    error_log('Falha ao carregar dashboard do cliente: ' . get_class($erro) . ', código ' . $erro->getCode());
+    responderDashboard(500, ['sucesso' => false, 'mensagem' => 'Não foi possível carregar o painel agora. Tente novamente.']);
 }
