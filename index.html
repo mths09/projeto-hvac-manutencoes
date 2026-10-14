@@ -50,348 +50,279 @@
     <!-- Principal -->
     <main>
       <!-- Inicio -->
-      <section id="inicio">
-        <div class="inicio-blob inicio-blob--1"></div>
+      <div class="fundo-continuo">
 
-        <div class="inicio-grid">
-
-          <div class="inicio-conteudo">
-            <p class="texto-auxiliar">Atendimento em Sorocaba e Região</p>
-            
-            <h1 class="titulo-inicio">
-            Climatização e 
-            <span class="highlight"> Manutenção </span>
-            que Funciona.
-            </h1>
-
-            <p class="descricao-inicio">
-              Especialistas em ar condicionado, refrigeração e eletromecânica.
-              Técnicos certificados, orçamento gratuito e garantia em todos os
-              Serviços.
-            </p>
-
-          <div class="acoes-inicio">
-            <a href="./frontend/src/paginas/agendamento.html" class="btn btn-atendimento">
-              <!-- Simbolo Calendario -->
-              <!-- SVG extraído para assets/icons/calendario.svg e substituído por img. -->
-              <img src="./frontend/assets/icons/calendario.svg" alt="" class="svg svg-calendario" />
-              <span> Agendar Atendimento </span>
-            </a>
-            <a
-              href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
-              target="_blank"
-              class="btn btn-whatsapp"
-            >
-              <!-- Simbolo Whatsapp -->
-              <!-- SVG extraído para assets/icons/whatsapp.svg e substituído por img. -->
-              <img src="./frontend/assets/icons/whatsapp.svg" alt="" class="svg svg-whatsapp" />
-              <span> WhatsApp </span>
-            </a>
-          </div>
-          
-
-        <div class="lista-qualidades">
-            <span>
-              <img src="./frontend/assets/icons/check.svg" alt="" width="24" height="24" class="svg" />
-              Técnicos certificados
-            </span>
-            <span>
-              <img src="./frontend/assets/icons/check.svg" alt="" width="24" height="24" class="svg" />
-              Garantia Inclusa
-            </span>
-            <span>
-              <img src="./frontend/assets/icons/check.svg" alt="" width="24" height="24" class="svg" />
-              Orçamento Gratuito
-            </span>
-          </div>
-        </div>
-          
-        <div class="inicio-visual">
-          <img
-            src="./frontend/assets/logoHVAC.png"
-            alt="HVAC logo hero"
-            class="hero-img"
-          />
-          <div class="float-card">
-            <img src="./frontend/assets/icons/servico-concluido.svg" alt="" width="24" height="24" class="svg-check" />
-            <div class="card-servico-concluido">
-              <!-- DEIXAR PARA ADICIONAR APOS O SITE FUNCIONAR-->
-              <strong> Serviço Concluído</strong>
-              <small> Instalação VRF 60 TR - Sorocaba - Hoje, 14h35</small>
-            </div>
-          </div>
-        </div>
- 
-      </section>
-
-      <!-- Serviços -->
-      <section id="servicos">
-        <span class="servicos-auxiliar">Triagem Inteligente ── Autoatendimento</span>
-        <h2 class="servicos-titulo">Como podemos ajudar?</h2>
-        <p class="servicos-subtitulo">
-          Selecione o tipo de equipamento. Descreva o problema e envie fotos ou
-          vídeos 
-          para agilizar o atendimento.
-        </p>
-
-        <div class="grade-cards">
-          <!-- ------ AR CONDICIONADO ------ -->
-          <button data-servico="ar-condicionado" class="card-item">
-            <div class="card-topo">
-              <!-- Simbolo AC-->
-            <!-- SVG extraído para assets/icons/ar-condicionado.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/ar-condicionado.svg" alt="" class="svg-card svg-ar-condicionado" aria-hidden="true" />
-            <!-- Seta -->
-            <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
-            </div>
-            
-            <h3 class="titulo-servico"><strong> Ar Condicionado </strong></h3>
-            <span class="subtitulo-servico">
-              Instalação, manutenção e higienização de
-              splits, cassetes e VRF
-            </span>
-          </button>
-
-          <!-- ------ GELADEIRA ------ -->
-          <button data-servico="frigorifico" class="card-item">
-            <div class="card-topo">
-              <!-- Icone Geladeira -->
-            <!-- SVG extraído para assets/icons/frigorifico.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/frigorifico.svg" alt="" class="svg-card svg-frigorifico" aria-hidden="true" id="frigorifico-svg" />
-            <!-- Seta -->
-            <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
-            </div>
-            
-            <h3 class="titulo-servico">
-              <strong> Frigorifico / Geladeira </strong>
-            </h3>
-            <span class="subtitulo-servico">
-              Conserto e manutenção de câmaras frias e 
-              refrigeradores comerciais
-            </span>
-          </button>
-
-          <!-- ------ ILUMINACAO ------ -->
-          <button data-servico="iluminacao" class="card-item">
-            <div class="card-topo">
-              <!-- Icone Lâmpada -->
-            <!-- SVG extraído para assets/icons/iluminacao.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/iluminacao.svg" alt="" class="svg-card svg-iluminacao" aria-hidden="true" />
-            <!-- Seta -->
-            <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
-            </div>
-            
-            <h3 class="titulo-servico"><strong> Iluminação </strong></h3>
-            <span class="subtitulo-servico">
-              Instalação de LED, luminárias industriais e 
-              sistemas de emergência
-            </span>
-          </button>
-
-          <!-- ------ MANUTENÇÃO ------ -->
-          <button data-servico="manutencao" class="card-item">
-            <div class="card-topo">
-              <!-- Icone Manutenção -->
-            <!-- SVG extraído para assets/icons/manutencao.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/manutencao.svg" alt="" class="svg-card svg-manutencao" aria-hidden="true" />
-            <!-- Seta -->
-            <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
-            </div>
-            
-            <h3 class="titulo-servico">
-              <strong> Manutenção Preventiva </strong>
-            </h3>
-            <span class="subtitulo-servico">
-              Planos periódicos para equipamentos
-              industriais e comerciais
-            </span>
-          </button>
-
-          <!-- ------ ELETROMECANICA ------ -->
-          <button data-servico="eletromecanica" class="card-item">
-            <div class="card-topo">
-              <!-- Icone Raio -->
-            <!-- SVG extraído para assets/icons/raio.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/raio.svg" alt="" class="svg-card svg-raio" aria-hidden="true" />
-            <!-- Seta -->
-            <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
-            </div>
-            
-            <h3 class="titulo-servico"><strong> Eletromecânica </strong></h3>
-            <span class="subtitulo-servico">
-              Motores, bombas, quadros elétricos e
-              automação industrial
-            </span>
-          </button>
-
-          <!-- ------ ATENDIMENTO URGENTE ------ -->
-          <button data-servico="atendimento-urgente" class="card-item">
-            <div class="card-topo">
-              <!-- Icone urgente -->
-            <!-- SVG extraído para assets/icons/atendimento-urgente.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/atendimento-urgente.svg" alt="" class="svg-card svg-atendimento-urgente" aria-hidden="true" />
-            <!-- Seta -->
-            <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
-            <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
-            </div>
-            
-            <h3 class="titulo-servico">
-              <strong> Atendimento Urgente </strong>
-            </h3>
-            <span class="subtitulo-servico">
-              Suporte de emergência 24h para falhas
-              críticas de equipamentos
-            </span>
-          </button>
-        </div>
-
-        <p class="servico-rodape">📎 Após selecionar, pode <a href="#servicos">anexar fotos ou vídeos</a> do problema</p>
-
-        <!-- ------ FORMULÁRIO ------ (realizar verificações e vinculo no banco de dados) -->
-        <div id="painel-formulario" class="escondido">
-          <!-- Icone (decidido via JS) -->
-          <div id="form-icone-svg"></div>
-
-          <div class="form-cabecalho">
-            <h3 class="titulo-form">Descreva o Problema</h3>
-            <p class="subtitulo-form" data-card-atributo="form-subtitulo">
-              Ar Condicionado ── Quanto mais detalhes, mais rápido enviamos um
-              técnico.
-            </p>
-          </div>
-          
-          <form
-            method="post"
-            enctype="multipart/form-data"
-            class="form-servicos"
-          >
-            <label for="form-nome">Seu nome: </label>
-            <input
-              type="text"
-              id="form-nome"
-              name="nome"
-              placeholder="Digite seu nome e sobrenome"
-              required
-            />
-
-            <label for="form-telefone">Telefone: </label>
-            <input
-              type="tel"
-              id="form-telefone"
-              name="telefone"
-              placeholder="Ex: (15) 99999-9999"
-              required
-            />
-
-            <label for="form-endereco"> Endereço do Atendimento: </label>
-            <input
-              type="text"
-              id="form-endereco"
-              name="endereco"
-              placeholder="Rua, número, bairro ── Sorocaba, SP"
-              required
-            />
-
-            <label for="form-problema">
-              Descreva o problema com detalhes
-            </label>
-            <textarea
-              name="problema-detalhado"
-              id="form-problema"
-              placeholder="Ex: O ar condicionado não esfria, faz barulho ao ligar. Comprei a 3 anos..."
-            ></textarea>
-
-            <input
-              type="file"
-              id="form-arquivos"
-              name="upload-defeito"
-              accept=".jpg, .jpeg, .png, .mp4, .mov"
-              multiple
-              class="upload-arquivo"
-            />
-            <label for="form-arquivos" class="upload-box">
-              <!-- Icone decorativo-->
-              <!-- SVG extraído para assets/icons/anexar-arquivos.svg e substituído por img. -->
-              <img src="./frontend/assets/icons/anexar-arquivos.svg" alt="" width="48" height="48" style="margin-bottom: 8px" />
-
-              <p class="anexo-arquivos">📎 Anexar fotos ou vídeos do defeito</p>
-              <p class="tipo-arquivos">
-                Arraste aqui ou clique para selecionar · JPG, PNG, MP4, MOV ·
-                até 50 MB
-              </p>
-            </label>
-
-            <button type="submit" class="btn-enviar"> Enviar </button>
-          </form>
-        </div>
-      </section>
-
-      <!-- ------ PORTFOLIO ------ -->
-      <section id="portfolio">
-        <p class="texto-section">Portfólio</p>
-
-        <h2>Trabalhos Realizados</h2>
-        <p>Mais de 500 clientes satisfeitos em Sorocaba e região.</p>
-
-        <!-- NOTA: INSERIR IMAGENS DO PORTFOLIO AQUI-->
-        <div id="portfolio-grid"></div>
-
-        <a href="#portfolio-completo" class="botao-ver-projetos">
-          Ver todos os Projetos
-        </a>
-        <div class="faixa-status">
-            <div class="container-status">
-          <div class="card-status">
-            <span class="stat-number cyan">10+</span>
-            <p class="label-status">Anos de experiência</p>
-          </div>
-
-          <div class="card-status">
-            <span class="stat-number magenta">500+</span>
-            <p class="label-status">Clientes Atendidos</p>
-          </div>
-
-          <div class="card-status">
-            <span class="stat-number cyan">92%</span>
-            <p class="label-status">Satisfação Garantida</p>
-          </div>
-
-          <div class="card-status">
-            <span class="stat-number magenta">24h</span>
-            <p class="label-status">Suporte de Emergência</p>
-          </div>
-        </div>
-        </div>
         
-      </section>
+        <section id="inicio">
+          <div class="inicio-blob inicio-blob--1"></div>
 
+          <div class="inicio-grid">
+
+            <div class="inicio-conteudo">
+              <p class="texto-auxiliar">Atendimento em Sorocaba e Região</p>
+              
+              <h1 class="titulo-inicio">
+              Climatização e 
+              <span class="highlight"> Manutenção </span>
+              que Funciona.
+              </h1>
+
+              <p class="descricao-inicio">
+                Especialistas em ar condicionado, refrigeração e eletromecânica.
+                Técnicos certificados, orçamento gratuito e garantia em todos os
+                Serviços.
+              </p>
+
+            <div class="acoes-inicio">
+              <a href="./frontend/src/paginas/agendamento.html" class="btn btn-atendimento">
+                <!-- Simbolo Calendario -->
+                <!-- SVG extraído para assets/icons/calendario.svg e substituído por img. -->
+                <img src="./frontend/assets/icons/calendario.svg" alt="" class="svg svg-calendario" />
+                <span> Agendar Atendimento </span>
+              </a>
+              <a
+                href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
+                target="_blank"
+                class="btn btn-whatsapp"
+              >
+                <!-- Simbolo Whatsapp -->
+                <!-- SVG extraído para assets/icons/whatsapp.svg e substituído por img. -->
+                <img src="./frontend/assets/icons/whatsapp.svg" alt="" class="svg svg-whatsapp" />
+                <span> WhatsApp </span>
+              </a>
+            </div>
+            
+
+          <div class="lista-qualidades">
+              <span>
+                <img src="./frontend/assets/icons/check.svg" alt="" width="24" height="24" class="svg" />
+                Técnicos certificados
+              </span>
+              <span>
+                <img src="./frontend/assets/icons/check.svg" alt="" width="24" height="24" class="svg" />
+                Atendimento 8 às 18h
+              </span>
+              <span>
+                <img src="./frontend/assets/icons/check.svg" alt="" width="24" height="24" class="svg" />
+                Visita Gratuita
+              </span>
+            </div>
+          </div>
+            
+          <div class="inicio-visual">
+            <img
+              src="./frontend/assets/logoHVAC.png"
+              alt="HVAC logo hero"
+              class="hero-img"
+            />
+            <div class="float-card">
+              <img src="./frontend/assets/icons/servico-concluido.svg" alt="" width="24" height="24" class="svg-check" />
+              <div class="card-servico-concluido">
+                <!-- DEIXAR PARA ADICIONAR APOS O SITE FUNCIONAR-->
+                <strong> Último Serviço </strong>
+                <small> <!-- PUXAR SERVIÇO MAIS RECENTE DO BANCO -->  </small>
+              </div>
+            </div>
+          </div>
+  
+        </section>
+
+        <!-- Serviços -->
+        <section id="servicos">
+          <span class="servicos-auxiliar">Triagem Inteligente ── Autoatendimento</span>
+          <h2 class="servicos-titulo">Como podemos ajudar?</h2>
+          <p class="servicos-subtitulo">
+            Selecione o tipo de equipamento. Descreva o problema e envie fotos ou
+            vídeos 
+            para agilizar o atendimento.
+          </p>
+
+          <div class="grade-cards">
+            <!-- ------ AR CONDICIONADO ------ -->
+            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+              <div class="card-topo">
+                <!-- Simbolo AC-->
+              <!-- SVG extraído para assets/icons/ar-condicionado.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/ar-condicionado.svg" alt="" class="svg-card svg-ar-condicionado" aria-hidden="true" />
+              <!-- Seta -->
+              <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
+              </div>
+              
+              <h3 class="titulo-servico"><strong> Ar Condicionado </strong></h3>
+              <span class="subtitulo-servico">
+                Instalação, manutenção e higienização de
+                splits, cassetes e VRF
+              </span>
+            </a>
+
+            <!-- ------ GELADEIRA ------ -->
+            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+              <div class="card-topo">
+                <!-- Icone Geladeira -->
+              <!-- SVG extraído para assets/icons/frigorifico.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/frigorifico.svg" alt="" class="svg-card svg-frigorifico" aria-hidden="true" id="frigorifico-svg" />
+              <!-- Seta -->
+              <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
+              </div>
+              
+              <h3 class="titulo-servico">
+                <strong> Frigorifico / Geladeira </strong>
+              </h3>
+              <span class="subtitulo-servico">
+                Conserto e manutenção de câmaras frias e 
+                refrigeradores comerciais
+              </span>
+            </a>
+
+            <!-- ------ ILUMINACAO ------ -->
+            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+              <div class="card-topo">
+                <!-- Icone Lâmpada -->
+              <!-- SVG extraído para assets/icons/iluminacao.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/iluminacao.svg" alt="" class="svg-card svg-iluminacao" aria-hidden="true" />
+              <!-- Seta -->
+              <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
+              </div>
+              
+              <h3 class="titulo-servico"><strong> Iluminação </strong></h3>
+              <span class="subtitulo-servico">
+                Instalação de LED, luminárias industriais e 
+                sistemas de emergência
+              </span>
+            </a>
+
+            <!-- ------ MANUTENÇÃO ------ -->
+            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+              <div class="card-topo">
+                <!-- Icone Manutenção -->
+              <!-- SVG extraído para assets/icons/manutencao.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/manutencao.svg" alt="" class="svg-card svg-manutencao" aria-hidden="true" />
+              <!-- Seta -->
+              <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
+              </div>
+              
+              <h3 class="titulo-servico">
+                <strong> Manutenção Preventiva </strong>
+              </h3>
+              <span class="subtitulo-servico">
+                Planos periódicos para equipamentos
+                industriais e comerciais
+              </span>
+            </a>
+
+            <!-- ------ ELETROMECANICA ------ -->
+            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+              <div class="card-topo">
+                <!-- Icone Raio -->
+              <!-- SVG extraído para assets/icons/raio.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/raio.svg" alt="" class="svg-card svg-raio" aria-hidden="true" />
+              <!-- Seta -->
+              <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
+              </div>
+              
+              <h3 class="titulo-servico"><strong> Eletromecânica </strong></h3>
+              <span class="subtitulo-servico">
+                Motores, bombas, quadros elétricos e
+                automação industrial
+              </span>
+            </a>
+
+            <!-- ------ ATENDIMENTO URGENTE ------ -->
+            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+              <div class="card-topo">
+                <!-- Icone urgente -->
+              <!-- SVG extraído para assets/icons/atendimento-urgente.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/atendimento-urgente.svg" alt="" class="svg-card svg-atendimento-urgente" aria-hidden="true" />
+              <!-- Seta -->
+              <!-- SVG extraído para assets/icons/seta.svg e substituído por img. -->
+              <img src="./frontend/assets/icons/seta.svg" alt="" class="svg svg-seta" />
+              </div>
+              
+              <h3 class="titulo-servico">
+                <strong> Atendimento Urgente </strong>
+              </h3>
+              <span class="subtitulo-servico">
+                Suporte de emergência 24h para falhas
+                críticas de equipamentos
+              </span>
+            </a>
+          </div>
+
+          <p class="servico-rodape">📎 Após selecionar, pode <a href="#servicos">anexar fotos ou vídeos</a> do problema</p>
+
+        
+        </section>
+      </div>
+
+      <div class="fundo-continuo fundo-continuo--portfolio">
+        <!-- ------ PORTFOLIO ------ -->
+        <section id="portfolio">
+          <p class="texto-section">Portfólio</p>
+
+          <h2>Trabalhos Realizados</h2>
+          <p>Mais de 500 clientes satisfeitos em Sorocaba e região.</p>
+
+          <!-- NOTA: INSERIR IMAGENS DO PORTFOLIO AQUI-->
+          <div id="portfolio-grid"></div>
+
+          <a href="#portfolio-completo" class="botao-ver-projetos">
+            Ver todos os Projetos
+          </a>
+          <div class="faixa-status">
+              <div class="container-status">
+            <div class="card-status">
+              <span class="stat-number cyan">10+</span>
+              <p class="label-status">Anos de experiência</p>
+            </div>
+
+            <div class="card-status">
+              <span class="stat-number magenta">500+</span>
+              <p class="label-status">Clientes Atendidos</p>
+            </div>
+
+            <div class="card-status">
+              <span class="stat-number cyan">92%</span>
+              <p class="label-status">Satisfação Garantida</p>
+            </div>
+
+            <div class="card-status">
+              <span class="stat-number magenta">24h</span>
+              <p class="label-status">Suporte de Emergência</p>
+            </div>
+          </div>
+          </div>
+          
+        </section>
+      </div>
       <!-- CONTATOS -->
       <section id="contatos">
-        <p class="texto-contatos">Urgência? Disponíveis 24h</p>
-        <h2 class="titulo-contatos">
-          Precisa de Atendimento
-          <span style="color: cyan"> Urgente? </span>
-        </h2>
-        <p class="subtitulo-contatos">
-          Ligue ou envie mensagem agora. Nossa equipe irá te responder para
-          emergências.
-        </p>
+        <p class="texto-contatos">Nosso Atendimento</p>
 
-        <a
-          href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20relatar%20uma%20emergência"
-          target="_blank"
-          class="botao-whatsapp"
-        >
-          <!-- Simbolo Whatsapp -->
-          <!-- SVG extraído para assets/icons/whatsapp.svg e substituído por img. -->
-          <img src="./frontend/assets/icons/whatsapp.svg" alt="" class="svg-whatsapp" />
-          WhatsApp Agora
-        </a>
+        <h2 class="titulo-contatos"> Como funciona nosso <span> Atendimento?</span></h2>
+        <section class="grid-atendimento">
+          
+          <div class="atendimentos">
+            <h3 class="atendimentos-titulo"> Onde e quando atendemos: </h3>
+
+            <p> <strong> Região: </strong> Sorocaba, Itu e região </p>
+            <p> <strong> Horário: </strong> 8h às 18h, com horários fixos </p>
+            <p> <strong> Endereço: </strong> Rua Tenente Giovaldo, 57 · Éden · Sorocaba </p>
+            
+            <p class="atendimentos-observacao"> O orçamento é feito após a visita técnica.</p>
+          </div>
+
+          <div class="agendar">
+            <h3 class="titulo-agendar"> Pronto para começar?</h3>
+            <span class="descricao-agendar"> Em poucos minutos você relata seu problema e recebe a confirmação pelo WhatsApp. </span>
+
+            <a class="agendar-botao" href="./frontend/src/paginas/agendamento.html"> Agendar Atendimento</a>
+          </div>
+        </section>
 
         <!-- CARDS DADOS -->
         <div class="info-cards">
@@ -412,7 +343,6 @@
             <p class="card-texto">
               Segunda a Sexta: 8h às 18h 
               Sábado: 8h às 12h 
-              Emergências: 24h/7
             </p>
           </div>
 
@@ -460,9 +390,22 @@
           <li><a href="#sobre">Sobre Nós</a></li>
           <li><a href="#equipe">Portfólio</a></li>
           <li><a href="#blog">Blog</a></li>
-          <li><a href="#areacliente">Área do Cliente</a></li>
+          <li><a href="./frontend/src/paginas/cadastro.html">Área do Cliente</a></li>
           <li><a href="#contatos">Contatos</a></li>
         </ul>
+      </div>
+
+      <!-- Coluna Contato -->
+      <div>
+        
+        <h4 class="footer-coluna-titulo">Contato</h4>
+        <ul>
+          <li class="footer-dados"> <a href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"> (11) 94387-0287 </a> </li>
+          <li class="footer-dados"> Rua Tenente Giovaldo, 57 - Éden Sorocaba - SP </li>
+          <li class="footer-dados"> Atendimento das 8h às 18h </li>
+        </ul>
+        
+
       </div>
       <!-- Barra Copyright -->
       <div class="footer-fundo">
@@ -477,6 +420,23 @@
         </ul>
       </div>
     </footer>
+
+    <!-- Botão flutuante do WhatsApp -->
+    <a
+      href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="whatsapp-flutuante"
+      aria-label="Falar no WhatsApp"
+    >
+      <span class="whatsapp-flutuante-texto">Fale conosco</span>
+      <img
+        src="./frontend/assets/icons/whatsapp.svg"
+        alt=""
+        class="whatsapp-flutuante-icone"
+      />
+    </a>
+
     <script src="./frontend/src/js/script.js"></script>
   </body>
 </html>
