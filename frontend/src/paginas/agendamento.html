@@ -235,7 +235,7 @@
           <div class="agendamento-grid">
             <!-- CALENDÁRIO -->
             <div class="painel-agendamento">
-              <h3 id="tituloMes">Agosto 2026</h3>
+              <h3 id="tituloMes">Carregando horários…</h3>
 
               <div class="dias-semana">
                 <span>Dom</span>
@@ -262,45 +262,28 @@
               <div class="horarios-grid" id="horarios"></div>
             </div>
           </div>
-          <!-- DADOS DO CLIENTE -->
-          <div class="campo-area">
-            <label for="nomeCompleto">Nome completo</label>
-            <input
-              type="text"
-              id="nomeCompleto"
-              placeholder="Digite seu nome completo"
-              autocomplete="name"
-            />
+
+          <div class="dados-cliente-grid">
+            <div class="campo-area">
+              <label for="nomeCompleto">Nome completo</label>
+              <input id="nomeCompleto" type="text" autocomplete="name" maxlength="150" required />
+            </div>
+            <div class="campo-area">
+              <label for="telefone">Telefone com DDD</label>
+              <input id="telefone" type="tel" autocomplete="tel" maxlength="25" required />
+            </div>
           </div>
 
-          <div class="campo-area">
-            <label for="telefone">Telefone</label>
-            <input
-              type="tel"
-              id="telefone"
-              placeholder="(15) 99999-9999"
-              autocomplete="tel"
-              maxlength="15"
-            />
-          </div>
-          <!-- TÉCNICO DE PREFERÊNCIA -->
-          <div class="campo-area">
-            <label for="tecnico">
-              Técnico de preferência
-              <span>(opcional)</span>
-            </label>
-
-            <select id="tecnico">
-              <option value="">Sem preferência</option>
-            </select>
-          </div>
           <!-- ENDEREÇO -->
           <div class="campo-area">
-            <label for="endereco"> Endereço de atendimento </label>
+            <label for="endereco">Endereço de atendimento</label>
 
             <input
               type="text"
               id="endereco"
+              maxlength="500"
+              autocomplete="street-address"
+              required
               placeholder="Rua, número, bairro — Sorocaba, SP"
             />
           </div>
@@ -314,6 +297,8 @@
 
             <textarea
               id="descricao"
+              maxlength="2000"
+              required
               placeholder="Ex: O ar condicionado não resfria, faz barulho ao ligar. Há 3 anos de uso..."
             ></textarea>
           </div>
@@ -326,19 +311,7 @@
 
             <span> JPG, PNG, MP4 · até 5 MB </span>
 
-            <input
-              type="file"
-              id="arquivo"
-              accept="image/*,video/*"
-              multiple
-              aria-describedby="erro-arquivo"
-            />
-
-            <small
-              id="erro-arquivo"
-              class="erro-campo"
-              aria-live="polite"
-            ></small>
+            <input type="file" id="arquivo" accept="image/*,video/*" multiple />
           </div>
 
           <!-- BOTÕES -->
@@ -369,19 +342,13 @@
 
             <div class="resumo-agendamento">
               <div class="resumo-linha">
-                <span>Nome completo</span>
+                <span>Nome</span>
                 <strong id="resumoNomeCompleto"></strong>
               </div>
 
               <div class="resumo-linha">
                 <span>Telefone</span>
                 <strong id="resumoTelefone"></strong>
-              </div>
-
-              <!-- TÉCNICO DE PREFERÊNCIA -->
-              <div class="resumo-linha">
-                <span>Técnico de preferência</span>
-                <strong id="resumoTecnico">Sem preferência</strong>
               </div>
 
               <div class="resumo-linha">

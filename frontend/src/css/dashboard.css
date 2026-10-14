@@ -297,6 +297,41 @@ body > header {
     rgb(224 64 251 / 6%)
   );
 }
+.cabecalho-servico {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.informacoes-servico {
+  margin-top: 10px;
+}
+.etiqueta-cancelado {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 30px;
+  background: rgb(255 82 82 / 14%);
+  color: #ff8b8b;
+  font-size: 11px;
+  font-weight: 700;
+}
+.botao-detalhes {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 5%);
+  color: var(--ciano);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+.botao-detalhes:hover {
+  background: rgb(0 229 255 / 10%);
+}
 .titulo-cartao,
 .titulo-servico {
   display: inline;
@@ -623,6 +658,51 @@ body > header {
   gap: 10px;
 }
 
+.documento-cliente {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 4%);
+  color: #c0c7d7;
+  font-size: 12px;
+}
+.documento-cliente strong {
+  color: #fff;
+  font-size: 13px;
+}
+.documento-cliente small {
+  color: var(--texto-secundario);
+}
+.conteudo-inicial > #status-dashboard {
+  min-height: 1.5em;
+}
+#dialog-detalhes {
+  width: min(560px, calc(100% - 32px));
+  max-height: min(80vh, 680px);
+  margin: auto;
+  padding: 24px;
+  border: 1px solid var(--borda);
+  border-radius: 20px;
+  background: #101a35;
+  color: #fff;
+}
+#dialog-detalhes::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+#dialog-detalhes h2 {
+  margin-bottom: 16px;
+}
+.detalhe-linha {
+  margin-block: 10px;
+  color: var(--texto-secundario);
+  overflow-wrap: anywhere;
+}
+#dialog-detalhes form {
+  margin-top: 18px;
+}
+
 .documentos .btn-documento {
   margin: 0;
   padding: 12px;
@@ -830,11 +910,15 @@ body > header {
   }
 }
 
-/* Tablet: duas colunas de indicadores e uma coluna de conteúdo. */
+/* Tablet: reorganiza os indicadores sem empilhar a área principal cedo demais. */
 @media (max-width: 1023px) {
   .resumo {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Em telas menores, a coluna lateral passa para baixo do conteúdo. */
+@media (max-width: 899px) {
   .colunas-dashboard {
     grid-template-columns: minmax(0, 1fr);
   }

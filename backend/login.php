@@ -25,9 +25,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 }
 
 $email = $_POST['email'] ?? null;
-$senha = $_POST['senha'] ?? null;
+$senhaDigitada = $_POST['senha'] ?? null;
 
-if (!is_string($email) || !is_string($senha)) {
+if (!is_string($email) || !is_string($senhaDigitada)) {
     responderLogin(422, [
         'sucesso' => false,
         'mensagem' => 'Informe um e-mail válido e sua senha.'
@@ -39,9 +39,9 @@ $email = strtolower(trim($email));
 if (
     strlen($email) > 254
     || !filter_var($email, FILTER_VALIDATE_EMAIL)
-    || $senha === ''
-    || strlen($senha) > 72
-    || str_contains($senha, "\0")
+    || $senhaDigitada === ''
+    || strlen($senhaDigitada) > 72
+    || str_contains($senhaDigitada, "\0")
 ) {
     responderLogin(422, [
         'sucesso' => false,
@@ -68,7 +68,7 @@ try {
     if (
         !$usuario
         || (int) $usuario['ativo'] !== 1
-        || !password_verify($senha, $usuario['senha_hash'])
+        || !password_verify($senhaDigitada, $usuario['senha_hash'])
     ) {
         responderLogin(401, [
             'sucesso' => false,

@@ -38,8 +38,8 @@
           <span class="avatar-perfil" aria-hidden="true">MM</span>
 
           <div>
-            <h2>Matheus Miranda</h2>
-            <p>Cliente desde janeiro de 2026</p>
+            <h2>Carregando…</h2>
+            <p>Dados da sua conta</p>
           </div>
         </div>
 
@@ -55,15 +55,9 @@
                 id="nome"
                 name="nome"
                 autocomplete="name"
-                value="Matheus Miranda"
-                aria-describedby="erro-nome"
+                maxlength="150"
+                required
               />
-
-              <small
-                id="erro-nome"
-                class="erro-campo_perfil"
-                aria-live="polite"
-              ></small>
             </div>
 
             <div class="campo">
@@ -73,15 +67,9 @@
                 id="email"
                 name="email"
                 autocomplete="email"
-                value="matheus@exemplo.com"
-                aria-describedby="erro-email"
+                maxlength="254"
+                required
               />
-
-              <small
-                id="erro-email"
-                class="erro-campo_perfil"
-                aria-live="polite"
-              ></small>
             </div>
 
             <div class="campo">
@@ -91,14 +79,9 @@
                 id="telefone"
                 name="telefone"
                 autocomplete="tel"
-                value="(15) 99618-4901"
+                maxlength="25"
+                required
               />
-
-              <small
-                id="erro-telefone"
-                class="erro-campo_perfil"
-                aria-live="polite"
-              ></small>
             </div>
 
             <div class="campo campo-completo">
@@ -108,24 +91,18 @@
                 id="endereco"
                 name="endereco"
                 autocomplete="street-address"
-                value="Rua exemplo, 327 - Sorocaba SP"
-                aria-describedby="ajuda-endereco erro-endereco"
+                maxlength="500"
+                aria-describedby="ajuda-endereco"
               />
 
-              <small
-                id="erro-telefone"
-                class="erro-campo_perfil"
-                aria-live="polite"
-              ></small>
-
               <small id="ajuda-endereco">
-                Inclua rua, número, complemento, cidade e estado.
+                Inclua rua, número, complemento, cidade e estado. Você pode deixar o campo vazio.
               </small>
             </div>
           </div>
 
           <p class="aviso-demonstracao" id="aviso-salvamento" role="status">
-            Os dados desta demonstração serão salvos apenas neste navegador.
+            Seus dados serão carregados da sua conta.
           </p>
 
           <div class="acoes-formulario">

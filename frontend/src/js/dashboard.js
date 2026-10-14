@@ -1,433 +1,368 @@
-const areaNotificacoes = document.querySelector(".area-notificacoes");
-const botaoNotificacoes = document.querySelector("#btn-notificacoes");
-const painelNotificacoes = document.querySelector("#painel-notificacoes");
-const botaoFechar = document.querySelector("#fechar-notificacoes");
-const listaNotificacoes = document.querySelector("#lista-notificacoes");
-const contadorNotificacoes = document.querySelector(".contador-notificacoes");
-const statusNotificacoes = document.querySelector("#status-notificacoes");
+(() => {
+  "use strict";
 
-const listaHistorico = document.querySelector(".lista-servicos");
-const listaAndamento = document.querySelector("#servicos-andamento");
-const listaDocumentos = document.querySelector(".documentos");
+  const API = "../../../backend/dashboard_cliente.php";
+  const elemento = (seletor) => document.querySelector(seletor);
+  const statusDashboard = elemento("#status-dashboard");
+  const botaoRecarregar = elemento("#recarregar-dashboard");
+  const botaoSair = elemento("#botao-sair");
+  const botaoNotificacoes = elemento("#btn-notificacoes");
+  const painelNotificacoes = elemento("#painel-notificacoes");
+  const listaNotificacoes = elemento("#lista-notificacoes");
+  const estadoNotificacoesVazio = elemento("#notificacoes-vazias");
+  const avisoNotificacoes = elemento("#status-notificacoes");
+  const botaoMarcarLidas = elemento("#marcar-lidas");
+  const botaoLimparLidas = elemento("#limpar-lidas");
+  const listaAndamento = elemento("#servicos-andamento");
+  const listaPedidos = elemento(".lista-servicos");
+  const listaDocumentos = elemento(".documentos");
+  const dialogoDetalhes = elemento("#dialog-detalhes");
+  let dadosAtuais = null;
+  let carregando = false;
+  let csrf = "";
+  let ultimaAtualizacao = 0;
 
-const statusDashboard = document.querySelector("#status-dashboard");
-const botaoRecarregar = document.querySelector("#recarregar-dashboard");
-
-let carregandoDashboard = false;
-let controleDashboard = null;
-
-// Cria elementos usando texto, sem interpretar os dados como HTML.
-function criarElemento(tag, classe, texto) {
-  const elemento = document.createElement(tag);
-
-  if (classe) {
-    elemento.className = classe;
+  function criar(tag, classe, texto) {
+    const no = document.createElement(tag);
+    if (classe) no.className = classe;
+    if (texto !== undefined && texto !== null) no.textContent = String(texto);
+    return no;
   }
 
-  if (texto !== undefined && texto !== null) {
-    elemento.textContent = texto;
+  function formatarData(valor) {
+    const data = String(valor || "").slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(data) ? data.split("-").reverse().join("/") : "—";
   }
 
-  return elemento;
-}
-
-function formatarData(valor) {
-  const data = String(valor || "").slice(0, 10);
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
-    return "Data não informada";
+  function formatarDataHora(valor) {
+    if (!valor) return "Ainda não agendado";
+    const texto = String(valor).replace("T", " ");
+    return `${formatarData(texto)} às ${texto.slice(11, 16)}`;
   }
 
-  return data.split("-").reverse().join("/");
-}
+  function iniciais(nome) {
+    const partes = String(nome || "").trim().split(/\s+/).filter(Boolean);
+    if (!partes.length) return "?";
+    return `${partes[0][0]}${partes.length > 1 ? partes.at(-1)[0] : ""}`.toUpperCase();
+  }
 
-function criarEtiqueta(servico) {
-  const classes = {
-    EM_ANDAMENTO: "etiqueta-laranja",
-    CONCLUIDO: "etiqueta-verde",
-    AGENDADO: "etiqueta-ciano",
-    SOLICITADO: "etiqueta-ciano",
-  };
+  function atualizarPerfil(usuario) {
+    const nome = String(usuario.nome || "Cliente").trim() || "Cliente";
+    document.querySelectorAll(".nome-usuario").forEach((no) => { no.textContent = nome; });
+    document.querySelector(".usuario .email-usuario").textContent = usuario.email || "";
+    elemento(".coluna-lateral .email-usuario").textContent = `📧 ${usuario.email || "E-mail não informado"}`;
+    elemento(".telefone-usuario").textContent = `📱 ${usuario.telefone || "Telefone não informado"}`;
+    elemento(".endereco-usuario").textContent = `📍 ${usuario.endereco || "Endereço não cadastrado"}`;
+    elemento("#avatar-usuario").textContent = iniciais(nome);
+    elemento("#avatar-meu-perfil").textContent = iniciais(nome);
+    elemento("#titulo-dashboard").textContent = `Bem-vindo, ${nome.split(/\s+/)[0]}! 👋`;
+    elemento(".tempo-cliente").textContent = `Cliente desde: ${formatarData(usuario.criado_em)}`;
+  }
 
-  return criarElemento(
-    "p",
-    classes[servico.status] || "descricao-servico",
-    servico.status_nome
-  );
-}
+  function classeStatus(status) {
+    if (status === "EM_ANDAMENTO") return "etiqueta-laranja";
+    if (status === "CONCLUIDO") return "etiqueta-verde";
+    if (status === "CANCELADO") return "etiqueta-cancelado";
+    return "etiqueta-ciano";
+  }
 
-// Mostra apenas os serviços recebidos do banco.
-function renderizarServicos(servicos) {
-  listaAndamento.replaceChildren();
-  listaHistorico.replaceChildren();
+  function criarEtapas(status) {
+    const etapas = ["Solicitado", "Agendado", "Em andamento", "Concluído"];
+    const indiceAtual = {
+      SOLICITADO: 0,
+      AGENDADO: 1,
+      EM_ANDAMENTO: 2,
+      CONCLUIDO: 3,
+    }[status];
+    if (indiceAtual === undefined) return null;
+    const lista = criar("ol", "progresso-servico");
+    lista.setAttribute("aria-label", "Etapas do pedido");
+    etapas.forEach((nome, indice) => {
+      const etapa = criar("li", indice <= indiceAtual ? "etapa etapa-preenchida" : "etapa", nome);
+      if (indice === indiceAtual) {
+        etapa.setAttribute("aria-current", "step");
+      }
+      lista.append(etapa);
+    });
+    return lista;
+  }
 
-  for (const servico of servicos) {
-    const emAndamento = servico.status === "EM_ANDAMENTO";
-
-    const cartao = criarElemento(
-      "article",
-      emAndamento ? "cartao servico-ativo" : "servico-historico"
-    );
-
+  function criarServico(servico, destaque = false) {
+    const cartao = criar("article", destaque ? "cartao servico-ativo" : "servico-historico");
     cartao.dataset.servicoId = servico.id;
-
-    cartao.append(
-      criarElemento(
-        "h3",
-        emAndamento ? "titulo-cartao" : "titulo-servico",
-        servico.tipo
-      ),
-      criarEtiqueta(servico),
-      criarElemento(
-        "p",
-        "descricao-servico",
-        `${servico.protocolo} · Solicitado em ${formatarData(servico.criado_em)}`
-      )
+    const cabecalho = criar("div", "cabecalho-servico");
+    cabecalho.append(
+      criar("h3", destaque ? "titulo-cartao" : "titulo-servico", servico.tipo),
+      criar("span", classeStatus(servico.status), servico.status_nome),
     );
+    if (servico.urgente) cabecalho.append(criar("span", "etiqueta-cancelado", "Urgente"));
+    cartao.append(cabecalho);
+    cartao.append(criar("p", "servico-cartao", `${servico.protocolo} · Pedido em ${formatarData(servico.criado_em)}`));
+    if (servico.descricao) cartao.append(criar("p", "descricao-cartao", servico.descricao));
 
-    if (servico.descricao) {
-      cartao.append(
-        criarElemento("p", "descricao-cartao", servico.descricao)
+    const informacoes = criar("div", "informacoes-servico");
+    informacoes.append(
+      criar("p", "descricao-servico", `Agendamento: ${formatarDataHora(servico.inicio_previsto)}`),
+      criar("p", "descricao-servico", `Endereço: ${servico.endereco || "Não informado"}`),
+    );
+    cartao.append(informacoes);
+
+    if (servico.tecnico) {
+      const tecnico = criar("div", "tecnico");
+      tecnico.append(
+        criar("span", "foto-tecnico", iniciais(servico.tecnico)),
+        criar("span", "nome-tecnico", servico.tecnico),
+        criar("p", "descricao-tecnico", "Técnico responsável"),
       );
+      const telefoneInformado = String(servico.telefone_tecnico || "").replace(/\D/g, "");
+      const telefone = telefoneInformado && !telefoneInformado.startsWith("55")
+        ? `55${telefoneInformado}`
+        : telefoneInformado;
+      if (telefone) {
+        const link = criar("a", "", "WhatsApp");
+        link.href = `https://wa.me/${telefone}`;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        tecnico.append(link);
+      }
+      cartao.append(tecnico);
     }
 
-    if (emAndamento) {
-      listaAndamento.append(cartao);
-    } else {
-      const item = criarElemento("li");
-      item.append(cartao);
-      listaHistorico.append(item);
-    }
+    const progresso = criarEtapas(servico.status);
+    if (progresso) cartao.append(progresso);
+    const botaoDetalhes = criar("button", "botao-detalhes", "Ver detalhes completos →");
+    botaoDetalhes.type = "button";
+    botaoDetalhes.dataset.detalhesId = servico.id;
+    cartao.append(botaoDetalhes);
+    return cartao;
   }
 
-  document.querySelector("#andamento-vazio").hidden =
-    listaAndamento.children.length > 0;
-
-  listaHistorico.hidden = listaHistorico.children.length === 0;
-
-  const historicoVazio = document.querySelector("#historico-vazio");
-
-  historicoVazio.hidden = listaHistorico.children.length > 0;
-
-  historicoVazio.querySelector("p").textContent =
-    servicos.length === 0
+  function renderizarServicos(servicos) {
+    listaAndamento.replaceChildren();
+    listaPedidos.replaceChildren();
+    const andamento = servicos.filter((item) => item.status === "EM_ANDAMENTO");
+    const demais = servicos.filter((item) => item.status !== "EM_ANDAMENTO");
+    andamento.forEach((item) => listaAndamento.append(criarServico(item, true)));
+    demais.forEach((item) => {
+      const linha = criar("li");
+      linha.append(criarServico(item));
+      listaPedidos.append(linha);
+    });
+    elemento("#andamento-vazio").hidden = andamento.length > 0;
+    listaPedidos.hidden = demais.length === 0;
+    const pedidosVazios = elemento("#historico-vazio");
+    pedidosVazios.hidden = demais.length > 0;
+    pedidosVazios.querySelector("p").textContent = servicos.length === 0
       ? "Você ainda não possui pedidos."
-      : "Você não possui outros pedidos além dos serviços em andamento.";
-}
-
-function renderizarDocumentos(documentos) {
-  listaDocumentos.replaceChildren();
-
-  for (const documento of documentos) {
-    const item = criarElemento("article", "estado-vazio");
-
-    item.append(
-      criarElemento("strong", "", documento.titulo),
-      criarElemento(
-        "p",
-        "",
-        `${documento.protocolo} · ${formatarData(documento.emitido_em)}`
-      )
-    );
-
-    listaDocumentos.append(item);
+      : "Não há outros pedidos além dos serviços em andamento.";
   }
 
-  listaDocumentos.hidden = documentos.length === 0;
-
-  document.querySelector("#documentos-vazios").hidden =
-    documentos.length > 0;
-}
-
-function renderizarNotificacoes(notificacoes) {
-  listaNotificacoes.replaceChildren();
-
-  for (const notificacao of notificacoes) {
-    const item = criarElemento("li", "item-notificacao");
-
-    item.classList.toggle("nao-lida", !notificacao.lida);
-
-    item.append(
-      criarElemento("h3", "", notificacao.titulo),
-      criarElemento("p", "", notificacao.mensagem),
-      criarElemento(
-        "span",
-        "estado-notificacao",
-        notificacao.lida ? "Lida" : "Não lida"
-      )
-    );
-
-    listaNotificacoes.append(item);
-  }
-
-  const naoLidas = notificacoes.filter((item) => !item.lida).length;
-
-  contadorNotificacoes.textContent = naoLidas;
-  contadorNotificacoes.hidden = naoLidas === 0;
-
-  listaNotificacoes.hidden = notificacoes.length === 0;
-
-  document.querySelector("#notificacoes-vazias").hidden =
-    notificacoes.length > 0;
-
-  botaoNotificacoes.setAttribute(
-    "aria-label",
-    `Notificações: ${naoLidas} não lidas`
-  );
-
-  statusNotificacoes.textContent = "";
-}
-
-// Remove dados antigos durante saída ou falha de carregamento.
-// O traço significa que os dados ainda não foram confirmados.
-function limparDashboard() {
-  document.querySelectorAll(".card-indicador strong").forEach((campo) => {
-    campo.textContent = "—";
-  });
-
-  [
-    listaAndamento,
-    listaHistorico,
-    listaDocumentos,
-    listaNotificacoes,
-  ].forEach((lista) => {
-    lista.replaceChildren();
-  });
-
-  document
-    .querySelectorAll(
-      "#andamento-vazio, #historico-vazio, #documentos-vazios, #notificacoes-vazias"
-    )
-    .forEach((elemento) => {
-      elemento.hidden = true;
-    });
-
-  contadorNotificacoes.hidden = true;
-}
-
-// Busca os pedidos do usuário conectado.
-async function carregarDashboard(exibirCarregamento = false) {
-  if (carregandoDashboard) {
-    return;
-  }
-
-  carregandoDashboard = true;
-  controleDashboard = new AbortController();
-
-  if (exibirCarregamento) {
-    statusDashboard.textContent = "Carregando seus pedidos…";
-  }
-
-  botaoRecarregar.hidden = true;
-
-  try {
-    const resposta = await fetch("../../../backend/dashboard_cliente.php", {
-      credentials: "same-origin",
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-      signal: controleDashboard.signal,
-    });
-
-    if (resposta.status === 401) {
-      limparDashboard();
-      limparDadosPerfil();
-      window.location.replace("./login.html");
-      return;
-    }
-
-    if (!resposta.ok) {
-      throw new Error(`Falha ao carregar o painel: ${resposta.status}`);
-    }
-
-    const dados = await resposta.json();
-
-    const chaves = [
-      "total",
-      "andamento",
-      "concluidos",
-      "agendados",
-    ];
-
-    const resumoValido =
-      dados?.resumo &&
-      chaves.every(
-        (chave) =>
-          Number.isSafeInteger(dados.resumo[chave]) &&
-          dados.resumo[chave] >= 0
+  function renderizarDocumentos(documentos) {
+    listaDocumentos.replaceChildren();
+    documentos.forEach((documento) => {
+      const linha = criar("article", "documento-cliente");
+      linha.append(
+        criar("strong", "", documento.titulo),
+        criar("span", "", `${documento.protocolo} · ${formatarData(documento.emitido_em)}`),
+        criar("small", "", documento.tipo),
       );
+      listaDocumentos.append(linha);
+    });
+    listaDocumentos.hidden = documentos.length === 0;
+    elemento("#documentos-vazios").hidden = documentos.length > 0;
+  }
 
-    const listasValidas =
-      Array.isArray(dados?.servicos) &&
-      Array.isArray(dados?.documentos) &&
-      Array.isArray(dados?.notificacoes);
+  function renderizarNotificacoes(notificacoes) {
+    listaNotificacoes.replaceChildren();
+    notificacoes.forEach((notificacao) => {
+      const linha = criar("li", "item-notificacao");
+      linha.classList.toggle("nao-lida", !notificacao.lida);
+      linha.append(
+        criar("h3", "", notificacao.titulo),
+        criar("p", "", notificacao.mensagem),
+        criar("span", "estado-notificacao", notificacao.lida ? "Lida" : "Não lida"),
+      );
+      listaNotificacoes.append(linha);
+    });
+    const naoLidas = notificacoes.filter((item) => !item.lida).length;
+    const lidas = notificacoes.length - naoLidas;
+    elemento(".contador-notificacoes").textContent = String(naoLidas);
+    elemento(".contador-notificacoes").hidden = naoLidas === 0;
+    listaNotificacoes.hidden = notificacoes.length === 0;
+    estadoNotificacoesVazio.hidden = notificacoes.length > 0;
+    botaoMarcarLidas.hidden = naoLidas === 0;
+    botaoLimparLidas.hidden = lidas === 0;
+    botaoNotificacoes.setAttribute("aria-label", `Notificações: ${naoLidas} não lidas`);
+    avisoNotificacoes.textContent = "";
+  }
 
-    if (dados?.sucesso !== true || !resumoValido || !listasValidas) {
-      throw new Error("Resposta inválida do painel.");
+  function renderizar(dados) {
+    dadosAtuais = dados;
+    csrf = dados.csrf;
+    atualizarPerfil(dados.usuario);
+    for (const chave of ["total", "andamento", "concluidos", "agendados"]) {
+      elemento(`.indicador-${chave} strong`).textContent = String(dados.resumo[chave]);
     }
-
-    // Atualiza os quatro contadores com os valores do banco.
-    for (const chave of chaves) {
-      document.querySelector(
-        `.indicador-${chave} strong`
-      ).textContent = dados.resumo[chave];
-    }
-
     renderizarServicos(dados.servicos);
     renderizarDocumentos(dados.documentos);
     renderizarNotificacoes(dados.notificacoes);
+    statusDashboard.textContent = dados.servicos.length === 0
+      ? "Seu painel está pronto. Quando você fizer um pedido, ele aparecerá aqui."
+      : "Seus pedidos e atendimentos estão atualizados.";
+    ultimaAtualizacao = Date.now();
+  }
 
-    statusDashboard.textContent = "";
-  } catch (erro) {
-    if (erro.name === "AbortError") {
-      return;
+  async function carregarDashboard(mostrarCarregamento = false) {
+    if (carregando) return;
+    carregando = true;
+    botaoRecarregar.hidden = true;
+    if (mostrarCarregamento) statusDashboard.textContent = "Carregando seus pedidos…";
+    try {
+      const resposta = await fetch(API, {
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+      const dados = await resposta.json();
+      if (resposta.status === 401) {
+        window.location.replace("./login.html");
+        return;
+      }
+      if (!resposta.ok || dados?.sucesso !== true) {
+        throw new Error(dados?.mensagem || "Não foi possível carregar o painel.");
+      }
+      const contadores = ["total", "andamento", "concluidos", "agendados"];
+      if (!dados.usuario || !dados.resumo || !contadores.every((chave) => Number.isSafeInteger(dados.resumo[chave]) && dados.resumo[chave] >= 0)
+          || ![dados.servicos, dados.documentos, dados.notificacoes].every(Array.isArray)
+          || typeof dados.csrf !== "string") {
+        throw new Error("O servidor retornou dados incompletos.");
+      }
+      renderizar(dados);
+    } catch (erro) {
+      statusDashboard.textContent = "Não foi possível carregar seus dados. Verifique o servidor e tente novamente.";
+      botaoRecarregar.hidden = false;
+      console.error(erro);
+    } finally {
+      carregando = false;
     }
-
-    // Falha de conexão não deve aparecer como zero pedidos.
-    limparDashboard();
-
-    statusDashboard.textContent =
-      "Não foi possível carregar seus pedidos. Tente novamente.";
-
-    statusNotificacoes.textContent =
-      "Não foi possível carregar as notificações.";
-
-    botaoRecarregar.hidden = false;
-
-    console.error(erro);
-  } finally {
-    carregandoDashboard = false;
-  }
-}
-
-// Painel de notificações.
-function fecharPainel(devolverFoco = false) {
-  painelNotificacoes.hidden = true;
-  botaoNotificacoes.setAttribute("aria-expanded", "false");
-
-  if (devolverFoco) {
-    botaoNotificacoes.focus();
-  }
-}
-
-botaoNotificacoes.addEventListener("click", () => {
-  if (!painelNotificacoes.hidden) {
-    fecharPainel(true);
-    return;
   }
 
-  painelNotificacoes.hidden = false;
-  botaoNotificacoes.setAttribute("aria-expanded", "true");
-  botaoFechar.focus();
-});
-
-botaoFechar.addEventListener("click", () => {
-  fecharPainel(true);
-});
-
-document.addEventListener("click", (evento) => {
-  if (!areaNotificacoes.contains(evento.target)) {
-    fecharPainel();
+  function abrirDetalhes(id) {
+    const servico = dadosAtuais?.servicos.find((item) => item.id === id);
+    if (!servico) return;
+    const conteudo = elemento("#conteudo-detalhes");
+    conteudo.replaceChildren();
+    const campos = [
+      ["Protocolo", servico.protocolo],
+      ["Serviço", servico.tipo],
+      ["Status", servico.status_nome],
+      ["Solicitado em", formatarData(servico.criado_em)],
+      ["Data e horário", formatarDataHora(servico.inicio_previsto)],
+      ["Endereço de atendimento", servico.endereco || "Não informado"],
+      ["Técnico", servico.tecnico || "A equipe ainda não atribuiu um técnico."],
+      ["Descrição", servico.descricao || "Sem descrição adicional."],
+    ];
+    for (const [titulo, valor] of campos) {
+      const linha = criar("p", "detalhe-linha");
+      linha.append(criar("strong", "", `${titulo}: `), document.createTextNode(String(valor)));
+      conteudo.append(linha);
+    }
+    dialogoDetalhes.showModal();
   }
-});
 
-document.addEventListener("keydown", (evento) => {
-  if (evento.key === "Escape" && !painelNotificacoes.hidden) {
-    fecharPainel(true);
+  async function marcarNotificacoesLidas() {
+    if (!csrf) return;
+    botaoMarcarLidas.disabled = true;
+    avisoNotificacoes.textContent = "Atualizando…";
+    try {
+      const resposta = await fetch("../../../backend/notificacoes_lidas.php", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: new URLSearchParams({ csrf }),
+      });
+      const resultado = await resposta.json();
+      if (resposta.status === 401) return window.location.replace("./login.html");
+      if (!resposta.ok || resultado?.sucesso !== true) throw new Error(resultado?.mensagem || "Falha ao atualizar.");
+      await carregarDashboard();
+      avisoNotificacoes.textContent = "Todas as notificações foram lidas.";
+    } catch (erro) {
+      avisoNotificacoes.textContent = erro.message || "Não foi possível atualizar as notificações.";
+    } finally {
+      botaoMarcarLidas.disabled = false;
+    }
   }
-});
 
-areaNotificacoes.addEventListener("focusout", (evento) => {
-  if (
-    evento.relatedTarget &&
-    !areaNotificacoes.contains(evento.relatedTarget)
-  ) {
-    fecharPainel();
+  async function limparNotificacoesLidas() {
+    if (!csrf) return;
+    botaoLimparLidas.disabled = true;
+    avisoNotificacoes.textContent = "Limpando notificações lidas…";
+    try {
+      const resposta = await fetch("../../../backend/notificacoes_limpar.php", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: new URLSearchParams({ csrf }),
+      });
+      const resultado = await resposta.json();
+      if (resposta.status === 401) return window.location.replace("./login.html");
+      if (!resposta.ok || resultado?.sucesso !== true) throw new Error(resultado?.mensagem || "Falha ao limpar.");
+      await carregarDashboard();
+      avisoNotificacoes.textContent = resultado.removidas > 0
+        ? `${resultado.removidas} notificação(ões) lida(s) removida(s).`
+        : "Não havia notificações lidas para limpar.";
+    } catch (erro) {
+      avisoNotificacoes.textContent = erro.message || "Não foi possível limpar as notificações lidas.";
+    } finally {
+      botaoLimparLidas.disabled = false;
+    }
   }
-});
 
-// Preenche o perfil com os dados recebidos do PHP.
-function exibirPerfilDashboard(perfil) {
-  const nome = perfil.nome.trim() || "Cliente";
+  function fecharNotificacoes(devolverFoco = false) {
+    painelNotificacoes.hidden = true;
+    botaoNotificacoes.setAttribute("aria-expanded", "false");
+    if (devolverFoco) botaoNotificacoes.focus();
+  }
 
-  document.querySelectorAll(".nome-usuario").forEach((elemento) => {
-    elemento.textContent = nome;
+  botaoNotificacoes.addEventListener("click", () => {
+    painelNotificacoes.hidden = !painelNotificacoes.hidden;
+    botaoNotificacoes.setAttribute("aria-expanded", String(!painelNotificacoes.hidden));
+    if (!painelNotificacoes.hidden) elemento("#fechar-notificacoes").focus();
+  });
+  elemento("#fechar-notificacoes").addEventListener("click", () => fecharNotificacoes(true));
+  document.addEventListener("click", (evento) => {
+    if (!elemento(".area-notificacoes").contains(evento.target)) fecharNotificacoes();
+  });
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && !painelNotificacoes.hidden) fecharNotificacoes(true);
+  });
+  botaoMarcarLidas.addEventListener("click", marcarNotificacoesLidas);
+  botaoLimparLidas.addEventListener("click", limparNotificacoesLidas);
+  botaoRecarregar.addEventListener("click", () => carregarDashboard(true));
+  listaAndamento.addEventListener("click", (evento) => {
+    const botao = evento.target.closest("[data-detalhes-id]");
+    if (botao) abrirDetalhes(botao.dataset.detalhesId);
+  });
+  listaPedidos.addEventListener("click", (evento) => {
+    const botao = evento.target.closest("[data-detalhes-id]");
+    if (botao) abrirDetalhes(botao.dataset.detalhesId);
+  });
+  botaoSair.addEventListener("click", async () => {
+    botaoSair.disabled = true;
+    try {
+      await fetch("../../../backend/logout.php", { method: "POST", credentials: "same-origin", cache: "no-store" });
+    } finally {
+      window.location.replace("./login.html");
+    }
   });
 
-  document.querySelector(".usuario .email-usuario").textContent =
-    perfil.email;
-
-  document.querySelector(".coluna-lateral .email-usuario").textContent =
-    `📧 ${perfil.email}`;
-
-  document.querySelector(".telefone-usuario").textContent =
-    `📱 ${perfil.telefone}`;
-
-  document.querySelector(".endereco-usuario").textContent =
-    `📍 ${perfil.endereco}`;
-
-  document.querySelector("#avatar-usuario").textContent =
-    obterIniciais(nome);
-
-  document.querySelector("#avatar-meu-perfil").textContent =
-    obterIniciais(nome);
-
-  document.querySelector("#titulo-dashboard").textContent =
-    `Bem-vindo, ${nome.split(/\s+/)[0]}! 👋`;
-}
-
-async function atualizarPerfilDashboard() {
-  const mensagem = document.querySelector("#status-perfil");
-
-  mensagem.textContent = "Carregando perfil…";
-
-  try {
-    const perfil = await carregarPerfil();
-
-    exibirPerfilDashboard(perfil);
-    mensagem.textContent = "";
-  } catch (erro) {
-    mensagem.textContent =
-      "Não foi possível carregar seu perfil. Recarregue a página.";
-
-    console.error(erro);
-  }
-}
-
-botaoRecarregar.addEventListener("click", () => {
   carregarDashboard(true);
-});
-
-// Carregamento inicial.
-atualizarPerfilDashboard();
-carregarDashboard(true);
-
-// Atualiza ao retornar à aba.
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") {
-    carregarDashboard();
-  }
-});
-
-// Atualiza quando a página é restaurada pelo navegador.
-window.addEventListener("pageshow", (evento) => {
-  if (evento.persisted) {
-    atualizarPerfilDashboard();
-    carregarDashboard(true);
-  }
-});
-
-// Limpa os dados ao sair da página.
-window.addEventListener("pagehide", () => {
-  controleDashboard?.abort();
-  limparDashboard();
-  limparDadosPerfil();
-});
-
-// Atualiza automaticamente enquanto o painel estiver visível.
-setInterval(() => {
-  if (document.visibilityState === "visible") {
-    carregarDashboard();
-  }
-}, 30000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && Date.now() - ultimaAtualizacao > 10000) carregarDashboard();
+  });
+  window.setInterval(() => {
+    if (document.visibilityState === "visible") carregarDashboard();
+  }, 30000);
+})();

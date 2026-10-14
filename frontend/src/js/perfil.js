@@ -1,86 +1,53 @@
-// trocar esse ID para testar outro usuario
-// é apenas demonstração", não um sistema de login - AINDA
-const ID_PERFIL_ATIVO = "perfil-001";
-
-const CHAVE_PERFIL = `hvac.perfil.demo.v2.${ID_PERFIL_ATIVO}`;
-
-const CAMPOS_PERFIL = ["nome", "email", "telefone", "endereco"];
-
-// conferindo formato dos dados (enquanto não tem validação)
-function temEstruturaDePerfil(perfil) {
-  return (
-    perfil !== null &&
-    typeof perfil === "object" &&
-    !Array.isArray(perfil) &&
-    CAMPOS_PERFIL.every((campo) => typeof perfil[campo] === "string")
-  );
-}
+const PERFIL_API = "../../../backend/perfil_cliente.php";
+let csrfPerfil = "";
 
 async function carregarPerfil() {
-  // tenta recuperar alterações feitas
-  try {
-    const textoSalvo = localStorage.getItem(CHAVE_PERFIL);
-
-    if (textoSalvo !== null) {
-      const perfilSalvo = JSON.parse(textoSalvo);
-
-      if (!temEstruturaDePerfil(perfilSalvo)) {
-        throw new Error("O perfil salvo possui uma estrutura inválida.");
-      }
-
-      return perfilSalvo;
-    }
-  } catch (erro) {
-    console.warn("Não foi possível ler o perfil local.", erro);
+  const resposta = await fetch(PERFIL_API, {
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  const dados = await resposta.json();
+  if (resposta.status === 401) {
+    window.location.replace("./login.html");
+    throw new Error("Entre na sua conta novamente.");
   }
-
-  // sem alterações locais, busca os dados iniciais.
-  const resposta = await fetch("../dados/perfil.json");
-
-  if (!resposta.ok) {
-    throw new Error(`Erro ao carregar os perfis: ${resposta.status}`);
+  if (!resposta.ok || dados?.sucesso !== true || !dados.usuario || typeof dados.csrf !== "string") {
+    throw new Error(dados?.mensagem || "Não foi possível carregar o perfil.");
   }
-
-  const perfis = await resposta.json();
-
-  if (!Array.isArray(perfis)) {
-    throw new Error("O arquivo de perfis precisa conter uma lista.");
-  }
-
-  const perfil = perfis.find(
-    (item) => item !== null && item.id === ID_PERFIL_ATIVO,
-  );
-
-  if (!temEstruturaDePerfil(perfil)) {
-    throw new Error("Perfil não encontrado ou com estrutura inválida.");
-  }
-
-  return perfil;
+  csrfPerfil = dados.csrf;
+  return dados.usuario;
 }
 
-function salvarPerfil(perfil) {
-  const dados = {
-    ...perfil,
-    id: ID_PERFIL_ATIVO,
-  };
+async function salvarPerfil(perfil) {
+  if (!csrfPerfil) await carregarPerfil();
+  const formulario = new FormData();
+  formulario.set("csrf", csrfPerfil);
+  for (const campo of ["nome", "email", "telefone", "endereco"]) {
+    formulario.set(campo, String(perfil[campo] || ""));
+  }
 
-  localStorage.setItem(CHAVE_PERFIL, JSON.stringify(dados));
+  const resposta = await fetch(PERFIL_API, {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+    body: formulario,
+  });
+  const dados = await resposta.json();
+  if (resposta.status === 401) {
+    window.location.replace("./login.html");
+    throw new Error("Entre na sua conta novamente.");
+  }
+  if (!resposta.ok || dados?.sucesso !== true) {
+    throw new Error(dados?.mensagem || "Não foi possível salvar o perfil.");
+  }
+  if (typeof dados.csrf === "string") csrfPerfil = dados.csrf;
+  return dados.usuario;
 }
 
 function obterIniciais(nome) {
-  const partes = nome.trim().split(/\s+/).filter(Boolean);
-
-  if (partes.length === 0) {
-    return "?";
-  }
-
-  const primeiraInicial = partes[0][0];
-
-  if (partes.length === 1) {
-    return primeiraInicial.toUpperCase();
-  }
-
-  const ultimaInicial = partes[partes.length - 1][0];
-
-  return (primeiraInicial + ultimaInicial).toUpperCase();
+  const partes = String(nome || "").trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  return `${partes[0][0]}${partes.length > 1 ? partes[partes.length - 1][0] : ""}`.toUpperCase();
 }
