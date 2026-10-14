@@ -472,3 +472,4 @@
     if (document.visibilityState === "visible") carregarDashboard();
   }, 30000);
 })();
+
