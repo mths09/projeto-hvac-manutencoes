@@ -26,9 +26,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 
 $email = $_POST['email'] ?? null;
 $senha = $_POST['senha'] ?? null;
-$area = $_POST['area'] ?? 'cliente';
 
-if (!is_string($email) || !is_string($senha) || !is_string($area)) {
+if (!is_string($email) || !is_string($senha)) {
     responderLogin(422, [
         'sucesso' => false,
         'mensagem' => 'Informe um e-mail válido e sua senha.'
@@ -36,14 +35,6 @@ if (!is_string($email) || !is_string($senha) || !is_string($area)) {
 }
 
 $email = strtolower(trim($email));
-$area = strtolower(trim($area));
-
-if (!in_array($area, ['cliente', 'admin'], true)) {
-    responderLogin(422, [
-        'sucesso' => false,
-        'mensagem' => 'Área de acesso inválida.'
-    ]);
-}
 
 if (
     strlen($email) > 254
@@ -87,16 +78,16 @@ try {
 
     $perfil = strtolower(trim((string) $usuario['perfil']));
     $ehAdministrador = in_array($perfil, ['admin', 'administrador'], true);
-    $perfilPermitido = $area === 'admin'
-        ? $ehAdministrador
-        : $perfil === 'cliente';
+    $ehCliente = $perfil === 'cliente';
 
-    if (!$perfilPermitido) {
+    if (!$ehAdministrador && !$ehCliente) {
         responderLogin(401, [
             'sucesso' => false,
             'mensagem' => 'E-mail ou senha inválidos. Confira os dados e tente novamente.'
         ]);
     }
+
+    $area = $ehAdministrador ? 'admin' : 'cliente';
 
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
@@ -127,9 +118,7 @@ try {
         'sucesso' => true,
         'mensagem' => 'Login realizado! Abrindo seu painel...',
         'area' => $area,
-        'destino' => $area === 'admin'
-            ? './tela-adm.html'
-            : './dashboard.html'
+        'destino' => $ehAdministrador ? './tela-adm.html' : './dashboard.html'
     ]);
 } catch (Throwable $erro) {
     error_log(

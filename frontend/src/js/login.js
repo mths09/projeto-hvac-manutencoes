@@ -2,10 +2,6 @@ const formularioLogin = document.querySelector('#form-login');
 const mensagemLogin = document.querySelector('#mensagem-login');
 const botaoLogin = document.querySelector('#btn-login');
 
-const areaSolicitada = new URLSearchParams(window.location.search).get('area') === 'admin'
-  ? 'admin'
-  : 'cliente';
-
 let enviandoLogin = false;
 
 function mostrarMensagemLogin(texto, tipo) {
@@ -13,37 +9,6 @@ function mostrarMensagemLogin(texto, tipo) {
   mensagemLogin.dataset.tipo = tipo;
   mensagemLogin.hidden = false;
 }
-
-function prepararTelaDeLogin() {
-  const titulo = document.querySelector('.card h1');
-  const subtitulo = titulo?.nextElementSibling;
-  const divisor = formularioLogin.querySelector('.divisor');
-  const textoCadastro = divisor?.nextElementSibling;
-  const botaoCadastro = formularioLogin.querySelector('.btn-cadastro');
-  const linkArea = document.createElement('a');
-
-  linkArea.style.cssText =
-    'display:block;margin-top:18px;text-align:center;color:#67e8f9;font-size:14px';
-
-  if (areaSolicitada === 'admin') {
-    document.title = 'Acesso administrativo | HVAC Lex Company';
-    if (titulo) titulo.textContent = 'Acesso do administrador';
-    if (subtitulo) subtitulo.textContent = 'Entre com sua conta administrativa.';
-    if (divisor) divisor.hidden = true;
-    if (textoCadastro) textoCadastro.hidden = true;
-    if (botaoCadastro) botaoCadastro.hidden = true;
-    botaoLogin.textContent = 'Entrar no painel administrativo →';
-    linkArea.href = './login.html';
-    linkArea.textContent = 'Voltar ao login do cliente';
-  } else {
-    linkArea.href = './login.html?area=admin';
-    linkArea.textContent = 'Acesso administrativo';
-  }
-
-  formularioLogin.after(linkArea);
-}
-
-prepararTelaDeLogin();
 
 formularioLogin.addEventListener('submit', async (evento) => {
   evento.preventDefault();
@@ -58,12 +23,9 @@ formularioLogin.addEventListener('submit', async (evento) => {
   mostrarMensagemLogin('Verificando seus dados...', 'info');
 
   try {
-    const dadosFormulario = new FormData(formularioLogin);
-    dadosFormulario.set('area', areaSolicitada);
-
     const resposta = await fetch(formularioLogin.action, {
       method: 'POST',
-      body: dadosFormulario,
+      body: new FormData(formularioLogin),
       credentials: 'same-origin',
       headers: { Accept: 'application/json' }
     });
@@ -84,8 +46,8 @@ formularioLogin.addEventListener('submit', async (evento) => {
     };
 
     if (
-      dados.area !== areaSolicitada
-      || dados.destino !== destinosPermitidos[areaSolicitada]
+      !Object.prototype.hasOwnProperty.call(destinosPermitidos, dados.area)
+      || dados.destino !== destinosPermitidos[dados.area]
     ) {
       throw new Error('O servidor retornou um destino de acesso inválido.');
     }
@@ -103,9 +65,7 @@ formularioLogin.addEventListener('submit', async (evento) => {
     if (!redirecionando) {
       enviandoLogin = false;
       botaoLogin.disabled = false;
-      botaoLogin.textContent = areaSolicitada === 'admin'
-        ? 'Entrar no painel administrativo →'
-        : 'Entrar na conta →';
+      botaoLogin.textContent = 'Entrar na conta →';
     }
   }
 });
