@@ -3,10 +3,7 @@
   <head>
     <meta charset="UTF-8" />
 
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>HVAC Lex Company — Área do Cliente</title>
 
@@ -22,19 +19,12 @@
       <div class="header-interno">
         <div class="logo-header">
           <a href="../../../index.html">
-            <img
-              src="../../assets/logoHVAC.png"
-              alt="HVAC Manutenções"
-            />
+            <img src="../../assets/logoHVAC.png" alt="HVAC Manutenções" />
           </a>
 
-          <span class="titulo-logo-header">
-            HVAC Lex Company
-          </span>
+          <span class="titulo-logo-header"> HVAC Lex Company </span>
 
-          <p class="descricao-logo-header">
-            Área do Cliente
-          </p>
+          <p class="descricao-logo-header">Área do Cliente</p>
         </div>
 
         <div class="acoes">
@@ -53,11 +43,7 @@
                 class="svg-notificacao"
               />
 
-              <span
-                class="contador-notificacoes"
-                aria-hidden="true"
-                hidden
-              >
+              <span class="contador-notificacoes" aria-hidden="true" hidden>
                 0
               </span>
             </button>
@@ -69,9 +55,7 @@
               hidden
             >
               <div class="topo-notificacoes">
-                <h2 id="titulo-notificacoes">
-                  Notificações
-                </h2>
+                <h2 id="titulo-notificacoes">Notificações</h2>
 
                 <button
                   type="button"
@@ -88,11 +72,7 @@
                 hidden
               ></ul>
 
-              <p
-                id="notificacoes-vazias"
-                class="estado-vazio"
-                hidden
-              >
+              <p id="notificacoes-vazias" class="estado-vazio" hidden>
                 Você não tem notificações no momento.
               </p>
 
@@ -107,55 +87,38 @@
           </div>
 
           <div class="usuario">
-            <span
-              class="avatar-usuario"
-              id="avatar-usuario"
-              aria-hidden="true"
-            >
+            <span class="avatar-usuario" id="avatar-usuario" aria-hidden="true">
               —
             </span>
 
-            <span class="nome-usuario">
-              Carregando…
-            </span>
+            <span class="nome-usuario"> Carregando… </span>
 
             <p class="email-usuario">—</p>
           </div>
 
-          <a
-            href="./login.html"
+          <button
+            type="button"
             class="botao-sair"
+            id="botao-sair"
             aria-label="Sair"
           >
-            <img
-              src="../../assets/icons/saida.svg"
-              alt=""
-            />
+            <img src="../../assets/icons/saida.svg" alt="" />
 
             <span class="texto-sair">Sair</span>
-          </a>
+          </button>
         </div>
       </div>
     </header>
 
     <main class="container dashboard">
-      <section
-        class="conteudo-inicial"
-        aria-labelledby="titulo-dashboard"
-      >
-        <h1 id="titulo-dashboard">
-          Bem-vindo! 👋
-        </h1>
+      <section class="conteudo-inicial" aria-labelledby="titulo-dashboard">
+        <h1 id="titulo-dashboard">Bem-vindo! 👋</h1>
 
-        <p>
-          Acompanhe seus serviços e atendimentos em Sorocaba e região!
-        </p>
+        <p>Acompanhe seus serviços e atendimentos em Sorocaba e região!</p>
 
         <p id="status-perfil" role="status"></p>
 
-        <p id="status-dashboard" role="status">
-          Carregando seus pedidos…
-        </p>
+        <p id="status-dashboard" role="status">Carregando seus pedidos…</p>
 
         <button
           type="button"
@@ -166,11 +129,7 @@
           Tentar carregar novamente
         </button>
 
-        <div
-          class="resumo"
-          role="group"
-          aria-label="Resumo dos serviços"
-        >
+        <div class="resumo" role="group" aria-label="Resumo dos serviços">
           <div class="card-indicador indicador-total">
             <strong>—</strong>
             <span>Total de Serviços</span>
@@ -195,45 +154,26 @@
         <div class="colunas-dashboard">
           <div class="coluna-principal">
             <section aria-labelledby="titulo-andamento">
-              <h2
-                id="titulo-andamento"
-                class="titulo-secao"
-              >
+              <h2 id="titulo-andamento" class="titulo-secao">
                 ● Serviço em Andamento
               </h2>
 
               <div id="servicos-andamento"></div>
 
-              <p
-                id="andamento-vazio"
-                class="estado-vazio"
-                hidden
-              >
+              <p id="andamento-vazio" class="estado-vazio" hidden>
                 Nenhum serviço em andamento no momento.
               </p>
             </section>
 
             <section aria-labelledby="titulo-historico">
-              <h2
-                id="titulo-historico"
-                class="titulo-secao"
-              >
-                Meus Pedidos
-              </h2>
+              <h2 id="titulo-historico" class="titulo-secao">Meus Pedidos</h2>
 
               <ul class="lista-servicos" hidden></ul>
 
-              <div
-                id="historico-vazio"
-                class="estado-vazio"
-                hidden
-              >
+              <div id="historico-vazio" class="estado-vazio" hidden>
                 <p>Você ainda não possui pedidos.</p>
 
-                <a
-                  href="./agendamento.html"
-                  class="link-estado-vazio"
-                >
+                <a href="./agendamento.html" class="link-estado-vazio">
                   Novo Agendamento →
                 </a>
               </div>
@@ -245,57 +185,32 @@
             aria-label="Informações e ações do cliente"
           >
             <section class="cartao">
-              <h2 class="titulo-secao">
-                Ações Rápidas
-              </h2>
+              <h2 class="titulo-secao">Ações Rápidas</h2>
 
-              <a
-                href="./agendamento.html"
-                class="botao btn-agendamento"
-              >
-                <img
-                  src="../../assets/icons/calendario.svg"
-                  alt=""
-                />
+              <a href="./agendamento.html" class="botao btn-agendamento">
+                <img src="../../assets/icons/calendario.svg" alt="" />
 
-                <span class="texto-btn-agendamento">
-                  Novo Agendamento
-                </span>
+                <span class="texto-btn-agendamento"> Novo Agendamento </span>
               </a>
 
               <a
                 href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20um%20suporte%20personalizado!"
                 class="botao btn-whatsapp"
               >
-                <img
-                  src="../../assets/icons/whatsapp.svg"
-                  alt=""
-                />
+                <img src="../../assets/icons/whatsapp.svg" alt="" />
 
-                <span class="texto-btn-whatsapp">
-                  Suporte WhatsApp
-                </span>
+                <span class="texto-btn-whatsapp"> Suporte WhatsApp </span>
               </a>
 
-              <a
-                href="tel:+5511943870287"
-                class="botao btn-contato"
-              >
-                <img
-                  src="../../assets/icons/telefone.svg"
-                  alt=""
-                />
+              <a href="tel:+5511943870287" class="botao btn-contato">
+                <img src="../../assets/icons/telefone.svg" alt="" />
 
-                <span class="texto-btn-contato">
-                  (11) 94387-0287
-                </span>
+                <span class="texto-btn-contato"> (11) 94387-0287 </span>
               </a>
             </section>
 
             <section class="cartao">
-              <h2 class="titulo-secao">
-                Meu Perfil
-              </h2>
+              <h2 class="titulo-secao">Meu Perfil</h2>
 
               <div class="avatar-usuario avatar-perfil">
                 <span
@@ -307,37 +222,24 @@
                 </span>
               </div>
 
-              <p class="nome-usuario">
-                Carregando…
-              </p>
+              <p class="nome-usuario">Carregando…</p>
 
               <p class="tempo-cliente">—</p>
               <p class="email-usuario">—</p>
               <p class="telefone-usuario">—</p>
               <p class="endereco-usuario">—</p>
 
-              <a
-                href="./editar-perfil.html"
-                class="botao btn-editar-perfil"
-              >
-                <span class="texto-btn-editar-perfil">
-                  Editar Perfil
-                </span>
+              <a href="./editar-perfil.html" class="botao btn-editar-perfil">
+                <span class="texto-btn-editar-perfil"> Editar Perfil </span>
               </a>
             </section>
 
             <section class="cartao">
-              <h2 class="titulo-secao">
-                Documentos
-              </h2>
+              <h2 class="titulo-secao">Documentos</h2>
 
               <div class="documentos" hidden></div>
 
-              <p
-                id="documentos-vazios"
-                class="estado-vazio"
-                hidden
-              >
+              <p id="documentos-vazios" class="estado-vazio" hidden>
                 Seus documentos aparecerão aqui quando estiverem disponíveis.
               </p>
             </section>

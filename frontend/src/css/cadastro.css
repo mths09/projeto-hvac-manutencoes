@@ -10,9 +10,7 @@ body {
   min-height: 100vh;
   margin: 0;
   color: #ffffff;
-  overflow: hidden;
   position: relative;
-
   background-color: #0a1128;
   background-image:
     radial-gradient(circle at 50% 30%, #1a2a5e 0%, transparent 60%),

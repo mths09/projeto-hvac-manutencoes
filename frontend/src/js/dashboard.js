@@ -52,7 +52,7 @@ function criarEtiqueta(servico) {
   return criarElemento(
     "p",
     classes[servico.status] || "descricao-servico",
-    servico.status_nome
+    servico.status_nome,
   );
 }
 
@@ -66,7 +66,7 @@ function renderizarServicos(servicos) {
 
     const cartao = criarElemento(
       "article",
-      emAndamento ? "cartao servico-ativo" : "servico-historico"
+      emAndamento ? "cartao servico-ativo" : "servico-historico",
     );
 
     cartao.dataset.servicoId = servico.id;
@@ -75,20 +75,18 @@ function renderizarServicos(servicos) {
       criarElemento(
         "h3",
         emAndamento ? "titulo-cartao" : "titulo-servico",
-        servico.tipo
+        servico.tipo,
       ),
       criarEtiqueta(servico),
       criarElemento(
         "p",
         "descricao-servico",
-        `${servico.protocolo} · Solicitado em ${formatarData(servico.criado_em)}`
-      )
+        `${servico.protocolo} · Solicitado em ${formatarData(servico.criado_em)}`,
+      ),
     );
 
     if (servico.descricao) {
-      cartao.append(
-        criarElemento("p", "descricao-cartao", servico.descricao)
-      );
+      cartao.append(criarElemento("p", "descricao-cartao", servico.descricao));
     }
 
     if (emAndamento) {
@@ -126,8 +124,8 @@ function renderizarDocumentos(documentos) {
       criarElemento(
         "p",
         "",
-        `${documento.protocolo} · ${formatarData(documento.emitido_em)}`
-      )
+        `${documento.protocolo} · ${formatarData(documento.emitido_em)}`,
+      ),
     );
 
     listaDocumentos.append(item);
@@ -135,8 +133,7 @@ function renderizarDocumentos(documentos) {
 
   listaDocumentos.hidden = documentos.length === 0;
 
-  document.querySelector("#documentos-vazios").hidden =
-    documentos.length > 0;
+  document.querySelector("#documentos-vazios").hidden = documentos.length > 0;
 }
 
 function renderizarNotificacoes(notificacoes) {
@@ -153,8 +150,8 @@ function renderizarNotificacoes(notificacoes) {
       criarElemento(
         "span",
         "estado-notificacao",
-        notificacao.lida ? "Lida" : "Não lida"
-      )
+        notificacao.lida ? "Lida" : "Não lida",
+      ),
     );
 
     listaNotificacoes.append(item);
@@ -172,7 +169,7 @@ function renderizarNotificacoes(notificacoes) {
 
   botaoNotificacoes.setAttribute(
     "aria-label",
-    `Notificações: ${naoLidas} não lidas`
+    `Notificações: ${naoLidas} não lidas`,
   );
 
   statusNotificacoes.textContent = "";
@@ -185,18 +182,15 @@ function limparDashboard() {
     campo.textContent = "—";
   });
 
-  [
-    listaAndamento,
-    listaHistorico,
-    listaDocumentos,
-    listaNotificacoes,
-  ].forEach((lista) => {
-    lista.replaceChildren();
-  });
+  [listaAndamento, listaHistorico, listaDocumentos, listaNotificacoes].forEach(
+    (lista) => {
+      lista.replaceChildren();
+    },
+  );
 
   document
     .querySelectorAll(
-      "#andamento-vazio, #historico-vazio, #documentos-vazios, #notificacoes-vazias"
+      "#andamento-vazio, #historico-vazio, #documentos-vazios, #notificacoes-vazias",
     )
     .forEach((elemento) => {
       elemento.hidden = true;
@@ -243,19 +237,13 @@ async function carregarDashboard(exibirCarregamento = false) {
 
     const dados = await resposta.json();
 
-    const chaves = [
-      "total",
-      "andamento",
-      "concluidos",
-      "agendados",
-    ];
+    const chaves = ["total", "andamento", "concluidos", "agendados"];
 
     const resumoValido =
       dados?.resumo &&
       chaves.every(
         (chave) =>
-          Number.isSafeInteger(dados.resumo[chave]) &&
-          dados.resumo[chave] >= 0
+          Number.isSafeInteger(dados.resumo[chave]) && dados.resumo[chave] >= 0,
       );
 
     const listasValidas =
@@ -269,9 +257,8 @@ async function carregarDashboard(exibirCarregamento = false) {
 
     // Atualiza os quatro contadores com os valores do banco.
     for (const chave of chaves) {
-      document.querySelector(
-        `.indicador-${chave} strong`
-      ).textContent = dados.resumo[chave];
+      document.querySelector(`.indicador-${chave} strong`).textContent =
+        dados.resumo[chave];
     }
 
     renderizarServicos(dados.servicos);
@@ -355,8 +342,7 @@ function exibirPerfilDashboard(perfil) {
     elemento.textContent = nome;
   });
 
-  document.querySelector(".usuario .email-usuario").textContent =
-    perfil.email;
+  document.querySelector(".usuario .email-usuario").textContent = perfil.email;
 
   document.querySelector(".coluna-lateral .email-usuario").textContent =
     `📧 ${perfil.email}`;
@@ -367,8 +353,7 @@ function exibirPerfilDashboard(perfil) {
   document.querySelector(".endereco-usuario").textContent =
     `📍 ${perfil.endereco}`;
 
-  document.querySelector("#avatar-usuario").textContent =
-    obterIniciais(nome);
+  document.querySelector("#avatar-usuario").textContent = obterIniciais(nome);
 
   document.querySelector("#avatar-meu-perfil").textContent =
     obterIniciais(nome);
