@@ -237,6 +237,8 @@ try {
     $emailEmUso = $stmt->get_result()->num_rows > 0;
     $stmt->close();
 
+
+
     if($emailEmUso) {
         responder(409, [
             'sucesso' => false,
@@ -249,7 +251,7 @@ try {
     $emTransacao = true;
 
     // atualizar dados do usuario
-    $sql = "UPDATE usuario SET nome = ?, email = ?, telefone = ? WHERE id_usuario = ? AND ativo = 1";
+    $sql = "UPDATE usuario SET nome = ?, email = ?, telefone_x = ? WHERE id_usuario = ? AND ativo = 1";
     $stmt = $conexao->prepare($sql);
     $stmt->bind_param('sssi', $nome, $email, $telefone, $idUsuario);
     $stmt->execute();
@@ -275,27 +277,60 @@ try {
         }
     }
 
-
     // endereço
+    $sql = "SELECT id_endereco_usuario
+            FROM endereco_usuario 
+            WHERE id_usuario = ? AND ativo = 1
+            ORDER BY principal DESC, id_endereco_usuario DESC
+            LIMIT 1";
+
+    $stmt = $conexao->prepare($sql);
+    $stmt->bind_param('i', $idUsuario);
+    $stmt->execute();
+    $linhaEndereco = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    //id encontrado
+    $idEnderecoAtual = $linhaEndereco
+        ? (int) $linhaEndereco['id_endereco_usuario']
+        : null; 
+
     // verificação endereço
     if($endereco === '') {
-        $stmt = $conexao->prepare('UPDATE endereco_usuario SET ativo = 0, principal = 0 WHERE id_usuario = ?');
-        $stmt->bind_param('i', $idUsuario);
-    } else {
-        $stmt = $conexao->prepare(
-        'INSERT INTO endereco_usuario (id_usuario, endereco_informado, principal, ativo)
-        VALUES (?, ?, 1, 1)
-        ON DUPLICATE KEY UPDATE
-            endereco_informado = VALUES(endereco_informado),
-            ativo = 1,
-            principal = 1');
+        // só desativa o principal, se existir
+        if($idEnderecoAtual !== null) {
+            $stmt = $conexao->prepare(
+                'UPDATE endereco_usuario
+                SET ativo = 0, principal = 0
+                WHERE id_endereco_usuario = ? AND id_usuario = ?'
+            );
+            $stmt->bind_param('ii', $idEnderecoAtual, $idUsuario);
+            $stmt->execute();
+            $stmt->close();    
+        }
+    } elseif ($idEnderecoAtual === null) {
+            $stmt = $conexao->prepare(
+                'INSERT INTO endereco_usuario
+                    (id_usuario, endereco_informado, principal, ativo)
+                VALUES (?,?,1,1'
+            );
+            $stmt->bind_param('is', $idUsuario, $endereco);
+            $stmt->execute();
+            $stmt->close();
+        } else {
+            // se tem endereço ativo, força atualização
+            $stmt = $conexao->prepare(
+                'UPDATE endereco_usuario
+                SET endereco_informado = ?, principal = 1, ativo = 1,
+                    cep = NULL, logradouro = NULL, numero = NULL,
+                    complemento = NULL, bairro = NULL, cidade = NULL, uf = NULL
+                    WHERE id_endereco_usuario = ? AND id_usuario = ?'
+                );
+            $stmt->bind_param('sii', $endereco, $idEnderecoAtual, $idUsuario);
+            $stmt->execute();
+            $stmt->close();
+        }
 
-        $stmt->bind_param('is', $idUsuario, $endereco);
-    }
-
-    $stmt->execute();
-    $stmt->close();
-    
     // confirmar commit e responder 200
     $conexao->commit();
     $emTransacao = false;
@@ -305,29 +340,52 @@ try {
         'mensagem' => 'Perfil atualizado.'
     ]);
 
-} catch(mysqli_sql_exception $erro) {
+} catch(Throwable $erro) {
+
+    // ID de correlação
+    $errorId = bin2hex(random_bytes(8));
+
+    // 1062 com 'un_usuario_email' = race condition entre o SELECT e o UPDATE.
+    // Se renomear o índice un_usuario_email no banco, atualizar a string abaixo.
+    $ehEmailDuplicado = $erro instanceof mysqli_sql_exception 
+        && $erro->getCode() === 1062 
+        && str_contains($erro->getMessage(), 'un_usuario_email');
+    
+    // inclua o rótulo "race-email" ou "erro" para filtrar depois
+    error_log(sprintf(
+        '[atualizar_perfil][%s][%s] class=%s code=%s file=%s line=%d',
+        $errorId,
+        $ehEmailDuplicado ? 'race-email' : 'erro',
+        get_class($erro),
+        (string) $erro->getCode(),
+        $erro->getFile(),
+        $erro->getLine()
+    ));
+
     if($emTransacao) {
-        $conexao->rollback(); 
+        try {
+            $conexao->rollback();
+        } catch (Throwable $erroRollback) {
+            error_log(sprintf(
+                '[atualizar_perfil][%s][rollback-falhou] class=%s code=%s',
+                $errorId,
+                get_class($erroRollback),
+                (string) $erroRollback->getCode()
+            ));
+        }
         $emTransacao = false;
     }
-    if($erro instanceof mysqli_sql_exception 
-        && $erro->getCode() === 1062
-        && str_contains($erro->getMessage(), 'un_usuario_email')) {
-        error_log('[atualizar_perfil] race condition de email detectada: ' . $erro->getMessage());
+
+    if($ehEmailDuplicado) {
         responder(409, [
             'sucesso' => false,
-            'mensagem' => 'Este email já está em uso.'
+            'mensagem' => 'Este e-mail já existe.'
         ]);
     }
-    throw $erro;
-} catch(Throwable $erro) {
-    if($emTransacao) {
-        $conexao->rollback();
-        $emTransacao = false;
-    }
-    error_log('[atualizar_perfil] ' . $erro->getMessage() . ' | ' . $erro->getFile() . ':' . $erro->getLine());
+
     responder(500, [
         'sucesso' => false,
-        'mensagem' => 'Ops! Algo deu errado com o nosso servidor. Por favor, tente novamente em alguns minutos.' 
+        'mensagem' => 'Ops! Algo deu errado com o nosso servidor. Por favor, tente novamente em alguns minutos.',
+        'referencia' => $errorId
     ]);
 } 
