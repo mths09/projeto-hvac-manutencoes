@@ -212,7 +212,7 @@ CREATE TABLE `endereco_atendimento` (
 DROP TABLE IF EXISTS `endereco_usuario`;
 CREATE TABLE `endereco_usuario` (
   `id_endereco_usuario` bigint(20) NOT NULL,
-  `id_usuario` bigint(20) NOT NULL,
+  `id_usuario` bigint(20) NOT NULL UNIQUE,
   `rotulo` varchar(60) DEFAULT NULL,
   `endereco_informado` text NOT NULL,
   `cep` varchar(8) DEFAULT NULL,
