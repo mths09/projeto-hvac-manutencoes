@@ -2,9 +2,11 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#080f25" />
-    <title>HVAC Manutenções Sorocaba - Área do Cliente</title>
+
+    <title>HVAC Lex Company — Área do Cliente</title>
+
     <link rel="icon" href="../../assets/logoHVAC.png" />
     <link rel="stylesheet" href="../css/dashboard.css" />
     <script src="../js/dashboard.js" defer></script>
@@ -15,13 +17,10 @@
         <div class="logo-header">
           <a href="../../../index.html">
             <img src="../../assets/logoHVAC.png" alt="HVAC Manutenções" />
-            <img src="../../assets/logoHVAC.png" alt="HVAC Manutenções" />
           </a>
 
           <span class="titulo-logo-header"> HVAC Lex Company </span>
 
-          <p class="descricao-logo-header">Área do Cliente</p>
-          <span class="titulo-logo-header">HVAC Lex Company</span>
           <p class="descricao-logo-header">Área do Cliente</p>
         </div>
 
@@ -35,8 +34,6 @@
               aria-label="Notificações"
               aria-expanded="false"
             >
-              <img src="../../assets/icons/sino.svg" alt="" class="svg-notificacao" />
-              <span class="contador-notificacoes" aria-hidden="true" hidden>0</span>
               <img
                 src="../../assets/icons/sino.svg"
                 alt=""
@@ -63,8 +60,6 @@
                 >
                   ×
                 </button>
-                <h2 id="titulo-notificacoes">Notificações</h2>
-                <button type="button" id="fechar-notificacoes" aria-label="Fechar notificações">×</button>
               </div>
 
               <ul
@@ -74,23 +69,33 @@
               ></ul>
 
               <p id="notificacoes-vazias" class="estado-vazio" hidden>
-              <ul class="lista-notificacoes" id="lista-notificacoes" hidden></ul>
-              <p id="notificacoes-vazias" class="estado-vazio" hidden>
                 Você não tem notificações no momento.
               </p>
-              <button type="button" class="marcar-lidas" id="marcar-lidas" hidden>
+              <button
+                type="button"
+                class="marcar-lidas"
+                id="marcar-lidas"
+                hidden
+              >
                 Marcar todas como lidas
               </button>
-              <button type="button" class="marcar-lidas" id="limpar-lidas" hidden>
+              <button
+                type="button"
+                class="marcar-lidas"
+                id="limpar-lidas"
+                hidden
+              >
                 Limpar notificações lidas
               </button>
-              <p class="status-notificacoes" id="status-notificacoes" role="status"></p>
+              <p
+                class="status-notificacoes"
+                id="status-notificacoes"
+                role="status"
+              ></p>
             </section>
           </div>
 
           <div class="usuario">
-            <span class="avatar-usuario" id="avatar-usuario" aria-hidden="true">—</span>
-            <span class="nome-usuario">Carregando…</span>
             <span class="avatar-usuario" id="avatar-usuario" aria-hidden="true">
               —
             </span>
@@ -108,8 +113,6 @@
           >
             <img src="../../assets/icons/saida.svg" alt="" />
 
-          <button type="button" class="botao-sair" id="botao-sair" aria-label="Sair da conta">
-            <img src="../../assets/icons/saida.svg" alt="" />
             <span class="texto-sair">Sair</span>
           </button>
         </div>
@@ -121,8 +124,6 @@
         <h1 id="titulo-dashboard">Bem-vindo! 👋</h1>
 
         <p>Acompanhe seus serviços e atendimentos em Sorocaba e região!</p>
-
-        <p id="status-perfil" role="status"></p>
 
         <p id="status-dashboard" role="status">Carregando seus pedidos…</p>
 
@@ -155,11 +156,6 @@
             <strong>—</strong>
             <span>Agendados</span>
           </div>
-        <div class="resumo" role="group" aria-label="Resumo dos serviços">
-          <div class="card-indicador indicador-total"><strong>0</strong><span>Total de Serviços</span></div>
-          <div class="card-indicador indicador-andamento"><strong>0</strong><span>Em Andamento</span></div>
-          <div class="card-indicador indicador-concluidos"><strong>0</strong><span>Concluídos</span></div>
-          <div class="card-indicador indicador-agendados"><strong>0</strong><span>Agendados</span></div>
         </div>
 
         <div class="colunas-dashboard">
@@ -169,7 +165,6 @@
                 ● Serviço em Andamento
               </h2>
 
-              <h2 id="titulo-andamento" class="titulo-secao">● Serviço em Andamento</h2>
               <div id="servicos-andamento"></div>
 
               <p id="andamento-vazio" class="estado-vazio" hidden>
@@ -192,7 +187,10 @@
             </section>
           </div>
 
-          <aside class="coluna-lateral" aria-label="Informações e ações do cliente">
+          <aside
+            class="coluna-lateral"
+            aria-label="Informações e ações do cliente"
+          >
             <section class="cartao">
               <h2 class="titulo-secao">Ações Rápidas</h2>
 
@@ -221,7 +219,12 @@
               <h2 class="titulo-secao">Meu Perfil</h2>
 
               <div class="avatar-usuario avatar-perfil">
-                <span class="avatar-usuario" id="avatar-meu-perfil" aria-hidden="true">—</span>
+                <span
+                  class="avatar-usuario"
+                  id="avatar-meu-perfil"
+                  aria-hidden="true"
+                  >—</span
+                >
               </div>
 
               <p class="nome-usuario">Carregando…</p>
@@ -253,8 +256,9 @@
     <dialog id="dialog-detalhes" aria-labelledby="dialog-detalhes-titulo">
       <h2 id="dialog-detalhes-titulo">Detalhes do pedido</h2>
       <div id="conteudo-detalhes"></div>
-      <form method="dialog"><button type="submit" class="botao btn-contato">Fechar</button></form>
+      <form method="dialog">
+        <button type="submit" class="botao btn-contato">Fechar</button>
+      </form>
     </dialog>
   </body>
 </html>
-

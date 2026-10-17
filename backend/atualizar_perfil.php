@@ -331,5 +331,3 @@ try {
         'mensagem' => 'Ops! Algo deu errado com o nosso servidor. Por favor, tente novamente em alguns minutos.' 
     ]);
 } 
-
-
