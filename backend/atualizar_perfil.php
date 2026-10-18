@@ -160,7 +160,7 @@ if(!is_string($dados->endereco)) {
 }
 
 // validando formatos e limites
-$email = trim($dados->email);
+$email = strtolower(trim($dados->email));
 
 if(strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     responder(422, [
@@ -169,12 +169,12 @@ if(strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     ]);
 }
 
-$nome = trim($dados->nome);
+$nome = preg_replace('/\s+/u', ' ', trim($dados->nome));
 
-if(mb_strlen($nome, 'UTF-8') < 2 || mb_strlen($nome, 'UTF-8') > 150) {
+if(mb_strlen($nome, 'UTF-8') < 2 || mb_strlen($nome, 'UTF-8') > 150 || preg_match('/[\p{C}<>]/u', $nome)) {
     responder(422, [
         'sucesso' => false,
-        'mensagem' => 'O nome deve ter de 2 a 150 caracteres.'
+        'mensagem' => 'O nome deve ter de 2 a 150 caracteres. Não são permitidos < ou >.'
     ]);
 }
 
@@ -191,21 +191,23 @@ if (
     ]);
 }
 
-$endereco = trim($dados->endereco);
+$endereco = trim($dados->endereco) ;
 
-if(
+if (
     $endereco !== '' &&
-    (mb_strlen($endereco, 'UTF-8') < 10 ||
-    mb_strlen($endereco, 'UTF-8') > 500)
+    (
+        mb_strlen($endereco, 'UTF-8') < 10 ||
+        mb_strlen($endereco, 'UTF-8') > 500 ||
+        preg_match('/[\p{C}<>]/u', $endereco)
+    )
 ) {
     responder(422, [
         'sucesso' => false,
-        'mensagem' => 'O endereço deve ter de 10 a 500 caracteres ou ficar vazio.'
+        'mensagem' => 'O endereço deve ter de 10 a 500 caracteres ou ficar vazio. Não são permitidos < ou >.'
     ]);
 }
 
 
-// CONEXÃO COM O BANCO (puxar do arquivo 'perfil_cliente.php', linha 82)
 $emTransacao = false; // flag de segurança
 
 try {
@@ -213,18 +215,17 @@ try {
     require_once __DIR__ . '/conexao.php';  
 
     // verificar usuario
-    $sql = "SELECT 1 FROM usuario WHERE id_usuario = ? AND ativo = 1 LIMIT 1";
+    $sql = "SELECT perfil FROM usuario WHERE id_usuario = ? AND ativo = 1 LIMIT 1";
     $stmt = $conexao->prepare($sql);
     $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
-
-    $usuarioAtivo = $stmt->get_result()->num_rows > 0;
+    $linhaUsuario = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    if(!$usuarioAtivo) {
-        responder(403, [
+    if(!$linhaUsuario || strtolower((string) $linhaUsuario['perfil']) !== 'cliente') {
+        responder(401, [
             'sucesso' => false,
-            'mensagem' => 'Não foi possível atualizar este perfil.'
+            'mensagem' => 'Entre na conta de cliente para continuar.'
         ]);
     }
 
@@ -251,7 +252,7 @@ try {
     $emTransacao = true;
 
     // atualizar dados do usuario
-    $sql = "UPDATE usuario SET nome = ?, email = ?, telefone_x = ? WHERE id_usuario = ? AND ativo = 1";
+    $sql = "UPDATE usuario SET nome = ?, email = ?, telefone = ? WHERE id_usuario = ? AND ativo = 1";
     $stmt = $conexao->prepare($sql);
     $stmt->bind_param('sssi', $nome, $email, $telefone, $idUsuario);
     $stmt->execute();
@@ -312,7 +313,7 @@ try {
             $stmt = $conexao->prepare(
                 'INSERT INTO endereco_usuario
                     (id_usuario, endereco_informado, principal, ativo)
-                VALUES (?,?,1,1'
+                VALUES (?,?,1,1)'
             );
             $stmt->bind_param('is', $idUsuario, $endereco);
             $stmt->execute();
@@ -337,7 +338,13 @@ try {
 
     responder(200, [
         'sucesso' => true,
-        'mensagem' => 'Perfil atualizado.'
+        'mensagem' => 'Perfil atualizado com sucesso.',
+        'usuario' => [
+            'nome' => $nome,
+            'email' => $email,
+            'telefone' => $telefone,
+            'endereco' => $endereco,
+        ],
     ]);
 
 } catch(Throwable $erro) {
