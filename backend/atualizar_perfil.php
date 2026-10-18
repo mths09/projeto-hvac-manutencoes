@@ -109,7 +109,8 @@ foreach ($campos as $campo) {
 }
 
 
-// validando token csrf ja usado
+// ATENÇÃO: o token é criado em perfil_cliente.php (GET) com esta mesma
+// chave de sessão. Se renomear 'csrf_dashboard' aqui, renomeie lá também.
 $csrfSessao = $_SESSION['csrf_dashboard'] ?? '';
 $csrfEnviado = $dados->csrf ?? null;
 
@@ -174,7 +175,7 @@ $nome = preg_replace('/\s+/u', ' ', trim($dados->nome));
 if(mb_strlen($nome, 'UTF-8') < 2 || mb_strlen($nome, 'UTF-8') > 150 || preg_match('/[\p{C}<>]/u', $nome)) {
     responder(422, [
         'sucesso' => false,
-        'mensagem' => 'O nome deve ter de 2 a 150 caracteres. Não são permitidos < ou >.'
+        'mensagem' => 'O nome deve ter de 2 a 150 caracteres e não pode conter < ou >.'
     ]);
 }
 
@@ -203,7 +204,7 @@ if (
 ) {
     responder(422, [
         'sucesso' => false,
-        'mensagem' => 'O endereço deve ter de 10 a 500 caracteres ou ficar vazio. Não são permitidos < ou >.'
+        'mensagem' => 'O endereço deve ter de 10 a 500 caracteres (ou ficar vazio) e não pode conter < ou >.'
     ]);
 }
 
