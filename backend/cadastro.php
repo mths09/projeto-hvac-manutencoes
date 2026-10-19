@@ -50,24 +50,29 @@ if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 16384) {
 
 try {
     require_once __DIR__ . '/validar_cadastro.php';
+    require_once __DIR__. '/validar_endereco.php';
 
-    $resultado = validarCadastro($_POST);
+    $resultadoCadastro = validarCadastro($_POST);
+    $resultadoEndereco = validarEndereco($_POST);
 
-    if ($resultado['erros']) {
+    $erros = $resultadoCadastro['erros'] + $resultadoEndereco['erros'];
+
+    if($erros) {
         responderCadastro(
             422,
-            implode(' ', $resultado['erros']),
-            $resultado['erros']
+            implode(' ', $erros),
+            $erros
         );
     }
 
-    $dados = $resultado['dados'];
+    $dados = $resultadoCadastro['dados']; 
+    $endereco = $resultadoEndereco['dados']; 
 
     // O perfil é definido no servidor.
     // Um visitante nunca pode se cadastrar como administrador.
     $perfil = 'cliente';
 
-    // Salvar somente o hash da senha.
+    // salva somente hash da senha
     $senhaHash = password_hash(
         $dados['senha'],
         PASSWORD_BCRYPT,
@@ -77,7 +82,10 @@ try {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
     require_once __DIR__ . '/conexao.php';
+    $conexao->begin_transaction();
 
+try {
+    // ------ usuario ------
     $sql = '
         INSERT INTO usuario (
             nome,
@@ -89,9 +97,7 @@ try {
         )
         VALUES (?, ?, ?, ?, ?, ?)
     ';
-
     $stmt = $conexao->prepare($sql);
-
     $stmt->bind_param(
         'ssssss',
         $dados['nome'],
@@ -101,9 +107,61 @@ try {
         $senhaHash,
         $perfil
     );
+    $stmt->execute();
+    $usuarioId = $conexao->insert_id;
+    $stmt->close();
 
+    // ------ endereco -------
+    $complemento = $endereco['complemento'] === '' ? null : $endereco['complemento']; // adicionar "null" ao complemento
+    $enderecoInformado = montarEnderecoInformado($endereco);
+
+    $principal = 1;
+    $ativo = 1;
+
+    $sql = '
+        INSERT INTO endereco_usuario (
+            id_usuario,
+            endereco_informado,
+            cep,
+            logradouro,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            uf,
+            principal,
+            ativo
+        )
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ';
+        $stmt = $conexao->prepare($sql);
+    $stmt->bind_param(
+        'issssssssii',
+        $usuarioId,
+        $enderecoInformado, 
+        $endereco['cep'],
+        $endereco['logradouro'],
+        $endereco['numero'],
+        $complemento,
+        $endereco['bairro'],
+        $endereco['cidade'],
+        $endereco['uf'],
+        $principal,
+        $ativo,
+    );
     $stmt->execute();
     $stmt->close();
+
+    $conexao->commit();
+
+} catch (Throwable $erroInterno) {
+    try {
+        $conexao->rollback();
+    } catch (Throwable $erroRollBack) {
+        error_log('Falha no rollback do cadastro: ' . get_class($erroRollBack));
+    }
+    throw $erroInterno;
+}
 
     responderCadastro(
         201,
@@ -121,21 +179,23 @@ try {
             ]
         );
     }
-
     // Não registrar senha ou valores enviados no formulário.
     error_log(
         'Falha no banco durante cadastro. Código: ' . $erro->getCode()
     );
-
     responderCadastro(
         503,
         'Não foi possível acessar o banco. Tente novamente mais tarde.'
     );
 
 } catch (Throwable $erro) {
-    error_log(
-        'Falha interna no cadastro: ' . get_class($erro)
-    );
+    error_log(sprintf(
+        'Falha interna no cadastro: class=%s code=%s file=%s line=%d',
+        get_class($erro),
+        (string) $erro->getCode(),
+        $erro->getFile(),
+        $erro->getLine()
+    ));
 
     responderCadastro(
         500,

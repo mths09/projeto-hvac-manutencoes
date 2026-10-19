@@ -1,0 +1,33 @@
+<svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="512"
+        height="512"
+        viewBox="0 0 512 512"
+        fill="none"
+        aria-label="Ícone de confirmação"
+        role="img"
+    >
+        <!-- Contorno arredondado -->
+        <path
+            d="M256 43
+            C117 43 48 74 48 216
+            L48 294
+            C48 433 91 480 256 480
+            C421 480 464 433 464 294
+            L464 216
+            C464 74 395 43 256 43 Z"
+            stroke="#00E639"
+            stroke-width="34"
+            stroke-linejoin="round"
+        />
+
+        <!-- Marca de confirmação -->
+        <path
+            d="M165 280 L217 332 L355 194"
+            stroke="#00E639"
+            stroke-width="43"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        />
+</svg>
+

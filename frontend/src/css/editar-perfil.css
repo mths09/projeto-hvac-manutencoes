@@ -20,6 +20,8 @@
     #ff9800 88%,
     #ffd600
   );
+
+  --aviso: #ff5252;
 }
 
 *,
@@ -228,14 +230,23 @@ img {
 }
 
 .campo small {
-  color: var(--texto-secundario);
+  color: var(--aviso);
   font-size: 12px;
+}
+
+#ajuda-endereco {
+  color: var(--texto-secundario);
+  font-size: 14px;
 }
 
 .aviso-demonstracao {
   margin-top: 24px;
   color: var(--texto-secundario);
   font-size: 12px;
+}
+
+.erro-campo_perfil {
+  color: red;
 }
 
 /* ACOES */
@@ -326,4 +337,54 @@ button:focus-visible {
   .botao {
     width: 100%;
   }
+}
+
+.dialogo-sucesso {
+  width: min(90vw, 28rem);
+  padding: 32px;
+  border: 1px solid var(--borda);
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.25);
+  background: var(--fundo);
+  align-self: center;
+  justify-self: center;
+  align-content: center;
+  justify-content: center;
+}
+
+.dialogo-sucesso::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+.dialogo-sucesso h2 {
+  margin: 0 0 0.5rem;
+  font-family: var(--fonte-titulos);
+  color: var(--texto);
+}
+
+.dialogo-sucesso p {
+  margin: 0 0 1.25rem;
+  font-family: var(--fonte-corpo);
+  text-decoration: none;
+  color: var(--texto-secundario);
+}
+
+.dialogo-sucesso a {
+  background: var(--gradiente-frio);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dialogo-sucesso button {
+  font-family: inherit;
+  color: var(--texto-secundario);
+  cursor: pointer;
+}
+
+.icone-sucesso {
+  align-self: center;
+  justify-self: center;
+  width: 120px;
+  height: 120px;
 }
