@@ -142,5 +142,36 @@
         </form>
       </section>
     </main>
+
+    <!-- Mensagem de sucesso após alterações -->
+    <dialog
+      id="dialogo-sucesso"
+      class="dialogo-sucesso"
+      aria-labelledby="titulo-sucesso"
+      aria-describedby="texto-sucesso"
+    >
+      <img
+        src="../../assets/icons/check-verde.svg"
+        alt="Confirmação"
+        class="icone-sucesso"
+      />
+
+      <h2 id="titulo-sucesso">Perfil atualizado!</h2>
+      <p id="texto-sucesso">Suas informações foram salvas com sucesso.</p>
+
+      <div class="acoes-formulario">
+        <button
+          type="button"
+          class="botao botao-secundario"
+          id="continuar-editando"
+        >
+          Continuar editando
+        </button>
+
+        <a href="./dashboard.html" class="botao botao-primario" autofocus>
+          Voltar ao painel
+        </a>
+      </div>
+    </dialog>
   </body>
 </html>

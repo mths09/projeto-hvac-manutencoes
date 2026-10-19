@@ -9,6 +9,10 @@ const campoEmail = document.querySelector("#email");
 const campoTelefone = document.querySelector("#telefone");
 const campoEndereco = document.querySelector("#endereco");
 
+// dialogo
+const dialogoSucesso = document.querySelector("#dialogo-sucesso");
+const botaoContinuarEditando = document.querySelector("#continuar-editando");
+
 let perfilCarregado = false;
 let salvando = false;
 
@@ -106,6 +110,19 @@ function textoClienteDesde(criadoEm) {
   return `Cliente desde ${dia}/${mes}/${ano}`;
 }
 
+function preencherCampos(perfil) {
+  campoNome.value = perfil.nome;
+  campoEmail.value = perfil.email;
+  campoTelefone.value = formatarTelefone(perfil.telefone);
+  campoEndereco.value = perfil.endereco;
+
+  document.querySelector(".resumo-perfil h2").textContent =
+    perfil.nome || "Cliente";
+
+  document.querySelector(".resumo-perfil .avatar-perfil").textContent =
+    obterIniciais(perfil.nome);
+}
+
 async function preencherFormulario() {
   perfilCarregado = false;
   salvando = false;
@@ -116,10 +133,7 @@ async function preencherFormulario() {
   try {
     const perfil = await carregarPerfil();
 
-    campoNome.value = perfil.nome;
-    campoEmail.value = perfil.email;
-    campoTelefone.value = formatarTelefone(perfil.telefone);
-    campoEndereco.value = perfil.endereco;
+    preencherCampos(perfil);
 
     document.querySelector(".resumo-perfil h2").textContent =
       perfil.nome || "Cliente";
@@ -210,21 +224,17 @@ formularioPerfil.addEventListener("submit", async (evento) => {
   avisoSalvamento.textContent = "Salvando perfil…";
 
   try {
-    await salvarPerfil(perfilAtualizado);
+    const usuarioSalvo = await salvarPerfil(perfilAtualizado);
 
-    avisoSalvamento.textContent =
-      "Perfil atualizado com sucesso! Voltando ao painel…";
-
-    setTimeout(() => {
-      window.location.replace("./dashboard.html");
-    }, 1200);
+    preencherCampos(usuarioSalvo);
+    avisoSalvamento.textContent = "";
+    dialogoSucesso.showModal();
   } catch (erro) {
     console.error("Erro ao salvar o perfil.", erro);
     tratarErroAoSalvar(erro);
-
+  } finally {
     salvando = false;
     botaoSalvar.disabled = false;
-  } finally {
     formularioPerfil.setAttribute("aria-busy", "false");
   }
 });
@@ -234,6 +244,10 @@ for (const campo of [campoNome, campoEmail, campoTelefone, campoEndereco]) {
     mostrarErro(campo, "");
   });
 }
+
+botaoContinuarEditando.addEventListener("click", () => {
+  dialogoSucesso.close();
+});
 
 preencherFormulario();
 // atualiza no botão do navegador
