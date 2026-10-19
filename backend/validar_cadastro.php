@@ -6,6 +6,7 @@ function validarCadastro(array $entrada): array
 {
     $campos = [
         'nome',
+        'sobrenome',
         'email',
         'telefone',
         'data_nascimento',
@@ -32,15 +33,22 @@ function validarCadastro(array $entrada): array
         }
     }
 
-    // Nome
-    if (
-        mb_strlen($dados['nome'], 'UTF-8') < 2 ||
-        mb_strlen($dados['nome'], 'UTF-8') > 150 ||
-        preg_match('/[\p{C}<>]/u', $dados['nome'])
-    ) {
-        $erros['nome'] =
-            'Informe um nome de 2 a 150 caracteres, sem marcação ou caracteres de controle.';
+
+    // Nome e sobrenome: validados separados, guardados juntos na coluna nome.
+    foreach (['nome', 'sobrenome'] as $campo) {
+        $dados[$campo] = (string) preg_replace('/\s+/u', ' ', $dados[$campo]);
+
+        if (
+            mb_strlen($dados[$campo], 'UTF-8') < 2 ||
+            mb_strlen($dados[$campo], 'UTF-8') > 74 ||
+            preg_match('/[\p{C}<>]/u', $dados[$campo])
+        ) {
+            $erros[$campo] = 'Informe de 2 a 74 caracteres, sem < ou >.';
+        }
     }
+
+    $dados['nome'] = $dados['nome'] . ' ' . $dados['sobrenome'];
+    unset($dados['sobrenome']);
 
     // E-mail
     $dados['email'] = strtolower($dados['email']);
