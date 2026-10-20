@@ -297,48 +297,7 @@ button:focus-visible {
   outline-offset: 4px;
 }
 
-@media (hover: hover) {
-  .voltar:hover {
-    color: var(--ciano);
-  }
-
-  .botao-secundario:hover {
-    background: rgb(255 255 255 / 10%);
-  }
-}
-
-/* Celular */
-@media (max-width: 639px) {
-  .container {
-    padding-inline: 16px;
-  }
-
-  .marca-textos {
-    display: none;
-  }
-
-  .pagina-perfil {
-    padding-block: 28px 40px;
-  }
-
-  .cartao-perfil {
-    padding: 20px;
-    border-radius: 20px;
-  }
-
-  .campos-perfil {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .acoes-formulario {
-    flex-direction: column;
-  }
-
-  .botao {
-    width: 100%;
-  }
-}
-
+/* pop up */
 .dialogo-sucesso {
   width: min(90vw, 28rem);
   padding: 32px;
@@ -387,4 +346,64 @@ button:focus-visible {
   justify-self: center;
   width: 120px;
   height: 120px;
+}
+
+@media (hover: hover) {
+  .voltar:hover {
+    color: var(--ciano);
+  }
+
+  .botao-secundario:hover {
+    background: rgb(255 255 255 / 10%);
+  }
+}
+
+/* Celular */
+@media (max-width: 639px) {
+  .container {
+    padding-inline: 16px;
+  }
+
+  .marca-textos {
+    display: none;
+  }
+
+  .pagina-perfil {
+    padding-block: 28px 40px;
+  }
+
+  .cartao-perfil {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .campos-perfil {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .acoes-formulario {
+    flex-direction: column;
+  }
+
+  .botao {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dialogo-sucesso {
+    padding: 1.25rem;
+  }
+
+  .dialogo-sucesso .acoes-formulario {
+    flex-direction: column-reverse;
+  }
+
+  .dialogo-sucesso .botao {
+    width: 100%;
+  }
+}
+
+html:has(dialog[open]) {
+  overflow: hidden;
 }

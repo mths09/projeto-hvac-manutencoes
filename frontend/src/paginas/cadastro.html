@@ -144,19 +144,36 @@
           method="POST"
         >
           <div class="campos-cadastro">
-            <div class="campo-inteiro">
-              <label for="nome">Nome completo</label>
+            <div>
+              <label for="nome">Nome</label>
               <input
                 type="text"
                 id="nome"
                 name="nome"
-                autocomplete="name"
+                autocomplete="given-name"
+                maxlength="74"
                 required
                 aria-describedby="erro-nome"
               />
-
               <small
                 id="erro-nome"
+                class="erro-campo"
+                aria-live="polite"
+              ></small>
+            </div>
+            <div>
+              <label for="sobrenome">Sobrenome</label>
+              <input
+                type="text"
+                id="sobrenome"
+                name="sobrenome"
+                autocomplete="family-name"
+                maxlength="74"
+                required
+                aria-describedby="erro-sobrenome"
+              />
+              <small
+                id="erro-sobrenome"
                 class="erro-campo"
                 aria-live="polite"
               ></small>
@@ -242,11 +259,152 @@
                 required
                 aria-describedby="erro-confirmar_senha"
               />
+              <small
+                id="erro-confirmar_senha"
+                class="erro-campo"
+                aria-live="polite"
+              >
+              </small>
             </div>
           </div>
           <p id="ajuda-senha" class="ajuda-cadastro">
             Use pelo menos 8 caracteres.
           </p>
+
+          <fieldset class="grupo-endereco">
+            <legend>Endereço</legend>
+
+            <div class="campos-cadastro">
+              <div>
+                <label for="cep">CEP</label>
+                <input
+                  type="text"
+                  id="cep"
+                  name="cep"
+                  inputmode="numeric"
+                  autocomplete="postal-code"
+                  placeholder="00000-000"
+                  maxlength="9"
+                  required
+                  aria-describedby="status-cep erro-cep"
+                />
+                <small
+                  id="status-cep"
+                  class="ajuda-cadastro"
+                  role="status"
+                ></small>
+                <small
+                  id="erro-cep"
+                  class="erro-campo"
+                  aria-live="polite"
+                ></small>
+              </div>
+              <div>
+                <label for="numero">Número</label>
+                <input
+                  type="text"
+                  id="numero"
+                  name="numero"
+                  autocomplete="off"
+                  maxlength="20"
+                  placeholder="Use S/N se não houver"
+                  required
+                  aria-describedby="erro-numero"
+                />
+                <small
+                  id="erro-numero"
+                  class="erro-campo"
+                  aria-live="polite"
+                ></small>
+              </div>
+              <div class="campo-inteiro">
+                <label for="logradouro">Rua / logradouro</label>
+                <input
+                  type="text"
+                  id="logradouro"
+                  name="logradouro"
+                  autocomplete="address-line1"
+                  maxlength="180"
+                  required
+                  aria-describedby="erro-logradouro"
+                />
+                <small
+                  id="erro-logradouro"
+                  class="erro-campo"
+                  aria-live="polite"
+                ></small>
+              </div>
+              <div>
+                <label for="complemento">Complemento (opcional)</label>
+                <input
+                  type="text"
+                  id="complemento"
+                  name="complemento"
+                  autocomplete="address-line2"
+                  maxlength="120"
+                  aria-describedby="erro-complemento"
+                />
+                <small
+                  id="erro-complemento"
+                  class="erro-campo"
+                  aria-live="polite"
+                ></small>
+              </div>
+              <div>
+                <label for="bairro">Bairro</label>
+                <input
+                  type="text"
+                  id="bairro"
+                  name="bairro"
+                  autocomplete="off"
+                  maxlength="100"
+                  required
+                  aria-describedby="erro-bairro"
+                />
+                <small
+                  id="erro-bairro"
+                  class="erro-campo"
+                  aria-live="polite"
+                ></small>
+              </div>
+              <div>
+                <label for="cidade">Cidade</label>
+                <input
+                  type="text"
+                  id="cidade"
+                  name="cidade"
+                  autocomplete="address-level2"
+                  maxlength="100"
+                  required
+                  aria-describedby="erro-cidade"
+                />
+                <small
+                  id="erro-cidade"
+                  class="erro-campo"
+                  aria-live="polite"
+                ></small>
+              </div>
+              <div>
+                <label for="uf">UF</label>
+                <input
+                  type="text"
+                  id="uf"
+                  name="uf"
+                  autocomplete="address-level1"
+                  maxlength="2"
+                  placeholder="SP"
+                  required
+                  aria-describedby="erro-uf"
+                />
+                <small
+                  id="erro-uf"
+                  class="erro-campo"
+                  aria-live="polite"
+                ></small>
+              </div>
+            </div>
+          </fieldset>
+
           <p id="mensagem-cadastro" role="status" aria-live="polite" hidden></p>
           <button type="submit" class="btn-entrar">Criar minha conta →</button>
           <div class="divisor"><span>Já tem uma conta?</span></div>

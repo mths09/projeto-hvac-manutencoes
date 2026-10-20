@@ -66,6 +66,26 @@ body.pagina-cadastro {
   border-color: #67e8f9;
   color: #a5f3fc;
 }
+
+html {
+  overflow-y: auto;
+}
+
+body.pagina-cadastro {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.campos-cadastro > div {
+  min-width: 0;
+}
+
+.campos-cadastro input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 @media (max-width: 520px) {
   .pagina-cadastro .card {
     padding: 24px 20px;
@@ -81,15 +101,12 @@ body.pagina-cadastro {
   }
 }
 
-.erro-campo {
-  display: block;
-  margin-top: 0.35rem;
-  color: #b42318;
-  font-size: 0.875rem;
-}
+@media (max-width: 560px) {
+  .campos-cadastro {
+    grid-template-columns: 1fr;
+  }
 
-input[aria-invalid="true"],
-textarea[aria-invalid="true"],
-select[aria-invalid="true"] {
-  border-color: #b42318;
+  .campo-inteiro {
+    grid-column: auto;
+  }
 }

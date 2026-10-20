@@ -5,10 +5,21 @@ const telefoneCadastro = formCadastro.elements.namedItem("telefone");
 const nascimento = document.getElementById("data_nascimento");
 const senhaCadastro = document.getElementById("senha");
 const confirmarSenha = document.getElementById("confirmar_senha");
+// endereco
+const sobrenomeCadastro = formCadastro.elements.namedItem("sobrenome");
+const cepCadastro = document.getElementById("cep");
+const logradouroCadastro = document.getElementById("logradouro");
+const numeroCadastro = document.getElementById("numero");
+const complementoCadastro = document.getElementById("complemento");
+const bairroCadastro = document.getElementById("bairro");
+const cidadeCadastro = document.getElementById("cidade");
+const ufCadastro = document.getElementById("uf");
+const statusCep = document.getElementById("status-cep");
 const mensagem = document.getElementById("mensagem-cadastro");
 const botao = formCadastro.querySelector('[type="submit"]');
 const textoOriginalBotao = botao.textContent;
 
+let consultaCepAtual = 0;
 let enviandoCadastro = false;
 let cadastroConcluido = false;
 
@@ -46,12 +57,12 @@ function validarNome(valor) {
   const nome = valor.trim();
   const tamanho = Array.from(nome).length;
 
-  if (tamanho < 2 || tamanho > 150) {
-    return "Informe um nome entre 2 e 150 caracteres.";
+  if (tamanho < 2 || tamanho > 74) {
+    return "Informe de 2 a 74 caracteres.";
   }
 
   if (/[\p{C}<>]/u.test(nome)) {
-    return "O nome contém caracteres não permitidos.";
+    return "Há caracteres não permitidos.";
   }
 
   return "";
@@ -116,7 +127,9 @@ function validarNascimento(campo) {
 
   const agora = new Date();
   const limite = Date.UTC(
-    agora.getFullYear(), agora.getMonth(), agora.getDate()
+    agora.getFullYear(),
+    agora.getMonth(),
+    agora.getDate(),
   );
 
   if (data.getTime() > limite) {
@@ -124,6 +137,113 @@ function validarNascimento(campo) {
   }
 
   return "";
+}
+
+function validarCep(valor) {
+  if (!/^[0-9]{5}-?[0-9]{3}$/.test(valor.trim())) {
+    return "Informe um CEP válido com 8 dígitos.";
+  }
+
+  return "";
+}
+
+function validarTextoEndereco(valor, rotulo, min, max, obrigatorio) {
+  const texto = valor.trim();
+
+  if (texto === "") {
+    return obrigatorio ? `Informe ${rotulo}.` : "";
+  }
+
+  const tamanho = Array.from(texto).length;
+
+  if (tamanho < min || tamanho > max || /[\p{C}<>]/u.test(texto)) {
+    return `Informe ${rotulo} com ${min} a ${max} caracteres, sem < ou >.`;
+  }
+
+  return "";
+}
+
+// O servidor confere a lista completa das 27 siglas; aqui só o formato.
+function validarUf(valor) {
+  return /^[A-Za-z]{2}$/.test(valor.trim())
+    ? ""
+    : "Informe a sigla do estado (ex.: SP).";
+}
+
+function formatarCep(valor) {
+  const digitos = valor.replace(/\D/g, "").slice(0, 8);
+
+  return digitos.length > 5
+    ? `${digitos.slice(0, 5)}-${digitos.slice(5)}`
+    : digitos;
+}
+
+async function buscarCep() {
+  const cep = cepCadastro.value.replace(/\D/g, "");
+
+  if (cep.length !== 8) {
+    return;
+  }
+
+  const consulta = ++consultaCepAtual;
+  statusCep.textContent = "Buscando endereço…";
+
+  try {
+    const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`ViaCEP respondeu ${resposta.status}`);
+    }
+
+    const dados = await resposta.json();
+
+    // Começou uma busca mais nova: esta resposta chegou atrasada.
+    if (consulta !== consultaCepAtual) {
+      return;
+    }
+
+    // CEP com formato válido, mas que não existe.
+    if (dados.erro) {
+      statusCep.textContent =
+        "CEP não encontrado. Preencha o endereço manualmente.";
+      return;
+    }
+
+    const recebidos = [
+      [logradouroCadastro, dados.logradouro],
+      [bairroCadastro, dados.bairro],
+      [cidadeCadastro, dados.localidade],
+      [ufCadastro, dados.uf],
+    ];
+
+    for (const [campo, valor] of recebidos) {
+      if (typeof valor === "string" && valor !== "") {
+        campo.value = valor;
+        mostrarErro(campo, "");
+      }
+    }
+
+    statusCep.textContent =
+      "Endereço preenchido. Confira os dados e informe o número.";
+
+    // Só move o foco se a pessoa ainda estiver no CEP.
+    if (document.activeElement === cepCadastro) {
+      (logradouroCadastro.value === ""
+        ? logradouroCadastro
+        : numeroCadastro
+      ).focus();
+    }
+  } catch (erro) {
+    if (consulta !== consultaCepAtual) {
+      return;
+    }
+
+    console.error("Falha ao buscar o CEP:", erro);
+    statusCep.textContent =
+      "Não foi possível buscar o CEP agora. Preencha o endereço manualmente.";
+  }
 }
 
 function validarSenhas() {
@@ -143,16 +263,52 @@ function validarSenhas() {
     confirmarSenha,
     confirmarSenha.value === "" || confirmarSenha.value !== senha
       ? "A confirmação precisa ser igual à senha."
-      : ""
+      : "",
   );
 }
 
 function validarCadastroNaTela() {
   mostrarErro(nomeCadastro, validarNome(nomeCadastro.value));
+  mostrarErro(sobrenomeCadastro, validarNome(sobrenomeCadastro.value));
   mostrarErro(emailCadastro, validarEmail(emailCadastro));
   mostrarErro(telefoneCadastro, validarTelefone(telefoneCadastro.value));
   mostrarErro(nascimento, validarNascimento(nascimento));
   validarSenhas();
+
+  mostrarErro(cepCadastro, validarCep(cepCadastro.value));
+  mostrarErro(
+    logradouroCadastro,
+    validarTextoEndereco(
+      logradouroCadastro.value,
+      "o logradouro",
+      2,
+      180,
+      true,
+    ),
+  );
+  mostrarErro(
+    numeroCadastro,
+    validarTextoEndereco(numeroCadastro.value, "o número", 1, 20, true),
+  );
+  mostrarErro(
+    complementoCadastro,
+    validarTextoEndereco(
+      complementoCadastro.value,
+      "o complemento",
+      1,
+      120,
+      false,
+    ),
+  );
+  mostrarErro(
+    bairroCadastro,
+    validarTextoEndereco(bairroCadastro.value, "o bairro", 2, 100, true),
+  );
+  mostrarErro(
+    cidadeCadastro,
+    validarTextoEndereco(cidadeCadastro.value, "a cidade", 2, 100, true),
+  );
+  mostrarErro(ufCadastro, validarUf(ufCadastro.value));
 
   const primeiroInvalido = formCadastro.querySelector(":invalid");
 
@@ -201,8 +357,51 @@ function acompanharCampo(campo, validar) {
 
 acompanharCampo(nomeCadastro, () => validarNome(nomeCadastro.value));
 acompanharCampo(emailCadastro, () => validarEmail(emailCadastro));
-acompanharCampo(telefoneCadastro, () => validarTelefone(telefoneCadastro.value));
+acompanharCampo(telefoneCadastro, () =>
+  validarTelefone(telefoneCadastro.value),
+);
 acompanharCampo(nascimento, () => validarNascimento(nascimento));
+acompanharCampo(sobrenomeCadastro, () => validarNome(sobrenomeCadastro.value));
+acompanharCampo(cepCadastro, () => validarCep(cepCadastro.value));
+acompanharCampo(logradouroCadastro, () =>
+  validarTextoEndereco(logradouroCadastro.value, "o logradouro", 2, 180, true),
+);
+acompanharCampo(numeroCadastro, () =>
+  validarTextoEndereco(numeroCadastro.value, "o número", 1, 20, true),
+);
+acompanharCampo(complementoCadastro, () =>
+  validarTextoEndereco(
+    complementoCadastro.value,
+    "o complemento",
+    1,
+    120,
+    false,
+  ),
+);
+acompanharCampo(bairroCadastro, () =>
+  validarTextoEndereco(bairroCadastro.value, "o bairro", 2, 100, true),
+);
+acompanharCampo(cidadeCadastro, () =>
+  validarTextoEndereco(cidadeCadastro.value, "a cidade", 2, 100, true),
+);
+acompanharCampo(ufCadastro, () => validarUf(ufCadastro.value));
+
+cepCadastro.addEventListener("input", () => {
+  cepCadastro.value = formatarCep(cepCadastro.value);
+
+  if (cepCadastro.value.replace(/\D/g, "").length === 8) {
+    buscarCep();
+  } else {
+    // CEP incompleto: cancela qualquer resposta pendente.
+    consultaCepAtual++;
+    statusCep.textContent = "";
+  }
+});
+
+ufCadastro.addEventListener("input", () => {
+  ufCadastro.value = ufCadastro.value.toUpperCase();
+});
+
 senhaCadastro.addEventListener("input", validarSenhas);
 confirmarSenha.addEventListener("input", validarSenhas);
 
@@ -255,7 +454,7 @@ formCadastro.addEventListener("submit", async (event) => {
       exibirMensagem(
         typeof dados.mensagem === "string"
           ? dados.mensagem
-          : "Não foi possível concluir o cadastro."
+          : "Não foi possível concluir o cadastro.",
       );
       return;
     }
@@ -263,13 +462,16 @@ formCadastro.addEventListener("submit", async (event) => {
     // Só confirma depois que o PHP informa que salvou a conta.
     cadastroConcluido = true;
     formCadastro.reset();
+    statusCep.textContent = "";
+    consultaCepAtual++;
+
     formCadastro.querySelectorAll("input").forEach((campo) => {
       mostrarErro(campo, "");
     });
 
     exibirMensagem(
       "Cadastro realizado com sucesso! Clique em Entrar na conta abaixo.",
-      true
+      true,
     );
 
     formCadastro.querySelector('a[href="./login.html"]')?.focus();
@@ -277,7 +479,7 @@ formCadastro.addEventListener("submit", async (event) => {
     console.error("Falha ao confirmar cadastro:", erro);
     exibirMensagem(
       "Não foi possível confirmar o cadastro. Verifique sua conexão. " +
-      "Se você já enviou seus dados, tente entrar na conta antes de cadastrar novamente."
+        "Se você já enviou seus dados, tente entrar na conta antes de cadastrar novamente.",
     );
   } finally {
     enviandoCadastro = false;
