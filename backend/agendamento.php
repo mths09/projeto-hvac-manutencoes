@@ -12,6 +12,105 @@ final class ErroAgendamento extends RuntimeException
     }
 }
 
+// Limites dos anexos de foto/vídeo enviados junto com o pedido.
+const ANEXO_MAX_ARQUIVOS = 5;
+const ANEXO_TAMANHO_MAXIMO = 5 * 1024 * 1024; // 5 MB por arquivo, conforme informado na tela.
+const ANEXO_MIME_EXTENSAO = [
+    'image/jpeg' => 'jpg',
+    'image/png' => 'png',
+    'video/mp4' => 'mp4',
+];
+
+// Converte a estrutura $_FILES['anexos'] (campo múltiplo) em uma lista de arquivos individuais.
+function normalizarArquivosEnviados(array $arquivos): array
+{
+    $bruto = $arquivos['anexos'] ?? null;
+    if (!is_array($bruto) || !is_array($bruto['name'] ?? null)) {
+        return [];
+    }
+    $lista = [];
+    foreach ($bruto['name'] as $indice => $nome) {
+        $erro = (int) ($bruto['error'][$indice] ?? UPLOAD_ERR_NO_FILE);
+        if ($erro === UPLOAD_ERR_NO_FILE) {
+            continue;
+        }
+        $lista[] = [
+            'name' => (string) $nome,
+            'tmp_name' => (string) ($bruto['tmp_name'][$indice] ?? ''),
+            'error' => $erro,
+            'size' => (int) ($bruto['size'][$indice] ?? 0),
+        ];
+    }
+    return $lista;
+}
+
+// Valida cada anexo (tamanho, integridade do upload e tipo real do arquivo via finfo).
+function validarAnexosAgendamento(array $arquivosBrutos): array
+{
+    $arquivos = normalizarArquivosEnviados($arquivosBrutos);
+    if (count($arquivos) > ANEXO_MAX_ARQUIVOS) {
+        throw new ErroAgendamento('Envie no máximo ' . ANEXO_MAX_ARQUIVOS . ' arquivos.', 422);
+    }
+    $validados = [];
+    foreach ($arquivos as $arquivo) {
+        if ($arquivo['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($arquivo['tmp_name'])) {
+            throw new ErroAgendamento('Não foi possível receber um dos arquivos enviados. Tente novamente.', 422);
+        }
+        if ($arquivo['size'] <= 0 || $arquivo['size'] > ANEXO_TAMANHO_MAXIMO) {
+            throw new ErroAgendamento('Cada arquivo deve ter até 5 MB.', 422);
+        }
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($arquivo['tmp_name']);
+        if (!is_string($mime) || !isset(ANEXO_MIME_EXTENSAO[$mime])) {
+            throw new ErroAgendamento('Envie apenas fotos (JPG ou PNG) ou vídeos (MP4).', 422);
+        }
+        $validados[] = [
+            'tmp_name' => $arquivo['tmp_name'],
+            'tamanho' => $arquivo['size'],
+            'mime' => $mime,
+            'extensao' => ANEXO_MIME_EXTENSAO[$mime],
+            'nome_original' => basename($arquivo['name'] !== '' ? $arquivo['name'] : 'arquivo'),
+        ];
+    }
+    return $validados;
+}
+
+// Move os anexos já validados para a pasta protegida e registra em arquivo/anexo_solicitacao.
+// Os caminhos físicos gravados são devolvidos para permitir limpeza em caso de rollback.
+function salvarAnexosAgendamento(mysqli $conexao, int $idSolicitacao, int $idCliente, array $anexos): array
+{
+    if (!$anexos) {
+        return [];
+    }
+    $diretorioUpload = __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'solicitacoes';
+    if (!is_dir($diretorioUpload) && !mkdir($diretorioUpload, 0750, true) && !is_dir($diretorioUpload)) {
+        throw new RuntimeException('Não foi possível preparar o armazenamento de anexos.');
+    }
+    $arquivosFisicos = [];
+    foreach ($anexos as $indice => $anexo) {
+        $nomeArquivo = bin2hex(random_bytes(16)) . '.' . $anexo['extensao'];
+        $caminhoFisico = $diretorioUpload . DIRECTORY_SEPARATOR . $nomeArquivo;
+        if (!move_uploaded_file($anexo['tmp_name'], $caminhoFisico)) {
+            throw new RuntimeException('Não foi possível salvar um dos anexos enviados.');
+        }
+        $arquivosFisicos[] = $caminhoFisico;
+        $chave = 'uploads/solicitacoes/' . $nomeArquivo;
+        $sha256 = hash_file('sha256', $caminhoFisico);
+        consultarAgendamento($conexao,
+            'INSERT INTO arquivo (nome_original, chave_armazenamento, mime_type, tamanho_bytes, sha256, id_autor)
+             VALUES (?, ?, ?, ?, ?, ?)',
+            [mb_substr($anexo['nome_original'], 0, 255, 'UTF-8'), $chave, $anexo['mime'], $anexo['tamanho'], $sha256, $idCliente]
+        );
+        $idArquivo = $conexao->insert_id;
+        consultarAgendamento($conexao,
+            'INSERT INTO anexo_solicitacao (id_solicitacao, id_arquivo, finalidade, legenda, ordem)
+             VALUES (?, ?, ?, ?, ?)',
+            [$idSolicitacao, $idArquivo, 'FOTO_PROBLEMA', mb_substr($anexo['nome_original'], 0, 255, 'UTF-8'), $indice]
+        );
+    }
+    return $arquivosFisicos;
+}
+
 function consultarAgendamento(mysqli $db, string $sql, array $parametros = []): mysqli_stmt
 {
     $stmt = $db->prepare($sql);
@@ -95,11 +194,12 @@ function resultadoAgendamento(string $protocolo, bool $repetido): array
 }
 
 // A transação é separada da rota HTTP para permitir testes isolados.
-function executarAgendamento(mysqli $conexao, array $usuario, array $dados): array
+function executarAgendamento(mysqli $conexao, array $usuario, array $dados, array $anexos = []): array
 {
     $dados = validarDadosAgendamento($dados);
     configurarFusoAgendamento($conexao);
     $conexao->begin_transaction();
+    $arquivosFisicosNovos = [];
     try {
         $cliente = consultarAgendamento($conexao,
             'SELECT id_usuario, nome, email, telefone, perfil, ativo FROM usuario WHERE id_usuario = ? FOR UPDATE',
@@ -180,6 +280,7 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados): arr
             'INSERT INTO endereco_atendimento (id_solicitacao, endereco_informado) VALUES (?, ?)',
             [$idSolicitacao, $dados['endereco']]
         );
+        $arquivosFisicosNovos = salvarAnexosAgendamento($conexao, $idSolicitacao, $idCliente, $anexos);
         consultarAgendamento($conexao,
             'INSERT INTO agendamento (id_solicitacao, id_disponibilidade, status) VALUES (?, ?, ?)',
             [$idSolicitacao, $dados['disponibilidade'], CONFIRMACAO_AUTOMATICA ? 'CONFIRMADO' : 'PENDENTE']
@@ -201,6 +302,11 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados): arr
         return $resposta;
     } catch (Throwable $erro) {
         $conexao->rollback();
+        foreach ($arquivosFisicosNovos as $arquivoFisico) {
+            if (is_file($arquivoFisico)) {
+                unlink($arquivoFisico);
+            }
+        }
         throw $erro;
     }
 }
@@ -224,7 +330,9 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
             header('Allow: GET, POST');
             throw new ErroAgendamento('Método não permitido.', 405);
         }
-        if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 32768) {
+        // 32 KB para os campos de texto + espaço para até ANEXO_MAX_ARQUIVOS anexos de ANEXO_TAMANHO_MAXIMO cada.
+        $limiteRequisicao = 32768 + (ANEXO_MAX_ARQUIVOS * ANEXO_TAMANHO_MAXIMO);
+        if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $limiteRequisicao) {
             throw new ErroAgendamento('Os dados enviados ultrapassam o limite permitido.', 413);
         }
         if (!session_start(['use_strict_mode' => true, 'use_only_cookies' => true,
@@ -285,11 +393,7 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
         if (!is_string($_POST['csrf'] ?? null) || !hash_equals($_SESSION['csrf_agendamento'], $_POST['csrf'])) {
             throw new ErroAgendamento('Sessão expirada. Entre novamente e consulte Meus Pedidos antes de reenviar.', 403);
         }
-        foreach ($_FILES as $arquivo) {
-            if (($arquivo['error'] ?? null) !== UPLOAD_ERR_NO_FILE) {
-                throw new ErroAgendamento('Anexos ainda não estão disponíveis nesta etapa. Envie o pedido sem arquivos.', 422);
-            }
-        }
+        $anexos = validarAnexosAgendamento($_FILES);
         $dados = validarDadosAgendamento($_POST);
         $rascunho = $rascunhos[$dados['protocolo']] ?? null;
         if (!$rascunho || (int) $rascunho['usuario'] !== $id) {
@@ -305,7 +409,7 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
         if (!session_write_close()) {
             throw new RuntimeException('Falha ao salvar a intenção de envio.');
         }
-        $resultado = executarAgendamento($conexao, $usuario, $dados);
+        $resultado = executarAgendamento($conexao, $usuario, $dados, $anexos);
         responderAgendamento($resultado['repetido'] ? 200 : 201, $resultado);
     } catch (Throwable $erro) {
         if (session_status() === PHP_SESSION_ACTIVE) {

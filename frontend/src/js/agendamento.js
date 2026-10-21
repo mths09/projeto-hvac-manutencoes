@@ -87,13 +87,63 @@
     });
   }
 
-  // Nesta etapa, o técnico será atribuído pela equipe e não há upload.
-  elemento("arquivo").disabled = true;
-  const upload = document.querySelector(".upload-area");
-  const avisoAnexo = document.createElement("p");
-  avisoAnexo.textContent = "Fotos e vídeos ainda não são enviados nesta etapa.";
-  avisoAnexo.style.cssText = "padding:16px;font-size:12px;text-align:center";
-  upload.replaceChildren(avisoAnexo);
+  // Fotos/vídeos anexados ao pedido (validados aqui e de novo no servidor).
+  const ANEXO_MAX_ARQUIVOS = 5;
+  const ANEXO_TAMANHO_MAXIMO = 5 * 1024 * 1024; // 5 MB, igual ao texto exibido na tela.
+  const ANEXO_TIPOS_ACEITOS = ["image/jpeg", "image/png", "video/mp4"];
+  let anexos = [];
+  const campoArquivo = elemento("arquivo");
+  const listaAnexos = elemento("listaAnexos");
+
+  function formatarTamanho(bytes) {
+    return bytes >= 1024 * 1024
+      ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+      : `${Math.ceil(bytes / 1024)} KB`;
+  }
+
+  function renderizarAnexos(erro = "") {
+    listaAnexos.replaceChildren();
+    if (erro) {
+      const item = document.createElement("li");
+      item.className = "lista-anexos-erro";
+      item.textContent = erro;
+      listaAnexos.append(item);
+    }
+    anexos.forEach((arquivo, indice) => {
+      const item = document.createElement("li");
+      const nome = document.createElement("span");
+      nome.textContent = `${arquivo.name} (${formatarTamanho(arquivo.size)})`;
+      const remover = document.createElement("button");
+      remover.type = "button";
+      remover.textContent = "Remover";
+      remover.setAttribute("aria-label", `Remover ${arquivo.name}`);
+      remover.addEventListener("click", () => {
+        anexos.splice(indice, 1);
+        renderizarAnexos();
+      });
+      item.append(nome, remover);
+      listaAnexos.append(item);
+    });
+  }
+
+  campoArquivo.addEventListener("change", () => {
+    const selecionados = [...campoArquivo.files];
+    campoArquivo.value = ""; // permite re-selecionar o mesmo arquivo depois de remover
+    for (const arquivo of selecionados) {
+      if (anexos.length >= ANEXO_MAX_ARQUIVOS) {
+        return renderizarAnexos(`Você pode anexar no máximo ${ANEXO_MAX_ARQUIVOS} arquivos.`);
+      }
+      if (!ANEXO_TIPOS_ACEITOS.includes(arquivo.type)) {
+        return renderizarAnexos(`"${arquivo.name}" não é JPG, PNG ou MP4.`);
+      }
+      if (arquivo.size > ANEXO_TAMANHO_MAXIMO) {
+        return renderizarAnexos(`"${arquivo.name}" passa de 5 MB.`);
+      }
+      anexos.push(arquivo);
+    }
+    renderizarAnexos();
+  });
+
   elemento("nomeCompleto").maxLength = 150;
   elemento("endereco").maxLength = 500;
   elemento("descricao").maxLength = 2000;
@@ -249,6 +299,8 @@
       resumoDescricao: pedido.campos.descricao
     };
     for (const [id, valor] of Object.entries(valores)) elemento(id).textContent = valor;
+    elemento("resumoAnexosLinha").hidden = anexos.length === 0;
+    elemento("resumoAnexos").textContent = `${anexos.length} ${anexos.length === 1 ? "arquivo" : "arquivos"}`;
     elemento("confirmarAgendamento").textContent = "Enviar pedido ✓";
     elemento("voltarDetalhes").disabled = incerto;
     etapa(3);
@@ -311,6 +363,7 @@
     for (const [chave, valor] of Object.entries(pedido.campos)) formulario.append(chave, valor);
     formulario.append("protocolo", pedido.protocolo);
     formulario.append("csrf", dados.csrf);
+    for (const arquivo of anexos) formulario.append("anexos[]", arquivo, arquivo.name);
     try {
       const retorno = await requisicao({method: "POST", body: formulario});
       concluido = true;

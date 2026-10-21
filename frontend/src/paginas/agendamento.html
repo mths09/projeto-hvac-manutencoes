@@ -311,7 +311,9 @@
 
             <span> JPG, PNG, MP4 · até 5 MB </span>
 
-            <input type="file" id="arquivo" accept="image/*,video/*" multiple />
+            <input type="file" id="arquivo" name="anexos[]" accept="image/jpeg,image/png,video/mp4" multiple />
+
+            <ul id="listaAnexos" class="lista-anexos" aria-live="polite"></ul>
           </div>
 
           <!-- BOTÕES -->
@@ -374,6 +376,11 @@
               <div class="resumo-linha descricao-resumo">
                 <span>Descrição</span>
                 <strong id="resumoDescricao"></strong>
+              </div>
+
+              <div class="resumo-linha" id="resumoAnexosLinha" hidden>
+                <span>Fotos/vídeos</span>
+                <strong id="resumoAnexos"></strong>
               </div>
             </div>
 
