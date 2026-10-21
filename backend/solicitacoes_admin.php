@@ -222,7 +222,7 @@ try {
 
             $agendamento = consultarSolicitacoesAdmin(
                 $conexao,
-                'SELECT a.id_agendamento, a.status, d.inicio_previsto, (d.inicio_previsto > NOW()) AS horario_futuro
+                'SELECT a.id_agendamento, a.status, d.id_disponibilidade, d.inicio_previsto, (d.inicio_previsto > NOW()) AS horario_futuro
                  FROM agendamento a
                  INNER JOIN disponibilidade d ON d.id_disponibilidade = a.id_disponibilidade
                  WHERE a.id_solicitacao = ?
@@ -248,6 +248,13 @@ try {
                     $conexao,
                     "UPDATE agendamento SET status = 'CANCELADO', motivo_cancelamento = 'Cancelado pela equipe no painel administrativo' WHERE id_agendamento = ?",
                     [$agendamento['id_agendamento']]
+                );
+                // A disponibilidade só volta a abrir quando o administrador liberar manualmente.
+                consultarSolicitacoesAdmin(
+                    $conexao,
+                    "UPDATE disponibilidade SET situacao = 'BLOQUEADO', id_editor = ?, atualizada_em = NOW()
+                     WHERE id_disponibilidade = ? AND situacao = 'LIVRE'",
+                    [$idAdministrador, $agendamento['id_disponibilidade']]
                 );
             }
 

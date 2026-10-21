@@ -1651,3 +1651,12 @@ header {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Mensagem quando ainda não há itens publicados no portfólio. */
+.portfolio-vazio {
+  grid-column: 1 / -1;
+  padding: 18px;
+  color: var(--ciano-palido);
+  text-align: center;
+}

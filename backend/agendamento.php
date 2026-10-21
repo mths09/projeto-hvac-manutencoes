@@ -150,7 +150,7 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados): arr
         $horario = consultarAgendamento($conexao,
             "SELECT id_disponibilidade, capacidade FROM disponibilidade
              WHERE id_disponibilidade = ? AND situacao = 'LIVRE' AND capacidade > 0
-             AND inicio_previsto > NOW() AND inicio_previsto <= DATE_ADD(NOW(), INTERVAL 60 DAY)
+             AND inicio_previsto > NOW() AND inicio_previsto <= DATE_ADD(NOW(), INTERVAL 30 DAY)
              AND fim_previsto > inicio_previsto FOR UPDATE", [$dados['disponibilidade']]
         )->get_result()->fetch_assoc();
         if (!$horario) {
@@ -265,7 +265,7 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
             $horarios = consultarAgendamento($conexao,
                 "SELECT d.id_disponibilidade AS id, d.inicio_previsto AS inicio, d.fim_previsto AS fim
                  FROM disponibilidade d WHERE d.situacao = 'LIVRE'
-                 AND d.inicio_previsto > NOW() AND d.inicio_previsto <= DATE_ADD(NOW(), INTERVAL 60 DAY)
+                 AND d.inicio_previsto > NOW() AND d.inicio_previsto <= DATE_ADD(NOW(), INTERVAL 30 DAY)
                  AND d.fim_previsto > d.inicio_previsto AND d.capacidade >
                  (SELECT COUNT(*) FROM agendamento a JOIN solicitacao s ON s.id_solicitacao = a.id_solicitacao
                   JOIN status_solicitacao st ON st.id_status = s.id_status_atual

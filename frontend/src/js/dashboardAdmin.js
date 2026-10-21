@@ -1,5 +1,6 @@
 const API = "../../../backend/solicitacoes_admin.php";
-const STORAGE_KEY = "hvac-agenda-v1";
+const AGENDA_API = "../../../backend/agenda_admin.php";
+const PORTFOLIO_API = "../../../backend/portfolio_admin.php";
 const STATUS_LABELS = {
   SOLICITADO: "Solicitado",
   AGENDADO: "Agendado",
@@ -19,6 +20,12 @@ let adminLoading = true;
 let adminError = "";
 let adminMessage = "";
 let adminMessageError = false;
+let portfolioItems = [];
+let portfolioCategories = [];
+let portfolioFilter = "Todos";
+let portfolioLoaded = false;
+let portfolioLoading = false;
+let portfolioError = "";
 
 const content = document.querySelector("#content");
 const dialog = document.querySelector("#order-dialog");
@@ -125,6 +132,10 @@ async function enviarAcaoAdmin(pedido, acao, valores, controle) {
       throw new Error(dados?.mensagem || "Não foi possível atualizar o pedido.");
     }
     adminMessage = dados.mensagem || "Alteração salva.";
+    if (renderSchedule.state) {
+      renderSchedule.state.loadedMonth = "";
+      renderSchedule.state.requestedMonth = "";
+    }
     await carregarSolicitacoesAdmin(false);
     if (adminError) adminMessageError = true;
   } catch (erro) {
@@ -772,60 +783,74 @@ function renderRequests(history = false) {
 }
 
 function renderSchedule() {
-  const STORAGE_KEY = "hvac-agenda-v1";
-  const DEFAULT_TIMES = [
-    "07:00",
-    "08:00",
-    "09:00",
-    "10:00",
-    "11:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
-  ];
-
-  // Preserva o mês e o dia selecionados ao atualizar a tela.
+  // O banco é a fonte da agenda; o navegador guarda apenas o mês selecionado.
   if (!renderSchedule.state) {
     const reference = typeof TODAY === "string" ? TODAY : localDate();
     const [year, month] = reference.split("-").map(Number);
-
-    let saved = {};
-
-    try {
-      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        for (const [date, slots] of Object.entries(parsed)) {
-          if (
-            /^\d{4}-\d{2}-\d{2}$/.test(date) &&
-            slots &&
-            typeof slots === "object" &&
-            !Array.isArray(slots)
-          ) {
-            saved[date] = Object.fromEntries(
-              Object.entries(slots).filter(
-                ([time, status]) =>
-                  /^([01]\d|2[0-3]):[0-5]\d$/.test(time) &&
-                  ["free", "blocked", "removed"].includes(status),
-              ),
-            );
-          }
-        }
-      }
-    } catch {}
-
     renderSchedule.state = {
       selected: reference,
       year,
       month: month - 1,
-      saved,
+      slots: [],
+      loadedMonth: "",
+      requestedMonth: "",
+      loading: false,
       error: "",
+      notice: "",
+      busy: false,
     };
   }
 
   const state = renderSchedule.state;
+  const monthKey = `${state.year}-${String(state.month + 1).padStart(2, "0")}`;
+
+  if (state.loadedMonth !== monthKey && state.requestedMonth !== monthKey) {
+    state.requestedMonth = monthKey;
+    state.loading = true;
+    state.error = "";
+    fetch(`${AGENDA_API}?ano=${state.year}&mes=${state.month + 1}`, {
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    })
+      .then(async (resposta) => {
+        const dados = await resposta.json();
+        if (resposta.status === 401 || resposta.status === 403) {
+          window.location.replace("./login.html");
+          throw new Error("Sessão administrativa encerrada.");
+        }
+        if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.horarios)) {
+          throw new Error(dados?.mensagem || "Não foi possível carregar a agenda.");
+        }
+        if (typeof dados.csrf !== "string") {
+          throw new Error("O servidor não forneceu a proteção de sessão do painel.");
+        }
+        if (state.requestedMonth !== monthKey) return;
+        adminCsrf = dados.csrf;
+        state.slots = dados.horarios.map((horario) => ({
+          id: String(horario.id),
+          date: String(horario.inicio || "").slice(0, 10),
+          time: String(horario.inicio || "").slice(11, 16),
+          endTime: String(horario.fim || "").slice(11, 16),
+          status: horario.estado === "blocked" ? "blocked" : horario.estado === "full" ? "occupied" : "free",
+          capacity: Number(horario.capacidade) || 1,
+          bookings: Number(horario.reservas) || 0,
+          protocols: Array.isArray(horario.protocolos) ? horario.protocolos.map(String) : [],
+        }));
+        state.loadedMonth = monthKey;
+        state.error = "";
+      })
+      .catch((erro) => {
+        if (state.requestedMonth !== monthKey || erro.message === "Sessão administrativa encerrada.") return;
+        state.loadedMonth = monthKey;
+        state.error = erro.message || "Não foi possível carregar a agenda.";
+      })
+      .finally(() => {
+        if (state.requestedMonth !== monthKey) return;
+        state.loading = false;
+        renderSchedule();
+      });
+  }
 
   if (!document.querySelector("#agenda-styles")) {
     const style = document.createElement("style");
@@ -977,6 +1002,21 @@ function renderSchedule() {
         white-space: nowrap;
       }
 
+      .agenda-refresh {
+        padding: 8px 10px;
+        border: 1px solid #ffffff20;
+        border-radius: 10px;
+        color: #c9cede;
+        background: #ffffff0b;
+        white-space: nowrap;
+      }
+
+      .agenda-slot-meta {
+        margin: 0 0 8px;
+        color: #aab2c6;
+        font-size: 11px;
+      }
+
       .agenda-slots {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1096,71 +1136,52 @@ function renderSchedule() {
     ].join("-");
   }
 
-  function bookingsFor(date) {
-    return orders.filter(
-      (order) =>
-        order.date === date &&
-        ["SOLICITADO", "AGENDADO", "EM_ANDAMENTO"].includes(order.statusCode),
-    );
-  }
-
   function slotsFor(date) {
-    const [year, month, day] = date.split("-").map(Number);
-    const weekday = new Date(year, month - 1, day).getDay();
-    const changes = state.saved[date] || {};
-
-    // Por padrão, cria horários de segunda a sexta.
-    const slots = new Map(
-      (weekday === 0 || weekday === 6 ? [] : DEFAULT_TIMES).map((time) => [
-        time,
-        { time, status: "free", orders: [] },
-      ]),
-    );
-
-    for (const [time, status] of Object.entries(changes)) {
-      if (status === "removed") {
-        slots.delete(time);
-      } else {
-        slots.set(time, { time, status, orders: [] });
-      }
-    }
-
-    // Reservas existentes sempre prevalecem sobre alterações locais.
-    for (const order of bookingsFor(date)) {
-      const current = slots.get(order.time);
-
-      slots.set(order.time, {
-        time: order.time,
-        status: "occupied",
-        orders: [...(current?.orders || []), order],
-      });
-    }
-
-    return [...slots.values()].sort((a, b) => a.time.localeCompare(b.time));
+    return state.slots.filter((slot) => slot.date === date);
   }
 
-  function saveSlot(time, status) {
-    if (bookingsFor(state.selected).some((order) => order.time === time)) {
-      return;
-    }
+  function dateAfterDays(days) {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return dateKey(date.getFullYear(), date.getMonth(), date.getDate());
+  }
 
-    state.saved[state.selected] ||= {};
-    state.saved[state.selected][time] = status;
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.saved));
-      state.error = "";
-    } catch {
-      state.error =
-        "Não foi possível salvar no navegador. As alterações valem apenas nesta sessão.";
-    }
-
+  async function enviarAcaoAgenda(acao, valores) {
+    if (!adminCsrf || state.busy) return;
+    state.busy = true;
+    state.error = "";
+    state.notice = "";
     renderSchedule();
+    try {
+      const resposta = await fetch(AGENDA_API, {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ csrf: adminCsrf, acao, ...valores }),
+      });
+      const dados = await resposta.json();
+      if (resposta.status === 401 || resposta.status === 403) {
+        window.location.replace("./login.html");
+        return;
+      }
+      if (!resposta.ok || dados?.sucesso !== true) {
+        throw new Error(dados?.mensagem || "Não foi possível atualizar a agenda.");
+      }
+      state.notice = dados.mensagem || "Agenda atualizada.";
+      state.loadedMonth = "";
+      state.requestedMonth = "";
+      state.busy = false;
+      renderSchedule();
+    } catch (erro) {
+      state.error = erro.message || "Não foi possível atualizar a agenda.";
+      state.busy = false;
+      renderSchedule();
+    }
   }
 
   const selectedSlots = slotsFor(state.selected);
-  const count = (status) =>
-    selectedSlots.filter((slot) => slot.status === status).length;
+  const count = (status) => selectedSlots.filter((slot) => slot.status === status).length;
 
   const firstWeekday = new Date(state.year, state.month, 1).getDay();
   const totalDays = new Date(state.year, state.month + 1, 0).getDate();
@@ -1170,7 +1191,7 @@ function renderSchedule() {
     .replace(" de ", " ");
 
   const monthTitle = monthText.charAt(0).toUpperCase() + monthText.slice(1);
-  const labels = { free: "Livre", occupied: "Ocupado", blocked: "Bloqueado" };
+  const labels = { free: "Livre", occupied: "Lotado", blocked: "Bloqueado" };
 
   content.innerHTML = `
     <section class="agenda-layout">
@@ -1242,56 +1263,56 @@ function renderSchedule() {
 
             <div class="agenda-summary">
               <span class="free">${count("free")} livres</span>
-              <span class="occupied">${count("occupied")} ocupados</span>
+              <span class="occupied">${count("occupied")} lotados</span>
               <span class="blocked">${count("blocked")} bloqueados</span>
             </div>
           </div>
 
-          <button class="agenda-add" id="agenda-add">+ Horário</button>
+          <button class="agenda-refresh" id="agenda-refresh" ${state.busy || state.loading ? "disabled" : ""}>Atualizar</button>
+          <button class="agenda-add" id="agenda-add" ${state.busy || state.loading ? "disabled" : ""}>+ Horário</button>
         </div>
 
         <div class="agenda-slots">
-          ${
-            selectedSlots
+          ${state.loading
+            ? '<div class="agenda-empty">Carregando horários do banco…</div>'
+            : !selectedSlots.length && state.error
+              ? `<div class="agenda-empty" role="status">${escapeHTML(state.error)}<br><button class="agenda-refresh" data-retry>↻ Tentar novamente</button></div>`
+              : selectedSlots.length
+                ? selectedSlots
               .map(
                 (slot) => `
             <article class="agenda-slot ${slot.status}">
               <div class="agenda-slot-header">
-                <strong>${escapeHTML(slot.time)}</strong>
+                <strong>${escapeHTML(slot.time)}–${escapeHTML(slot.endTime)}</strong>
                 <span class="agenda-slot-status">${labels[slot.status]}</span>
               </div>
 
-              ${
-                slot.status === "occupied"
-                  ? `
-                <p class="agenda-booking">
-                  ${slot.orders.map((order) => escapeHTML(order.id)).join(", ")}
-                </p>
-                <p class="agenda-locked">Não pode ser alterado</p>
-              `
+              <p class="agenda-slot-meta">${slot.bookings} de ${slot.capacity} vagas ocupadas</p>
+              ${slot.protocols.length ? `<p class="agenda-booking">${slot.protocols.map(escapeHTML).join(", ")}</p>` : ""}
+              ${slot.bookings > 0 && slot.status !== "blocked"
+                ? '<p class="agenda-locked">Não pode ser bloqueado ou removido enquanto houver reservas ativas.</p>'
+                : slot.status === "occupied"
+                  ? '<p class="agenda-locked">Capacidade atingida.</p>'
                   : `
                 <div class="agenda-slot-actions">
                   <button
                     class="agenda-toggle"
-                    data-toggle-time="${escapeHTML(slot.time)}"
+                    data-toggle-id="${escapeHTML(slot.id)}"
+                    ${state.busy ? "disabled" : ""}
                     aria-label="${slot.status === "blocked" ? "Liberar" : "Bloquear"} ${escapeHTML(slot.time)}"
                   >
                     ${slot.status === "blocked" ? "🔓 Liberar" : "🔒 Bloquear"}
                   </button>
 
-                  <button
-                    class="agenda-remove"
-                    data-remove-time="${escapeHTML(slot.time)}"
-                    aria-label="Remover horário ${escapeHTML(slot.time)}"
-                  >×</button>
+                  ${slot.bookings === 0 ? `<button class="agenda-remove" data-remove-id="${escapeHTML(slot.id)}" ${state.busy ? "disabled" : ""} aria-label="Remover horário ${escapeHTML(slot.time)}">×</button>` : ""}
                 </div>
               `
               }
             </article>
           `,
               )
-              .join("") ||
-            `
+              .join("")
+                : `
             <div class="agenda-empty">
               Nenhum horário disponível. Clique em “+ Horário” para adicionar.
             </div>
@@ -1299,13 +1320,8 @@ function renderSchedule() {
           }
         </div>
 
-        ${
-          state.error
-            ? `
-          <p class="notice" role="status">${escapeHTML(state.error)}</p>
-        `
-            : ""
-        }
+        ${state.notice ? `<p class="notice" role="status">${escapeHTML(state.notice)}</p>` : ""}
+        ${state.error && !state.loading && selectedSlots.length ? `<p class="notice error" role="alert">${escapeHTML(state.error)}</p>` : ""}
       </section>
     </section>
   `;
@@ -1325,6 +1341,8 @@ function renderSchedule() {
 
       state.year = next.getFullYear();
       state.month = next.getMonth();
+      const dia = Math.min(Number(state.selected.slice(8, 10)), new Date(state.year, state.month + 1, 0).getDate());
+      state.selected = dateKey(state.year, state.month, dia);
       renderSchedule();
       return;
     }
@@ -1335,23 +1353,36 @@ function renderSchedule() {
       return;
     }
 
-    if (button.dataset.toggleTime) {
-      const time = button.dataset.toggleTime;
-      const slot = slotsFor(state.selected).find((item) => item.time === time);
-
-      if (slot && slot.status !== "occupied") {
-        saveSlot(time, slot.status === "blocked" ? "free" : "blocked");
+    if (button.dataset.toggleId) {
+      const slot = state.slots.find((item) => item.id === button.dataset.toggleId);
+      if (slot) {
+        const acao = slot.status === "blocked" ? "liberar" : "bloquear";
+        const verbo = acao === "liberar" ? "liberar" : "bloquear";
+        if (window.confirm(`Deseja ${verbo} o horário ${slot.time}–${slot.endTime}?`)) {
+          enviarAcaoAgenda(acao, { horario_id: slot.id });
+        }
       }
       return;
     }
 
-    if (button.dataset.removeTime) {
-      saveSlot(button.dataset.removeTime, "removed");
+    if (button.dataset.removeId) {
+      const slot = state.slots.find((item) => item.id === button.dataset.removeId);
+      if (slot && window.confirm(`Remover o horário ${slot.time}–${slot.endTime} da agenda?`)) {
+        enviarAcaoAgenda("remover", { horario_id: slot.id });
+      }
       return;
     }
 
     if (button.id === "agenda-add") {
       openAddTime();
+      return;
+    }
+
+    if (button.id === "agenda-refresh" || button.dataset.retry !== undefined) {
+      state.loadedMonth = "";
+      state.requestedMonth = "";
+      state.notice = "";
+      renderSchedule();
     }
   });
 
@@ -1363,19 +1394,31 @@ function renderSchedule() {
 
     modal.innerHTML = `
       <h2 id="agenda-modal-title">Adicionar horário</h2>
-      <p class="muted">${dateBR(selectedDate)}</p>
-
       <form>
         <label>
-          Horário
-          <input type="time" name="time" required value="18:00">
+          Data
+          <input type="date" name="date" required value="${escapeHTML(selectedDate)}" min="${localDate()}" max="${dateAfterDays(30)}">
+        </label>
+        <div class="form-grid">
+        <label>
+          Início
+          <input type="time" name="inicio" required value="18:00">
+        </label>
+        <label>
+          Fim
+          <input type="time" name="fim" required value="19:00">
+        </label>
+        </div>
+        <label>
+          Capacidade de atendimento
+          <input type="number" name="capacidade" required min="1" max="100" step="1" value="1">
         </label>
 
         <p class="notice" role="alert" data-error hidden></p>
 
         <div class="form-actions">
           <button type="button" class="secondary" data-cancel>Cancelar</button>
-          <button type="submit" class="primary">Adicionar</button>
+          <button type="submit" class="primary" ${state.busy ? "disabled" : ""}>Adicionar</button>
         </div>
       </form>
     `;
@@ -1388,20 +1431,25 @@ function renderSchedule() {
 
     modal.querySelector("form").addEventListener("submit", (event) => {
       event.preventDefault();
-
-      const time = modal.querySelector('[name="time"]').value;
-      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return;
-
-      if (slotsFor(selectedDate).some((slot) => slot.time === time)) {
-        const error = modal.querySelector("[data-error]");
-        error.textContent = "Esse horário já existe neste dia.";
-        error.hidden = false;
+      const formData = new FormData(event.currentTarget);
+      const valores = {
+        data: String(formData.get("date") || ""),
+        inicio: String(formData.get("inicio") || ""),
+        fim: String(formData.get("fim") || ""),
+        capacidade: String(formData.get("capacidade") || ""),
+      };
+      const erro = modal.querySelector("[data-error]");
+      if (valores.fim <= valores.inicio) {
+        erro.textContent = "O horário final precisa ser posterior ao início.";
+        erro.hidden = false;
         return;
       }
-
-      state.selected = selectedDate;
-      saveSlot(time, "free");
       modal.close();
+      state.selected = valores.data;
+      const [year, month] = valores.data.split("-").map(Number);
+      state.year = year;
+      state.month = month - 1;
+      enviarAcaoAgenda("criar", valores);
     });
 
     modal.addEventListener("close", () => modal.remove(), { once: true });
@@ -1409,27 +1457,175 @@ function renderSchedule() {
   }
 }
 
+async function carregarPortfolioAdmin() {
+  portfolioLoading = true;
+  portfolioError = "";
+  if (page === "portfolio") renderPortfolio();
+  try {
+    const resposta = await fetch(PORTFOLIO_API, {
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.categorias) || !Array.isArray(dados.itens)) {
+      throw new Error(dados?.mensagem || "Não foi possível carregar o portfólio.");
+    }
+    if (typeof dados.csrf === "string") adminCsrf = dados.csrf;
+    portfolioCategories = dados.categorias.map((categoria) => ({
+      id: String(categoria.id), name: String(categoria.nome), color: String(categoria.cor || "#00d8f3"),
+    }));
+    portfolioItems = dados.itens.map((item) => ({
+      id: String(item.id), categoryId: String(item.id_categoria), category: String(item.categoria || "Sem categoria"),
+      title: String(item.titulo || ""), description: String(item.descricao || ""), location: String(item.localidade_publica || ""),
+      image: String(item.imagem_url || ""), imageName: String(item.imagem_nome || ""), published: Boolean(item.publicado), createdAt: String(item.criado_em || "").slice(0, 10),
+    }));
+    portfolioLoaded = true;
+  } catch (erro) {
+    portfolioError = erro.message || "Não foi possível carregar o portfólio do banco.";
+  } finally {
+    portfolioLoading = false;
+    if (page === "portfolio") renderPortfolio();
+  }
+}
+
+async function enviarPortfolio(formData) {
+  const resposta = await fetch(PORTFOLIO_API, {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+    body: formData,
+  });
+  const dados = await resposta.json();
+  if (resposta.status === 401 || resposta.status === 403) {
+    window.location.replace("./login.html");
+    throw new Error("Entre como administrador para continuar.");
+  }
+  if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível salvar o item.");
+  return dados;
+}
+
+function abrirPortfolioModal(item = null) {
+  const modal = document.createElement("dialog");
+  modal.className = "portfolio-dialog";
+  modal.setAttribute("aria-labelledby", "portfolio-dialog-title");
+  const editando = Boolean(item);
+  modal.innerHTML = `
+    <h2 id="portfolio-dialog-title">${editando ? "Editar item" : "Adicionar item ao portfólio"}</h2>
+    <form enctype="multipart/form-data">
+      <label>Título do serviço<input name="titulo" required maxlength="150" value="${escapeHTML(item?.title || "")}" placeholder="Ex.: Instalação Split Residencial"></label>
+      <label>Categoria<select name="id_categoria" required>${portfolioCategories.map((categoria) => `<option value="${escapeHTML(categoria.id)}" ${item?.categoryId === categoria.id ? "selected" : ""}>${escapeHTML(categoria.name)}</option>`).join("")}</select></label>
+      <label>Imagem de capa<input name="imagem" type="file" accept="image/png,image/jpeg,image/webp" ${editando ? "" : "required"}><small>JPG, PNG ou WebP, até 2 MB.${item?.imageName ? ` Imagem atual: ${escapeHTML(item.imageName)}.` : ""}</small></label>
+      <label>Localidade<input name="localidade" maxlength="150" value="${escapeHTML(item?.location || "")}" placeholder="Ex.: Sorocaba, SP"></label>
+      <label>Descrição<textarea name="descricao" rows="4" maxlength="3000" placeholder="Conte um pouco sobre o serviço">${escapeHTML(item?.description || "")}</textarea></label>
+      <label class="checkbox"><input name="publicado" type="checkbox" value="1" ${!editando || item?.published ? "checked" : ""}> Exibir no site</label>
+      <p class="portfolio-form-error" role="alert" hidden></p>
+      <div class="form-actions"><button type="button" class="secondary" data-cancel>Cancelar</button><button type="submit" class="primary">${editando ? "Salvar alterações" : "Adicionar item"}</button></div>
+    </form>`;
+  document.body.appendChild(modal);
+  modal.querySelector("[data-cancel]").addEventListener("click", () => modal.close());
+  modal.querySelector("form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const submit = formElement.querySelector('[type="submit"]');
+    const error = formElement.querySelector(".portfolio-form-error");
+    const dados = new FormData(formElement);
+    dados.set("acao", "salvar");
+    dados.set("csrf", adminCsrf);
+    if (editando) dados.set("id", item.id);
+    dados.set("publicado", formElement.elements.publicado.checked ? "1" : "0");
+    submit.disabled = true;
+    error.hidden = true;
+    try {
+      const resultado = await enviarPortfolio(dados);
+      modal.close();
+      adminMessage = resultado.mensagem || "Item salvo.";
+      adminMessageError = false;
+      portfolioLoaded = false;
+      await carregarPortfolioAdmin();
+      if (page === "portfolio") render();
+    } catch (erro) {
+      error.textContent = erro.message || "Não foi possível salvar o item.";
+      error.hidden = false;
+      submit.disabled = false;
+    }
+  });
+  modal.addEventListener("close", () => modal.remove(), { once: true });
+  modal.showModal();
+}
+
 function renderPortfolio() {
-  const completed = orders.filter((order) => order.status === "Concluído");
+  if (!portfolioLoaded && !portfolioLoading && !portfolioError) void carregarPortfolioAdmin();
+  const categorias = [
+    { id: "Todos", name: "Todos", count: portfolioItems.length },
+    ...portfolioCategories.map((categoria) => ({
+      ...categoria,
+      count: portfolioItems.filter((item) => item.categoryId === categoria.id).length,
+    })),
+  ];
+  if (!categorias.some((categoria) => categoria.id === portfolioFilter)) portfolioFilter = "Todos";
+  const itensVisiveis = portfolioItems.filter((item) => portfolioFilter === "Todos" || item.categoryId === portfolioFilter);
+
   content.innerHTML = `
-        <div class="toolbar"><h1>Portfólio de serviços concluídos</h1></div>
-        <section class="technicians">
-          ${
-            completed
-              .map(
-                (order) => `
-            <article class="panel">
-              <h2>${escapeHTML(order.equipment)}</h2>
-              <p><strong>${escapeHTML(order.client)}</strong></p>
-              <p class="muted">Técnico: ${escapeHTML(order.technician)}</p>
-              <p class="muted">${dateBR(order.date)} · ${escapeHTML(order.id)}</p>
-              ${badge(order.status)}
-            </article>
-          `,
-              )
-              .join("") || '<div class="empty">Nenhum serviço concluído.</div>'
-          }
-        </section>`;
+    <section class="portfolio-admin" aria-label="Gerenciamento do portfólio">
+      <div class="portfolio-toolbar">
+        <div class="portfolio-filters" role="group" aria-label="Filtrar itens por categoria">
+          ${categorias.map((categoria) => `<button type="button" class="portfolio-filter ${portfolioFilter === categoria.id ? "active" : ""}" data-portfolio-filter="${escapeHTML(categoria.id)}" aria-pressed="${portfolioFilter === categoria.id}">${escapeHTML(categoria.name)} (${categoria.count})</button>`).join("")}
+        </div>
+        <button type="button" class="primary portfolio-add" id="portfolio-add" ${!portfolioLoaded || portfolioLoading ? "disabled" : ""}>+ Adicionar Item</button>
+      </div>
+      ${portfolioLoading && !portfolioLoaded ? '<div class="panel empty">Carregando itens do portfólio…</div>' : ""}
+      ${portfolioError ? `<section class="panel portfolio-error" role="alert"><p>${escapeHTML(portfolioError)}</p><button type="button" class="primary" id="portfolio-retry">Tentar novamente</button></section>` : ""}
+      <div class="portfolio-grid-admin">
+        ${itensVisiveis.map((portfolioItem) => `
+          <article class="portfolio-card-admin">
+            ${portfolioItem.image ? `<img src="${escapeHTML(portfolioItem.image)}" alt="${escapeHTML(portfolioItem.title)}" loading="lazy">` : '<div class="portfolio-image-empty" aria-hidden="true">▧</div>'}
+            <div class="portfolio-card-body">
+              <div class="portfolio-card-title-row"><button type="button" class="portfolio-edit" data-portfolio-edit="${escapeHTML(portfolioItem.id)}" aria-label="Editar item: ${escapeHTML(portfolioItem.title)}">${escapeHTML(portfolioItem.title)}</button><button type="button" class="portfolio-delete" data-portfolio-delete="${escapeHTML(portfolioItem.id)}" aria-label="Excluir ${escapeHTML(portfolioItem.title)}" title="Excluir item">×</button></div>
+              <span class="portfolio-card-category">${escapeHTML(portfolioItem.category)}</span>
+              <div class="portfolio-card-meta"><span>${portfolioItem.createdAt ? escapeHTML(dateBR(portfolioItem.createdAt)) : "Sem data"}</span>${portfolioItem.published ? "" : '<span class="portfolio-publication draft">Rascunho</span>'}</div>
+            </div>
+          </article>`).join("")}
+        ${!portfolioLoading && !portfolioError && !itensVisiveis.length ? '<div class="panel empty portfolio-vazio">Nenhum item nesta categoria. Use “Adicionar Item” para incluir um serviço concluído.</div>' : ""}
+      </div>
+    </section>`;
+
+  content.querySelectorAll("[data-portfolio-filter]").forEach((button) => button.addEventListener("click", () => {
+    portfolioFilter = button.dataset.portfolioFilter;
+    renderPortfolio();
+  }));
+  content.querySelector("#portfolio-add").addEventListener("click", () => abrirPortfolioModal());
+  content.querySelector("#portfolio-retry")?.addEventListener("click", () => { portfolioLoaded = false; portfolioError = ""; void carregarPortfolioAdmin(); });
+  content.querySelectorAll("[data-portfolio-edit]").forEach((button) => button.addEventListener("click", () => {
+    const registro = portfolioItems.find((registro) => registro.id === button.dataset.portfolioEdit);
+    if (registro) abrirPortfolioModal(registro);
+  }));
+  content.querySelectorAll("[data-portfolio-delete]").forEach((button) => button.addEventListener("click", async () => {
+    const item = portfolioItems.find((registro) => registro.id === button.dataset.portfolioDelete);
+    if (!item || !confirm(`Excluir “${item.title}” do portfólio?`)) return;
+    const dados = new FormData();
+    dados.set("acao", "remover");
+    dados.set("csrf", adminCsrf);
+    dados.set("id", item.id);
+    button.disabled = true;
+    try {
+      const resultado = await enviarPortfolio(dados);
+      adminMessage = resultado.mensagem || "Item removido.";
+      adminMessageError = false;
+      portfolioLoaded = false;
+      await carregarPortfolioAdmin();
+      if (page === "portfolio") render();
+    } catch (erro) {
+      adminMessage = erro.message || "Não foi possível remover o item.";
+      adminMessageError = true;
+      render();
+    }
+  }));
 }
 
 function render() {
