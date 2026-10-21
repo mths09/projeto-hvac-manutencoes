@@ -798,6 +798,7 @@ function renderSchedule() {
       error: "",
       notice: "",
       busy: false,
+      addingTime: false,
     };
   }
 
@@ -1011,6 +1012,71 @@ function renderSchedule() {
         white-space: nowrap;
       }
 
+      .agenda-add-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-bottom: 12px;
+        padding: 9px 10px;
+        border: 1px solid #00d8f344;
+        border-radius: 10px;
+        background: #00d8f314;
+      }
+
+      .agenda-add-row select,
+      .agenda-add-row input {
+        min-height: 28px;
+        padding: 4px 9px;
+        border: 1px solid #ffffff28;
+        border-radius: 7px;
+        color: #f2f5ff;
+        background: #252d43;
+        font-size: 11px;
+      }
+
+      .agenda-add-row select { min-width: 76px; }
+
+      .agenda-add-options {
+        position: relative;
+        color: #c9cede;
+        font-size: 11px;
+      }
+
+      .agenda-add-options summary {
+        cursor: pointer;
+        list-style: none;
+        white-space: nowrap;
+      }
+
+      .agenda-add-options summary::-webkit-details-marker { display: none; }
+
+      .agenda-add-options[open] .agenda-add-fields {
+        position: absolute;
+        z-index: 2;
+        top: 25px;
+        left: 0;
+        display: flex;
+        gap: 8px;
+        min-width: 310px;
+        padding: 10px;
+        border: 1px solid #3a4662;
+        border-radius: 9px;
+        background: #171f35;
+        box-shadow: 0 8px 24px #0005;
+      }
+
+      .agenda-add-fields label {
+        display: grid;
+        gap: 4px;
+      }
+
+      .agenda-cancel {
+        padding: 6px 9px;
+        color: #b8c0d2;
+        background: transparent;
+      }
+
       .agenda-slot-meta {
         margin: 0 0 8px;
         color: #aab2c6;
@@ -1169,6 +1235,7 @@ function renderSchedule() {
         throw new Error(dados?.mensagem || "Não foi possível atualizar a agenda.");
       }
       state.notice = dados.mensagem || "Agenda atualizada.";
+      state.addingTime = false;
       state.loadedMonth = "";
       state.requestedMonth = "";
       state.busy = false;
@@ -1192,6 +1259,7 @@ function renderSchedule() {
 
   const monthTitle = monthText.charAt(0).toUpperCase() + monthText.slice(1);
   const labels = { free: "Livre", occupied: "Lotado", blocked: "Bloqueado" };
+  const horariosPadrao = ["07:00", "08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
 
   content.innerHTML = `
     <section class="agenda-layout">
@@ -1269,8 +1337,26 @@ function renderSchedule() {
           </div>
 
           <button class="agenda-refresh" id="agenda-refresh" ${state.busy || state.loading ? "disabled" : ""}>Atualizar</button>
-          <button class="agenda-add" id="agenda-add" ${state.busy || state.loading ? "disabled" : ""}>+ Horário</button>
+          <button class="agenda-add" id="agenda-add" ${state.busy || state.loading || state.selected < localDate() || state.selected > dateAfterDays(30) ? "disabled" : ""}>+ Horário</button>
         </div>
+
+        ${state.addingTime ? `
+          <form class="agenda-add-row" id="agenda-add-form">
+            <select name="inicio" aria-label="Horário de início" required ${state.busy || state.loading ? "disabled" : ""}>
+              ${horariosPadrao.map((hora) => `<option value="${hora}" ${hora === "07:00" ? "selected" : ""}>${hora}</option>`).join("")}
+            </select>
+            <details class="agenda-add-options">
+              <summary aria-label="Configurar fim e capacidade" title="Configurar fim e capacidade">⚙ Opções</summary>
+              <div class="agenda-add-fields">
+                <label>Início<input type="time" name="inicioPersonalizado" ${state.busy || state.loading ? "disabled" : ""}></label>
+                <label>Fim<input type="time" name="fim" value="08:00" required ${state.busy || state.loading ? "disabled" : ""}></label>
+                <label>Capacidade<input type="number" name="capacidade" value="1" min="1" max="100" step="1" required ${state.busy || state.loading ? "disabled" : ""}></label>
+              </div>
+            </details>
+            <button class="agenda-add" type="submit" ${state.busy || state.loading ? "disabled" : ""}>Adicionar</button>
+            <button class="agenda-cancel" type="button" data-cancel-add ${state.busy || state.loading ? "disabled" : ""}>Cancelar</button>
+          </form>
+        ` : ""}
 
         <div class="agenda-slots">
           ${state.loading
@@ -1349,6 +1435,13 @@ function renderSchedule() {
 
     if (button.dataset.date) {
       state.selected = button.dataset.date;
+      state.addingTime = false;
+      renderSchedule();
+      return;
+    }
+
+    if (button.dataset.cancelAdd !== undefined) {
+      state.addingTime = false;
       renderSchedule();
       return;
     }
@@ -1374,7 +1467,9 @@ function renderSchedule() {
     }
 
     if (button.id === "agenda-add") {
-      openAddTime();
+      state.addingTime = !state.addingTime;
+      state.error = "";
+      renderSchedule();
       return;
     }
 
@@ -1386,74 +1481,39 @@ function renderSchedule() {
     }
   });
 
-  function openAddTime() {
-    const selectedDate = state.selected;
-    const modal = document.createElement("dialog");
-
-    modal.setAttribute("aria-labelledby", "agenda-modal-title");
-
-    modal.innerHTML = `
-      <h2 id="agenda-modal-title">Adicionar horário</h2>
-      <form>
-        <label>
-          Data
-          <input type="date" name="date" required value="${escapeHTML(selectedDate)}" min="${localDate()}" max="${dateAfterDays(30)}">
-        </label>
-        <div class="form-grid">
-        <label>
-          Início
-          <input type="time" name="inicio" required value="18:00">
-        </label>
-        <label>
-          Fim
-          <input type="time" name="fim" required value="19:00">
-        </label>
-        </div>
-        <label>
-          Capacidade de atendimento
-          <input type="number" name="capacidade" required min="1" max="100" step="1" value="1">
-        </label>
-
-        <p class="notice" role="alert" data-error hidden></p>
-
-        <div class="form-actions">
-          <button type="button" class="secondary" data-cancel>Cancelar</button>
-          <button type="submit" class="primary" ${state.busy ? "disabled" : ""}>Adicionar</button>
-        </div>
-      </form>
-    `;
-
-    document.body.appendChild(modal);
-
-    modal.querySelector("[data-cancel]").addEventListener("click", () => {
-      modal.close();
+  const addForm = layout.querySelector("#agenda-add-form");
+  if (addForm) {
+    const inicioInput = addForm.elements.inicio;
+    const inicioPersonalizado = addForm.elements.inicioPersonalizado;
+    const fimInput = addForm.elements.fim;
+    const atualizarFimPadrao = (valor) => {
+      if (fimInput.dataset.editado === "true" || !valor) return;
+      const partes = valor.split(":").map(Number);
+      if (partes[0] < 23) fimInput.value = String(partes[0] + 1).padStart(2, "0") + ":" + String(partes[1]).padStart(2, "0");
+    };
+    inicioInput.addEventListener("change", () => {
+      inicioPersonalizado.value = "";
+      atualizarFimPadrao(inicioInput.value);
     });
-
-    modal.querySelector("form").addEventListener("submit", (event) => {
+    inicioPersonalizado.addEventListener("input", () => atualizarFimPadrao(inicioPersonalizado.value));
+    fimInput.addEventListener("input", () => { fimInput.dataset.editado = "true"; });
+    addForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      const formData = new FormData(event.currentTarget);
+      if (!addForm.reportValidity()) return;
+      const formData = new FormData(addForm);
       const valores = {
-        data: String(formData.get("date") || ""),
-        inicio: String(formData.get("inicio") || ""),
+        data: state.selected,
+        inicio: String(formData.get("inicioPersonalizado") || formData.get("inicio") || ""),
         fim: String(formData.get("fim") || ""),
-        capacidade: String(formData.get("capacidade") || ""),
+        capacidade: String(formData.get("capacidade") || "1"),
       };
-      const erro = modal.querySelector("[data-error]");
       if (valores.fim <= valores.inicio) {
-        erro.textContent = "O horário final precisa ser posterior ao início.";
-        erro.hidden = false;
+        state.error = "O horário final precisa ser posterior ao início.";
+        renderSchedule();
         return;
       }
-      modal.close();
-      state.selected = valores.data;
-      const [year, month] = valores.data.split("-").map(Number);
-      state.year = year;
-      state.month = month - 1;
       enviarAcaoAgenda("criar", valores);
     });
-
-    modal.addEventListener("close", () => modal.remove(), { once: true });
-    modal.showModal();
   }
 }
 
