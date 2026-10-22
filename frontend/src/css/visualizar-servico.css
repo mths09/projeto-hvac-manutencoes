@@ -1,0 +1,198 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap");
+
+:root {
+  --ciano: #00e5ff;
+  --azul-marinho-escuro: #080f25;
+  --azul-marinho: #05091e;
+  --fonte-titulos: "Nunito", sans-serif;
+  --fonte-corpo: "Open Sans", sans-serif;
+  --texto-secundario: #aab3c8;
+  --borda: rgb(255 255 255 / 10%);
+  --gradiente-frio: linear-gradient(135deg, #00e5ff, #0099cc);
+  --gradiente-chama: linear-gradient(
+    135deg,
+    #1565c0,
+    #7b1fa2 35%,
+    #e040fb 65%,
+    #ff9800 88%,
+    #ffd600
+  );
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--azul-marinho-escuro);
+  color: #fff;
+  font-family: var(--fonte-corpo);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--fonte-titulos);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--ciano);
+  outline-offset: 4px;
+}
+
+.container,
+.header-interno {
+  width: 100%;
+  max-width: 1152px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+/* HEADER */
+body > header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #08112e;
+  border-bottom: 1px solid rgb(0 229 255 / 12%);
+  box-shadow: 0 8px 24px rgba(0 0 0 / 15%);
+}
+
+.header-interno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 14px;
+}
+
+/* Logo à esquerda, nome e descrição à direita */
+.logo-header {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.logo-header > a {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.logo-header > a > img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.titulo-logo-header {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  color: #fff;
+  font-family: var(--fonte-titulos);
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.descricao-logo-header {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  margin-top: 2px;
+  color: var(--ciano);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  position: relative;
+}
+
+.usuario {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 12px;
+  padding-left: 16px;
+  border-left: 1px solid var(--borda);
+}
+
+.avatar-usuario {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--gradiente-chama);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.usuario > .avatar-usuario {
+  grid-row: 1 / 3;
+  align-self: center;
+}
+
+.nome-usuario {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.email-usuario {
+  color: var(--texto-secundario);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--texto-secundario);
+}
+
+.btn-voltar:hover {
+  cursor: pointer;
+  color: #fff;
+  transition: 0.2s;
+}
