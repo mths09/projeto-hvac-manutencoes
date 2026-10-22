@@ -57,7 +57,7 @@ function validarHorarioAgenda(mixed $inicio, mixed $fim, mixed $capacidade, stri
     }
     $agora = new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo'));
     if ($inicioData <= $agora || $inicioData > $agora->modify('+30 days')) {
-        throw new InvalidArgumentException('Crie horários futuros com até 30 dias de antecedência.');
+        throw new InvalidArgumentException('Não é possivel criar horários em datas antigas');
     }
     return [$inicioData->format('Y-m-d H:i:s'), $fimData->format('Y-m-d H:i:s'), $capacidadeValidada];
 }
