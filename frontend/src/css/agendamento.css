@@ -5,21 +5,27 @@
 }
 
 :root {
-  --fundo-principal: #07164b;
-  --fundo-secundario: #091b5c;
-  --fundo-card: rgba(27, 73, 150, 0.34);
+  --fundo-principal: #05091e;
+  --fundo-secundario: #08112e;
 
-  --borda-card: rgba(120, 180, 255, 0.22);
+  --borda-card: rgb(255 255 255 / 10%);
   --borda-clara: rgba(126, 245, 255, 0.85);
 
-  --texto: #f4f8ff;
+  --texto: #e0faff;
   --texto-secundario: #b8c5df;
 
-  --azul: #1596e8;
-  --ciano: #20d5e6;
-  --roxo: #7163ff;
+  --azul: #1565c0;
+  --ciano: #00e5ff;
+  --roxo: #7b1fa2;
 
-  --verde: #4ee6b5;
+  --verde: #25d366;
+  --gradiente-frio: linear-gradient(135deg, #00e5ff, #0099cc);
+  --gradiente-destaque: linear-gradient(
+    145deg,
+    #05091e 0%,
+    #0d1b4b 55%,
+    #12255e 100%
+  );
 }
 
 html {
@@ -32,18 +38,7 @@ body {
   font-family: "Poppins", sans-serif;
   color: var(--texto);
 
-  background:
-    radial-gradient(
-      circle at 48% 25%,
-      rgba(39, 77, 255, 0.25),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 10% 85%,
-      rgba(14, 100, 235, 0.18),
-      transparent 35%
-    ),
-    linear-gradient(180deg, #061342 0%, #0a1d61 45%, #09266e 100%);
+  background: var(--fundo-secundario);
 
   overflow-x: hidden;
 }
@@ -80,51 +75,59 @@ body {
 }
 
 /* ========================= */
-/* TOPO */
+/* HEADER */
 /* ========================= */
 
 .topo {
-  width: 100%;
-
-  border-bottom: 1px solid rgba(154, 190, 255, 0.2);
-
+  top: 0;
+  z-index: 100;
+  height: 85px;
+  padding-inline: 1.5rem;
   background: rgba(5, 18, 58, 0.3);
-
+  border-bottom: 1px solid rgba(0, 229, 255, 0.12);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(14px);
   backdrop-filter: blur(12px);
 }
 
-.topo-conteudo {
-  width: min(100% - 40px, 1040px);
-
-  min-height: 74px;
-
-  margin: 0 auto;
-
+.header-interno {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  height: 100%;
+  margin-inline: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: clamp(1rem, 5vw, 5rem);
 }
 
-.logo {
-  font-size: 17px;
-  font-weight: 700;
+.logo-img {
+  width: clamp(220px, 20vw, 295px);
+  height: auto;
+  flex-shrink: 0;
+}
 
-  color: #f7f9ff;
+.logo-container:hover .logo-img {
+  transform: scale(1.025);
 }
 
 .voltar-site {
-  color: #d2dcf2;
-
+  color: #05091e;
   font-size: 13px;
   font-weight: 500;
-
   text-decoration: none;
-
   transition: 0.2s;
+  background: var(--gradiente-frio);
+  padding: 10px;
+  border: 0;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 22px rgba(0, 184, 212, 0.12);
 }
 
 .voltar-site:hover {
-  color: #ffffff;
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #0099cc, #00e5ff);
 }
 
 /* ========================= */
@@ -267,35 +270,20 @@ body {
 
 .servico-card {
   width: 100%;
-
   min-height: 172px;
-
   padding: 20px;
-
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
   border-radius: 16px;
-
   border: 1px solid var(--borda-card);
-
-  background: linear-gradient(
-    145deg,
-    rgba(48, 105, 189, 0.38),
-    rgba(22, 60, 129, 0.42)
-  );
-
+  background: rgba(255, 255, 255, 0.06);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 15px 35px rgba(0, 0, 0, 0.1);
-
   color: #ffffff;
-
   text-align: left;
-
   cursor: pointer;
-
   transition:
     transform 0.2s,
     border-color 0.2s,
@@ -304,31 +292,16 @@ body {
 }
 
 .servico-card:hover {
-  transform: translateY(-3px);
-
-  border-color: rgba(80, 204, 255, 0.6);
-
-  background: linear-gradient(
-    145deg,
-    rgba(43, 113, 205, 0.5),
-    rgba(22, 66, 145, 0.5)
-  );
+  transform: scale(1.02);
+  background: rgba(0, 229, 255, 0.14);
+  border-color: var(--ciano);
+  box-shadow: 0 20px 40px rgba(0, 229, 255, 0.2);
 }
 
 .servico-card.selecionado {
   border: 2px solid #55e5e7;
-
-  background:
-    radial-gradient(
-      circle at 75% 50%,
-      rgba(24, 219, 206, 0.25),
-      transparent 55%
-    ),
-    linear-gradient(145deg, rgba(28, 115, 196, 0.55), rgba(17, 70, 147, 0.55));
-
-  box-shadow:
-    0 0 0 1px rgba(68, 232, 231, 0.15),
-    0 0 30px rgba(38, 204, 223, 0.16);
+  background: rgba(0, 229, 255, 0.14);
+  box-shadow: 0 20px 40px rgba(0, 229, 255, 0.2);
 }
 
 /* ÍCONES */
@@ -697,11 +670,7 @@ body {
 
   outline: none;
 
-  background: linear-gradient(
-    145deg,
-    rgba(68, 112, 184, 0.35),
-    rgba(32, 68, 132, 0.4)
-  );
+  background: rgba(32, 68, 132, 0.4);
 
   color: #ffffff;
 
@@ -1013,4 +982,92 @@ body {
   background: rgba(255, 75, 96, 0.15) !important;
   color: #ffb4b4 !important;
   justify-content: center !important;
+}
+
+/* FOOTER */
+
+.footer {
+  padding: 3.5rem max(1.5rem, calc((100vw - 1280px) / 2)) 1.5rem;
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr 1fr;
+  gap: 2.5rem;
+  color: #fff;
+  background: #08112e;
+  border-top: 1px solid rgba(0, 229, 255, 0.08);
+}
+
+.coluna-logo {
+  max-width: 430px;
+}
+
+.footer-logo img {
+  width: min(100%, 285px);
+  height: auto;
+}
+
+.logo-descricao {
+  max-width: 350px;
+  margin-top: 1.25rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.footer-coluna-titulo {
+  margin-bottom: 1.25rem;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.footer ul {
+  list-style: none;
+}
+
+.footer > div:not(.coluna-logo):not(.footer-fundo) li + li {
+  margin-top: 0.65rem;
+}
+
+.footer a {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer a:hover {
+  color: #00e5ff;
+}
+
+.footer-dados {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-fundo {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+  padding-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.75rem;
+}
+
+.legal-links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.legal-links a {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.75rem;
 }

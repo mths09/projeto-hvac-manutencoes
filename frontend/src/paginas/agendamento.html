@@ -26,8 +26,14 @@
 
     <!-- CABEÇALHO -->
     <header class="topo">
-      <div class="topo-conteudo">
-        <div class="logo">HVAC Lex Company</div>
+      <div class="header-interno">
+        <a href="../../../index.html" class="logo-container">
+          <img
+            src="../../assets/logoSite.png"
+            alt="HVAC Lex Company"
+            class="logo-img"
+          />
+        </a>
 
         <a href="../../../index.html" class="voltar-site"> ← Voltar ao site </a>
       </div>
@@ -266,11 +272,23 @@
           <div class="dados-cliente-grid">
             <div class="campo-area">
               <label for="nomeCompleto">Nome completo</label>
-              <input id="nomeCompleto" type="text" autocomplete="name" maxlength="150" required />
+              <input
+                id="nomeCompleto"
+                type="text"
+                autocomplete="name"
+                maxlength="150"
+                required
+              />
             </div>
             <div class="campo-area">
               <label for="telefone">Telefone com DDD</label>
-              <input id="telefone" type="tel" autocomplete="tel" maxlength="25" required />
+              <input
+                id="telefone"
+                type="tel"
+                autocomplete="tel"
+                maxlength="25"
+                required
+              />
             </div>
           </div>
 
@@ -281,6 +299,7 @@
             <input
               type="text"
               id="endereco"
+              autocomplete="endereco"
               maxlength="500"
               autocomplete="street-address"
               required
@@ -311,7 +330,13 @@
 
             <span> JPG, PNG, MP4 · até 5 MB </span>
 
-            <input type="file" id="arquivo" name="anexos[]" accept="image/jpeg,image/png,video/mp4" multiple />
+            <input
+              type="file"
+              id="arquivo"
+              name="anexos[]"
+              accept="image/jpeg,image/png,video/mp4"
+              multiple
+            />
 
             <ul id="listaAnexos" class="lista-anexos" aria-live="polite"></ul>
           </div>
@@ -401,6 +426,75 @@
         </section>
       </div>
     </main>
+
+    <footer class="footer">
+      <!-- ------ Coluna Logo ------ -->
+      <div class="coluna-logo">
+        <div class="footer-logo">
+          <img src="../../assets/logoSite.png" alt="Logo Rodapé" />
+        </div>
+        <p class="logo-descricao">
+          Especialistas em climatização, refrigeração e eletromecânica em
+          Sorocaba e região há mais de 15 anos. CREA-SP registrado.
+        </p>
+      </div>
+
+      <!-- ------ Coluna Serviços ------- -->
+      <div>
+        <h4 class="footer-coluna-titulo">Serviços</h4>
+        <ul>
+          <li><a href="../../../index.html">Ar condicionado</a></li>
+          <li><a href="../../../index.html#servicos">Refrigeração</a></li>
+          <li><a href="../../../index.html#servicos">Eletromecânica</a></li>
+          <li><a href="../../../index.html#servicos">Iluminação</a></li>
+          <li>
+            <a href="../../../index.html#servicos">Manutenção Preventiva</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ------ Coluna Empresa ------- -->
+      <div>
+        <h4 class="footer-coluna-titulo">Empresa</h4>
+        <ul>
+          <li><a href="#sobre">Sobre Nós</a></li>
+          <li><a href="#equipe">Portfólio</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="./cadastro.html">Área do Cliente</a></li>
+          <li><a href="#contatos">Contatos</a></li>
+        </ul>
+      </div>
+
+      <!-- Coluna Contato -->
+      <div>
+        <h4 class="footer-coluna-titulo">Contato</h4>
+        <ul>
+          <li class="footer-dados">
+            <a
+              href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
+            >
+              (11) 94387-0287
+            </a>
+          </li>
+          <li class="footer-dados">
+            Rua Tenente Giovaldo, 57 - Éden Sorocaba - SP
+          </li>
+          <li class="footer-dados">Atendimento das 8h às 18h</li>
+        </ul>
+      </div>
+      <!-- Barra Copyright -->
+      <div class="footer-fundo">
+        <p>
+          © 2026 HVAC Lex Company Tecnologia e Manutenção Ltda. CNPJ:
+          00.000.000/0001-00
+        </p>
+        <ul class="legal-links">
+          <li><a href="#"> Privacidade </a></li>
+          <li><a href="#"> Termos de Uso </a></li>
+          <li><a href="#"> Cookies </a></li>
+        </ul>
+      </div>
+    </footer>
 
     <script src="../js/agendamento.js"></script>
 

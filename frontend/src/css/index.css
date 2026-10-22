@@ -236,21 +236,6 @@ header {
   );
 }
 
-/* pontinhos brancos no fundo*/
-.fundo-continuo::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.09) 1px,
-    transparent 1px
-  );
-  background-size: 28px 28px;
-}
-
 .fundo-continuo--portfolio {
   background: linear-gradient(
     180deg,
@@ -1651,7 +1636,6 @@ header {
     transition-duration: 0.01ms !important;
   }
 }
-
 
 /* Mensagem quando ainda não há itens publicados no portfólio. */
 .portfolio-vazio {
