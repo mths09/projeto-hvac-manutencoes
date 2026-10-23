@@ -196,3 +196,424 @@ body > header {
   color: #fff;
   transition: 0.2s;
 }
+
+/* MAIN */
+.dados-servico {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 0 2px 20px;
+  border-bottom: 1px solid var(--borda);
+}
+
+.dados-servico h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  font-size: clamp(20px, 3vw, 27px);
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.dados-servico h1 span {
+  color: rgb(255 255 255 / 68%);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sobretitulo-servico {
+  margin-bottom: 3px;
+  color: var(--texto-secundario);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.status-servico {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid rgb(255 152 0 / 28%);
+  border-radius: 999px;
+  background: rgb(255 152 0 / 10%);
+  color: #ffb74d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.status-servico > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* cards e titulos de sessões */
+.card {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--borda);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 5%);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 10%);
+}
+
+.titulo-sessao {
+  margin-bottom: 20px;
+  color: rgb(255 255 255 / 55%);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.09rem;
+  text-transform: uppercase;
+}
+
+/* Linha do tempo */
+.timeline {
+  display: grid;
+  list-style: none;
+}
+
+.etapa {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 14px;
+  min-height: 70px;
+  color: rgb(255 255 255 / 38%);
+}
+
+.etapa:not(:last-child)::after {
+  position: absolute;
+  top: 17px;
+  bottom: 0;
+  left: 7px;
+  width: 2px;
+  background: rgb(255 255 255 / 12%);
+  content: "";
+}
+
+.etapa.concluida:not(:last-child)::after {
+  background: var(--ciano);
+}
+
+.marcador {
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 2px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: var(--azul-marinho-escuro);
+}
+
+.etapa.concluida .marcador,
+.etapa.atual .marcador {
+  border-color: var(--ciano);
+  background: var(--ciano);
+}
+
+.etapa.atual .marcador {
+  box-shadow: 0 0 0 4px rgb(0 229 255 / 13%);
+}
+
+.etapa h3 {
+  color: inherit;
+  font-family: var(--fonte-corpo);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.etapa.concluida h3,
+.etapa.atual h3 {
+  color: #fff;
+}
+
+.etapa p {
+  margin-top: 4px;
+  color: var(--texto-secundario);
+  font-size: 12px;
+}
+
+.selo-agora {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(255 152 0 / 14%);
+  color: #ffb74d;
+  font-size: 10px;
+  vertical-align: 1px;
+}
+
+/* Grade de informações do serviço */
+.grade-detalhes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.item-servico {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid rgb(255 255 255 / 4%);
+  border-radius: 13px;
+  background: rgb(255 255 255 / 3%);
+}
+
+.descricao-servico {
+  grid-column: 1 / -1;
+}
+
+.titulo-item {
+  display: block;
+  margin-bottom: 5px;
+  color: rgb(255 255 255 / 42%);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.valor-item {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.descricao-servico .valor-item {
+  color: rgb(255 255 255 / 72%);
+  font-weight: 400;
+  line-height: 1.65;
+}
+
+/* Mensagem quando não há fotos */
+.estado-vazio {
+  display: grid;
+  min-height: 112px;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1px dashed rgb(255 255 255 / 14%);
+  border-radius: 14px;
+  color: var(--texto-secundario);
+  font-size: 13px;
+  text-align: center;
+}
+
+.icone-foto {
+  color: var(--ciano);
+  font-size: 25px;
+}
+
+/* Cartão de ações */
+.painel-acoes {
+  display: grid;
+  gap: 10px;
+}
+
+.painel-acoes .titulo-sessao {
+  margin-bottom: 4px;
+}
+
+.btn-nota-fiscal,
+.btn-agendamento {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 13px;
+  font-size: 13px;
+  font-weight: 800;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    background-color 180ms ease;
+}
+
+.btn-nota-fiscal {
+  background: rgb(255 255 255 / 7%);
+  color: rgb(255 255 255 / 78%);
+}
+
+.btn-agendamento {
+  border-color: transparent;
+  background: var(--gradiente-frio);
+  color: var(--azul-marinho-escuro);
+}
+
+.btn-nota-fiscal:hover,
+.btn-agendamento:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Cartão de contato */
+.duvidas {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 22px;
+  text-align: center;
+}
+
+.texto-duvidas {
+  color: var(--texto-secundario);
+  font-family: var(--fonte-corpo);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.telefone-duvidas {
+  color: var(--ciano);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.email-duvidas {
+  color: rgb(255 255 255 / 62%);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.pagina-servico {
+  width: min(100% - 48px, 1152px);
+  margin-inline: auto;
+  padding-block: 36px 64px;
+}
+
+.titulo-servico {
+  min-width: 0;
+}
+
+.layout-servico {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 0.92fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.conteudo-servico,
+.coluna-lateral {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  min-width: 0;
+}
+
+.grade-detalhes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.descricao-servico {
+  grid-column: 1 / -1;
+}
+
+.painel-acoes {
+  display: grid;
+  gap: 10px;
+}
+
+.painel-acoes .titulo-sessao {
+  margin-bottom: 4px;
+}
+
+/* Tablet */
+@media (max-width: 760px) {
+  .pagina-servico {
+    width: min(100% - 32px, 600px);
+    padding-block: 26px 44px;
+  }
+
+  .layout-servico {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .coluna-lateral {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Celular */
+@media (max-width: 520px) {
+  .header-interno {
+    padding-inline: 16px;
+  }
+
+  .grade-detalhes {
+    grid-template-columns: 1fr;
+  }
+
+  .descricao-servico {
+    grid-column: auto;
+  }
+
+  .logo-header {
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 9px;
+  }
+
+  .logo-header > a > img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .usuario {
+    grid-template-columns: 32px minmax(0, 1fr);
+    column-gap: 8px;
+    padding-left: 10px;
+  }
+
+  .avatar-usuario {
+    width: 32px;
+    height: 32px;
+  }
+
+  .email-usuario {
+    display: none;
+  }
+
+  .btn-voltar {
+    min-height: 36px;
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .pagina-servico {
+    width: min(100% - 28px, 440px);
+    padding-top: 22px;
+  }
+
+  .dados-servico {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .card {
+    padding: 19px;
+    border-radius: 18px;
+  }
+
+  .grade-detalhes,
+  .coluna-lateral {
+    grid-template-columns: 1fr;
+  }
+}

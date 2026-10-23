@@ -29,35 +29,111 @@
             <span class="nome-usuario"> Carregando… </span>
 
             <p class="email-usuario">—</p>
-
-            <a href="./dashboard.html" class="btn-voltar" aria-label="Voltar">
-              ← Voltar</a
-            >
           </div>
+          <a href="./dashboard.html" class="btn-voltar" aria-label="Voltar">
+            ← Voltar</a
+          >
         </div>
       </div>
     </header>
 
-    <main>
+    <main class="pagina-servico">
       <div class="dados-servico">
-        <h3 id="titulo-pedido">SRV-003 - Frigorifico / Geladeira</h3>
-        <span id="etiqueta-status-pedido"> • Agendado </span>
+        <div class="titulo-servico">
+          <p class="sobretitulo-servico">Detalhes do atendimento</p>
+          <h1 id="titulo-pedido">
+            SRV-003 <span>Frigorífico / Geladeira</span>
+          </h1>
+        </div>
+
+        <span id="etiqueta-status-pedido" class="status-servico">
+          <span aria-hidden="true"></span>
+          Agendado
+        </span>
       </div>
 
-      <section id="linha-tempo">
-        <h3>Linha do tempo</h3>
-        <div class="timeline">
-          <!-- Conteúdo da linha do tempo -->
-        </div>
-      </section>
+      <div class="layout-servico">
+        <div class="conteudo-servico">
+          <section id="linha-tempo" class="card">
+            <h2 class="titulo-sessao">Linha do tempo</h2>
 
-      <section id="detalhes-servico">
-        <div id="servico">
-          <span> Tipo de Serviço</span>
-          <p id="tipo-servico">Frigorífico / Geladeira</p>
+            <ol class="timeline">
+              <!-- Adicione aqui as etapas reais do serviço -->
+            </ol>
+          </section>
+
+          <section id="detalhes-servico" class="card">
+            <h2 class="titulo-sessao">Detalhes do serviço</h2>
+
+            <dl class="grade-detalhes">
+              <div class="item-servico">
+                <dt class="titulo-item">Tipo de serviço</dt>
+                <dd id="tipo-servico" class="valor-item">
+                  Frigorífico / Geladeira
+                </dd>
+              </div>
+
+              <div class="item-servico">
+                <dt class="titulo-item">Agendado para</dt>
+                <dd id="agendamento-servico" class="valor-item">
+                  22/08/2026 às 10:00
+                </dd>
+              </div>
+
+              <div class="item-servico">
+                <dt class="titulo-item">Endereço</dt>
+                <dd id="endereco-servico" class="valor-item">
+                  Rua das Flores, 123 — Sorocaba - SP
+                </dd>
+              </div>
+
+              <div class="item-servico">
+                <dt class="titulo-item">Valor</dt>
+                <dd id="valor-servico" class="valor-item">R$ 250,00</dd>
+              </div>
+
+              <div class="item-servico descricao-servico">
+                <dt class="titulo-item">Descrição do problema</dt>
+                <dd id="descricao-problema" class="valor-item">
+                  O frigorífico não está resfriando adequadamente.
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section id="fotos-atendimento" class="card">
+            <h2 class="titulo-sessao">Fotos do atendimento</h2>
+
+            <div id="lista-fotos-atendimento" class="estado-vazio">
+              <p>Não há anexos deste serviço por enquanto.</p>
+            </div>
+          </section>
         </div>
-        <div class="item-servico"></div>
-      </section>
+
+        <aside class="coluna-lateral" aria-label="Ações e suporte">
+          <section class="card painel-acoes">
+            <h2 class="titulo-sessao">Ações</h2>
+
+            <button class="btn-nota-fiscal" type="button">
+              Baixar nota fiscal
+            </button>
+
+            <a href="./agendamento.html" class="btn-agendamento">
+              Novo agendamento
+            </a>
+          </section>
+
+          <section class="duvidas card">
+            <h2 class="texto-duvidas">Dúvidas sobre este serviço?</h2>
+            <a href="tel:+5511943870287" class="telefone-duvidas">
+              +55 (11) 94387-0287
+            </a>
+            <a href="mailto:contato@servico.com" class="email-duvidas">
+              ✉ contato@servico.com
+            </a>
+          </section>
+        </aside>
+      </div>
     </main>
   </body>
 </html>
