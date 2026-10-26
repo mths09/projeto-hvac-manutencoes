@@ -19,6 +19,8 @@ function responder(int $status, array $dados) {
     exit;
 }
 
+require_once __DIR__ . '/validar_endereco.php';
+
 // so aceita o metodo PATCH
 if(($_SERVER['REQUEST_METHOD'] ?? '') !== 'PATCH') {
     header('Allow: PATCH');
@@ -74,13 +76,16 @@ if(trim($corpo) === '') {
     ]);
 }
 
+// verificar se é JSON
 try {
     $dados = json_decode(
         $corpo,
-        false,
+        true,
         512,
         JSON_THROW_ON_ERROR
     );
+
+    error_log('[debug-perfil] chaves: ' . implode(',', array_keys($dados)));
 } catch(JsonException $erro) {
     // JSON malformado
     responder(400, [
@@ -88,31 +93,19 @@ try {
         'mensagem' => 'JSON inválido'
     ]);
 }
-
-// conferindo se o objeto tem o formato
-$campos = ['nome', 'email', 'telefone', 'endereco'];
-
-if (!is_object($dados)) {
+// confirmar que dados é array
+if(!is_array($dados)) {
     responder(422, [
         'sucesso' => false,
-        'mensagem' => 'O corpo deve ser um objeto JSON.'
+        'mensagem' => 'O corpo deve ser um objeto JSON.',
+        'erros' => ['corpo' => 'O corpo deve ser um objeto JSON.'],
     ]);
 }
 
-foreach ($campos as $campo) {
-    if (!property_exists($dados, $campo)) {
-        responder(422, [
-            'sucesso' => false,
-            'mensagem' => 'Faltam campos obrigatórios.'
-        ]);
-    }
-}
-
-
-// ATENÇÃO: o token é criado em perfil_cliente.php (GET) com esta mesma
+// NOTA: o token é criado em perfil_cliente.php (GET) com esta mesma
 // chave de sessão. Se renomear 'csrf_dashboard' aqui, renomeie lá também.
 $csrfSessao = $_SESSION['csrf_dashboard'] ?? '';
-$csrfEnviado = $dados->csrf ?? null;
+$csrfEnviado = $dados['csrf'] ?? null;
 
 if (
     !is_string($csrfSessao) ||
@@ -126,88 +119,88 @@ if (
     ]);
 }
 
-// validação dos valores e tipos do perfil
-// verificar se são strings
-// email
-if(!is_string($dados->email)) {
+// conferindo se o objeto tem o formato
+$campos = ['nome', 'email', 'telefone', 'endereco'];
+$erros = [];
+
+// endereco
+foreach ($campos as $campo) {
+    if (!array_key_exists($campo, $dados)) {
+        $erros[$campo] = 'Este campo é obrigatório.';
+    }
+}
+// validação tipo
+foreach(['nome', 'email', 'telefone'] as $campo) {
+    if(array_key_exists($campo, $dados) && !is_string($dados[$campo])) {
+        $erros[$campo] = 'Este campo deve ser um texto.';
+    }
+}
+
+$endereco = null;
+
+if(!array_key_exists('endereco', $dados)) {
+    // erro ja registrado acima
+} elseif (!is_array($dados['endereco'])) {
+    $erros['endereco'] = 'O endereço deve ser informado como objeto.';
+} else {
+    $resultadoEndereco = validarEndereco($dados['endereco']);
+
+    $endereco = $resultadoEndereco['dados'];
+    $erros = array_merge($erros, $resultadoEndereco['erros']);
+}
+
+$email = null;
+
+if(is_string($dados['email'] ?? null)) {
+    $email = strtolower(trim($dados['email']));
+
+    if(strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $erros['email'] = 'Informe um e-mail válido.';
+    }
+}
+
+$nome = null;
+
+if(is_string($dados['nome'] ?? null)) {
+    $nome = preg_replace('/\s+/u', ' ', trim($dados['nome']));
+
+    if(
+        mb_strlen($nome, 'UTF-8') < 2 ||
+        mb_strlen($nome, 'UTF-8') > 150 ||
+        preg_match('/[\p{C}<>]/u', $nome)
+    ) {
+        $erros['nome'] = 'Informe um nome válido.';
+    }
+}
+
+$telefone = null;
+
+if(is_string($dados['telefone'] ?? null)) {
+    $telefoneEntrada = trim($dados['telefone']);
+    $telefone = preg_replace('/\D/', '', $telefoneEntrada);
+
+    if(
+        !preg_match('/^[0-9()\s.-]+$/D', $telefoneEntrada) ||
+        !preg_match('/^[1-9][0-9]{9,10}$/D', $telefone)
+    ) {
+        $erros['telefone'] = 'Informe um telefone válido com DDD';
+    }
+}
+
+if ($erros !== []) {
     responder(422, [
         'sucesso' => false,
-        'mensagem' => 'O e-mail deve ser um texto.'
+        'mensagem' => 'Confira os campos informados.',
+        'erros' => $erros,
     ]);
 }
 
-// nome
-if(!is_string($dados->nome)) {
-    responder(422, [
-        'sucesso' => false,
-        'mensagem' => 'O nome deve ser um texto.'
-    ]);
-}
+$endereco = $resultadoEndereco['dados'];
+$enderecoInformado = montarEnderecoInformado($endereco);
 
-// telefone
-if (!is_string($dados->telefone)) {
-    responder(422, [
-        'sucesso' => false,
-        'mensagem' => 'O telefone deve ser um texto.'
-    ]);
-}
-
-// endereço
-if(!is_string($dados->endereco)) {
-    responder(422, [
-        'sucesso' => false,
-        'mensagem' => 'O endereço deve ser um texto.' 
-    ]);
-}
-
-// validando formatos e limites
-$email = strtolower(trim($dados->email));
-
-if(strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    responder(422, [
-        'sucesso' => false,
-        'mensagem' => 'Informe um e-mail válido.'
-    ]);
-}
-
-$nome = preg_replace('/\s+/u', ' ', trim($dados->nome));
-
-if(mb_strlen($nome, 'UTF-8') < 2 || mb_strlen($nome, 'UTF-8') > 150 || preg_match('/[\p{C}<>]/u', $nome)) {
-    responder(422, [
-        'sucesso' => false,
-        'mensagem' => 'O nome deve ter de 2 a 150 caracteres e não pode conter < ou >.'
-    ]);
-}
-
-$telefoneEntrada = trim($dados->telefone);
-$telefone = preg_replace('/\D/', '', $telefoneEntrada);
-
-if (
-    !preg_match('/^[0-9()\s.-]+$/D', $telefoneEntrada) ||
-    !preg_match('/^[1-9][0-9]{9,10}$/D', $telefone)
-) {
-    responder(422, [
-        'sucesso' => false,
-        'mensagem' => 'Informe um telefone válido com DDD.'
-    ]);
-}
-
-$endereco = trim($dados->endereco) ;
-
-if (
-    $endereco !== '' &&
-    (
-        mb_strlen($endereco, 'UTF-8') < 10 ||
-        mb_strlen($endereco, 'UTF-8') > 500 ||
-        preg_match('/[\p{C}<>]/u', $endereco)
-    )
-) {
-    responder(422, [
-        'sucesso' => false,
-        'mensagem' => 'O endereço deve ter de 10 a 500 caracteres (ou ficar vazio) e não pode conter < ou >.'
-    ]);
-}
-
+$complemento = $endereco['complemento'] !== ''
+    ? $endereco['complemento']
+    : null;
 
 $emTransacao = false; // flag de segurança
 
@@ -244,7 +237,10 @@ try {
     if($emailEmUso) {
         responder(409, [
             'sucesso' => false,
-            'mensagem' => 'Este email já está em uso.'
+            'mensagem' => 'Este email já está em uso.',
+            'erros' => [
+                'email' => 'Este email já está em uso.',
+            ],
         ]);
     }
 
@@ -279,6 +275,7 @@ try {
         }
     }
 
+
     // endereço
     $sql = "SELECT id_endereco_usuario
             FROM endereco_usuario 
@@ -298,40 +295,50 @@ try {
         : null; 
 
     // verificação endereço
-    if($endereco === '') {
-        // só desativa o principal, se existir
-        if($idEnderecoAtual !== null) {
+        if($idEnderecoAtual === null) {
+            $stmt = $conexao->prepare(
+                'INSERT INTO endereco_usuario (id_usuario, endereco_informado, cep, logradouro, numero,
+                complemento, bairro, cidade, uf, principal, ativo)
+                VALUES (?,?,?,?,?,?,?,?,?,1,1)'
+            );
+
+    $stmt->bind_param(
+        'issssssss',
+        $idUsuario,
+        $enderecoInformado,
+        $endereco['cep'],
+        $endereco['logradouro'],
+        $endereco['numero'],
+        $complemento,
+        $endereco['bairro'],
+        $endereco['cidade'],
+        $endereco['uf']
+    );
+        } else {
             $stmt = $conexao->prepare(
                 'UPDATE endereco_usuario
-                SET ativo = 0, principal = 0
+                SET endereco_informado = ?, cep = ?, logradouro = ?, numero = ?,
+                    complemento = ?, bairro = ?, cidade = ?, uf = ?,
+                    principal = 1, ativo = 1
                 WHERE id_endereco_usuario = ? AND id_usuario = ?'
             );
-            $stmt->bind_param('ii', $idEnderecoAtual, $idUsuario);
-            $stmt->execute();
-            $stmt->close();    
-        }
-    } elseif ($idEnderecoAtual === null) {
-            $stmt = $conexao->prepare(
-                'INSERT INTO endereco_usuario
-                    (id_usuario, endereco_informado, principal, ativo)
-                VALUES (?,?,1,1)'
+            $stmt->bind_param(
+                'ssssssssii',
+                $enderecoInformado,
+                $endereco['cep'],
+                $endereco['logradouro'],
+                $endereco['numero'],
+                $complemento,
+                $endereco['bairro'],
+                $endereco['cidade'],
+                $endereco['uf'],
+                $idEnderecoAtual,
+                $idUsuario
             );
-            $stmt->bind_param('is', $idUsuario, $endereco);
-            $stmt->execute();
-            $stmt->close();
-        } else {
-            // se tem endereço ativo, força atualização
-            $stmt = $conexao->prepare(
-                'UPDATE endereco_usuario
-                SET endereco_informado = ?, principal = 1, ativo = 1,
-                    cep = NULL, logradouro = NULL, numero = NULL,
-                    complemento = NULL, bairro = NULL, cidade = NULL, uf = NULL
-                    WHERE id_endereco_usuario = ? AND id_usuario = ?'
-                );
-            $stmt->bind_param('sii', $endereco, $idEnderecoAtual, $idUsuario);
-            $stmt->execute();
-            $stmt->close();
         }
+
+    $stmt->execute();
+    $stmt->close(); 
 
     // confirmar commit e responder 200
     $conexao->commit();
@@ -387,7 +394,10 @@ try {
     if($ehEmailDuplicado) {
         responder(409, [
             'sucesso' => false,
-            'mensagem' => 'Este e-mail já existe.'
+            'mensagem' => 'Este e-mail já existe.',
+            'erros' => [
+                'email' => 'Este e-mail já existe.',
+            ]
         ]);
     }
 

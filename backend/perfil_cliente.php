@@ -51,7 +51,7 @@ try {
 
     $stmt = $conexao->prepare(
         'SELECT nome, email, telefone, perfil, ativo, criado_em
-         FROM usuario WHERE id_usuario = ? LIMIT 1'
+        FROM usuario WHERE id_usuario = ? LIMIT 1'
     );
     $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
@@ -64,14 +64,34 @@ try {
     }
 
     $stmt = $conexao->prepare(
-        'SELECT endereco_informado FROM endereco_usuario
-         WHERE id_usuario = ? AND ativo = 1
-         ORDER BY principal DESC, id_endereco_usuario DESC LIMIT 1'
+        'SELECT endereco_informado, cep, logradouro, numero, complemento, bairro, cidade, uf FROM endereco_usuario
+        WHERE id_usuario = ? AND ativo = 1
+        ORDER BY principal DESC, id_endereco_usuario DESC LIMIT 1'
     );
+
     $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
-    $enderecoPerfil = $stmt->get_result()->fetch_assoc()['endereco_informado'] ?? '';
+    $linhaEndereco = $stmt->get_result()->fetch_assoc() ?? null;
     $stmt->close();
+
+    $camposEndereco = [
+        'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf'
+    ];
+
+    $enderecoPerfil = array_fill_keys($camposEndereco, '');
+    if($linhaEndereco !== null) {
+        foreach($camposEndereco as $campo) {
+            $enderecoPerfil[$campo] = (string) ($linhaEndereco[$campo] ?? '');
+        }
+    }
+    
+    // conta antiga, endereço vai como lembrete
+    $enderecoAntigo = '';
+
+    if ($linhaEndereco !== null && ($linhaEndereco['cep'] ?? '') === '') {
+        $enderecoAntigo = (string) ($linhaEndereco['endereco_informado'] ?? '');
+    }
+
     $conexao->close();
 
     responderPerfilCliente(200, [
@@ -81,7 +101,8 @@ try {
             'nome' => (string) $usuario['nome'],
             'email' => (string) $usuario['email'],
             'telefone' => (string) $usuario['telefone'],
-            'endereco' => (string) $enderecoPerfil,
+            'endereco' => $enderecoPerfil,
+            'endereco_antigo' => $enderecoAntigo,
             'criado_em' => (string) $usuario['criado_em']
         ]
     ]);
