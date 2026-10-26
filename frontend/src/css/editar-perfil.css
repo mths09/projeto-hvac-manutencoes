@@ -70,7 +70,7 @@ img {
 /* cabeçalho */
 .cabecalho {
   background: var(--fundo-cabecalho);
-  border-bottom: 1px solid rgb(0, 229, 255 / 12%);
+  border-bottom: 1px solid rgb(0 229 255 / 12%);
 }
 
 .conteudo-cabecalho {
@@ -234,6 +234,42 @@ img {
   font-size: 12px;
 }
 
+.campo-completo {
+  grid-column: 1 / -1;
+}
+
+.campo .ajuda-campo {
+  color: var(--texto-secundario);
+}
+
+.grupo-endereco {
+  min-width: 0;
+  margin-top: 28px;
+  padding: 0;
+  border: none;
+}
+
+.grupo-endereco legend {
+  padding: 0 0 20px;
+  color: var(--texto-secundario);
+  font-family: var(--fonte-titulos);
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lembrete-endereco {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: rgb(0 229 255 / 8%);
+  color: var(--texto-secundario);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
 #ajuda-endereco {
   color: var(--texto-secundario);
   font-size: 14px;
@@ -298,17 +334,17 @@ button:focus-visible {
 }
 
 /* pop up */
+/* pop up */
 .dialogo-sucesso {
   width: min(90vw, 28rem);
+  max-height: 90dvh;
+  margin: auto;
   padding: 32px;
+  overflow-y: auto;
   border: 1px solid var(--borda);
   border-radius: 24px;
   box-shadow: 0 10px 40px rgb(0 0 0 / 0.25);
   background: var(--fundo);
-  align-self: center;
-  justify-self: center;
-  align-content: center;
-  justify-content: center;
 }
 
 .dialogo-sucesso::backdrop {
@@ -324,7 +360,6 @@ button:focus-visible {
 .dialogo-sucesso p {
   margin: 0 0 1.25rem;
   font-family: var(--fonte-corpo);
-  text-decoration: none;
   color: var(--texto-secundario);
 }
 
@@ -341,11 +376,15 @@ button:focus-visible {
   cursor: pointer;
 }
 
+.dialogo-sucesso .acoes-formulario {
+  flex-wrap: wrap;
+}
+
 .icone-sucesso {
-  align-self: center;
-  justify-self: center;
+  display: block;
   width: 120px;
   height: 120px;
+  margin: 0 auto 1rem;
 }
 
 @media (hover: hover) {
@@ -390,17 +429,13 @@ button:focus-visible {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .dialogo-sucesso {
-    padding: 1.25rem;
+    padding: 24px 20px;
   }
 
   .dialogo-sucesso .acoes-formulario {
     flex-direction: column-reverse;
-  }
-
-  .dialogo-sucesso .botao {
-    width: 100%;
   }
 }
 

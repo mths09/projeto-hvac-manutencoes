@@ -70,6 +70,7 @@ async function salvarPerfil(perfil) {
     );
     erro.status = resposta.status;
     erro.referencia = dados?.referencia ?? null;
+    erro.erros = dados?.erros ?? null;
     throw erro;
   }
 

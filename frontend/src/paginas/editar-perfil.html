@@ -50,7 +50,7 @@
 
           <div class="campos-perfil">
             <div class="campo campo-completo">
-              <label for="nome"> Nome Completo</label>
+              <label for="nome">Nome completo</label>
               <input
                 type="text"
                 id="nome"
@@ -58,6 +58,7 @@
                 autocomplete="name"
                 maxlength="150"
                 required
+                aria-describedby="erro-nome"
               />
               <small
                 id="erro-nome"
@@ -75,6 +76,7 @@
                 autocomplete="email"
                 maxlength="254"
                 required
+                aria-describedby="erro-email"
               />
               <small
                 id="erro-email"
@@ -92,6 +94,7 @@
                 autocomplete="tel"
                 maxlength="25"
                 required
+                aria-describedby="erro-telefone"
               />
               <small
                 id="erro-telefone"
@@ -99,28 +102,147 @@
                 aria-live="polite"
               ></small>
             </div>
-
-            <div class="campo campo-completo">
-              <label for="endereco"> Endereço </label>
-              <input
-                type="text"
-                id="endereco"
-                name="endereco"
-                autocomplete="street-address"
-                maxlength="500"
-                aria-describedby="ajuda-endereco"
-              />
-              <small
-                id="erro-endereco"
-                class="erro-campo_perfil"
-                aria-live="polite"
-              ></small>
-              <small id="ajuda-endereco">
-                Inclua rua, número, complemento, cidade e estado. Você pode
-                deixar o campo vazio.
-              </small>
-            </div>
           </div>
+
+          <fieldset class="grupo-endereco">
+            <legend>Endereço</legend>
+
+            <div class="campos-perfil">
+              <div class="campo">
+                <label for="cep">CEP</label>
+                <input
+                  type="text"
+                  id="cep"
+                  name="cep"
+                  inputmode="numeric"
+                  autocomplete="postal-code"
+                  placeholder="00000-000"
+                  maxlength="9"
+                  required
+                  aria-describedby="status-cep erro-cep"
+                />
+                <small
+                  id="status-cep"
+                  class="ajuda-campo"
+                  role="status"
+                ></small>
+                <small
+                  id="erro-cep"
+                  class="erro-campo_perfil"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="campo">
+                <label for="numero">Número</label>
+                <input
+                  type="text"
+                  id="numero"
+                  name="numero"
+                  autocomplete="off"
+                  maxlength="20"
+                  placeholder="Use S/N se não houver"
+                  required
+                  aria-describedby="erro-numero"
+                />
+                <small
+                  id="erro-numero"
+                  class="erro-campo_perfil"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="campo campo-completo">
+                <label for="logradouro">Rua / logradouro</label>
+                <input
+                  type="text"
+                  id="logradouro"
+                  name="logradouro"
+                  autocomplete="address-line1"
+                  maxlength="180"
+                  required
+                  aria-describedby="erro-logradouro"
+                />
+                <small
+                  id="erro-logradouro"
+                  class="erro-campo_perfil"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="campo">
+                <label for="complemento">Complemento (opcional)</label>
+                <input
+                  type="text"
+                  id="complemento"
+                  name="complemento"
+                  autocomplete="address-line2"
+                  maxlength="120"
+                  aria-describedby="erro-complemento"
+                />
+                <small
+                  id="erro-complemento"
+                  class="erro-campo_perfil"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="campo">
+                <label for="bairro">Bairro</label>
+                <input
+                  type="text"
+                  id="bairro"
+                  name="bairro"
+                  autocomplete="off"
+                  maxlength="100"
+                  required
+                  aria-describedby="erro-bairro"
+                />
+                <small
+                  id="erro-bairro"
+                  class="erro-campo_perfil"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="campo">
+                <label for="cidade">Cidade</label>
+                <input
+                  type="text"
+                  id="cidade"
+                  name="cidade"
+                  autocomplete="address-level2"
+                  maxlength="100"
+                  required
+                  aria-describedby="erro-cidade"
+                />
+                <small
+                  id="erro-cidade"
+                  class="erro-campo_perfil"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="campo">
+                <label for="uf">UF</label>
+                <input
+                  type="text"
+                  id="uf"
+                  name="uf"
+                  autocomplete="address-level1"
+                  maxlength="2"
+                  placeholder="SP"
+                  required
+                  aria-describedby="erro-uf"
+                />
+                <small
+                  id="erro-uf"
+                  class="erro-campo_perfil"
+                  aria-live="polite"
+                ></small>
+              </div>
+            </div>
+          </fieldset>
 
           <p class="aviso-demonstracao" id="aviso-salvamento" role="status">
             Seus dados serão carregados da sua conta.
