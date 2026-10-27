@@ -42,6 +42,64 @@ function validarProtocoloAdmin(mixed $protocolo): string
     return $protocolo;
 }
 
+function normalizarNovoPedidoAdmin(mixed $entrada): array
+{
+    if (!is_array($entrada)) {
+        throw new DomainException('Os dados do pedido são inválidos.');
+    }
+    $texto = static function (string $campo, int $limite, bool $obrigatorio = false) use ($entrada): string {
+        $valor = $entrada[$campo] ?? '';
+        if (!is_string($valor)) {
+            throw new DomainException('Confira os dados do formulário.');
+        }
+        $valor = trim($valor);
+        if (($obrigatorio && $valor === '') || mb_strlen($valor, 'UTF-8') > $limite) {
+            throw new DomainException($obrigatorio ? 'Preencha os campos obrigatórios.' : 'Um dos campos ultrapassa o limite permitido.');
+        }
+        return $valor;
+    };
+    $id = static function (string $campo, bool $opcional = false) use ($entrada): ?int {
+        $valor = $entrada[$campo] ?? '';
+        if ($opcional && $valor === '') {
+            return null;
+        }
+        if (!is_int($valor) && !is_string($valor)) {
+            throw new DomainException('Selecione um serviço, horário e técnico válidos.');
+        }
+        $validado = filter_var((string) $valor, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($validado === false) {
+            throw new DomainException('Selecione um serviço e horário disponíveis.');
+        }
+        return $validado;
+    };
+
+    $nome = $texto('nome', 150, true);
+    $telefone = $texto('telefone', 25);
+    $endereco = $texto('endereco', 500, true);
+    $descricao = $texto('descricao', 3000);
+    if ($telefone !== '' && (!preg_match('/^[0-9+().\s-]{8,25}$/D', $telefone) || strlen(preg_replace('/\D/', '', $telefone)) < 8)) {
+        throw new DomainException('Informe um telefone válido.');
+    }
+    if (!in_array($entrada['prioridade'] ?? null, ['normal', 'urgente'], true)) {
+        throw new DomainException('Selecione uma prioridade válida.');
+    }
+
+    return [
+        'nome' => $nome,
+        'telefone' => $telefone,
+        'endereco' => $endereco,
+        'descricao' => $descricao,
+        'id_tipo_servico' => $id('id_tipo_servico'),
+        'id_disponibilidade' => $id('id_disponibilidade'),
+        'id_tecnico' => $id('id_tecnico', true),
+        'urgente' => $entrada['prioridade'] === 'urgente',
+    ];
+}
+
+if (defined('HVAC_SOLICITACOES_ADMIN_TESTE')) {
+    return;
+}
+
 try {
     $metodo = $_SERVER['REQUEST_METHOD'] ?? '';
     if (!in_array($metodo, ['GET', 'POST'], true)) {
@@ -176,20 +234,153 @@ try {
             $tecnico['id'] = (string) $tecnico['id'];
         }
         unset($tecnico);
+        $servicos = consultarSolicitacoesAdmin(
+            $conexao,
+            'SELECT id_tipo_servico AS id, nome FROM tipo_servico WHERE ativo = 1 ORDER BY ordem, nome'
+        )->get_result()->fetch_all(MYSQLI_ASSOC);
+        foreach ($servicos as &$servico) {
+            $servico['id'] = (string) $servico['id'];
+        }
+        unset($servico);
         $conexao->close();
         responderSolicitacoesAdmin(200, [
             'sucesso' => true,
             'csrf' => $csrfSessao,
             'pedidos' => $pedidos,
-            'tecnicos' => $tecnicos
+            'tecnicos' => $tecnicos,
+            'servicos' => $servicos
         ]);
     }
 
-    $protocolo = validarProtocoloAdmin($entrada['protocolo'] ?? null);
     $acao = $entrada['acao'] ?? null;
-    if (!is_string($acao) || !in_array($acao, ['status', 'tecnico'], true)) {
+    if (!is_string($acao) || !in_array($acao, ['criar', 'status', 'tecnico'], true)) {
         responderSolicitacoesAdmin(422, ['sucesso' => false, 'mensagem' => 'Ação inválida.']);
     }
+
+    if ($acao === 'criar') {
+        $novoPedido = normalizarNovoPedidoAdmin($entrada);
+        $conexao->begin_transaction();
+        try {
+            $servico = consultarSolicitacoesAdmin(
+                $conexao,
+                'SELECT id_tipo_servico FROM tipo_servico WHERE id_tipo_servico = ? AND ativo = 1 LIMIT 1 FOR UPDATE',
+                [$novoPedido['id_tipo_servico']]
+            )->get_result()->fetch_assoc();
+            if (!$servico) {
+                throw new DomainException('O tipo de serviço selecionado está indisponível.');
+            }
+
+            $horario = consultarSolicitacoesAdmin(
+                $conexao,
+                "SELECT id_disponibilidade, capacidade
+                 FROM disponibilidade
+                 WHERE id_disponibilidade = ? AND situacao = 'LIVRE'
+                   AND inicio_previsto > NOW()
+                   AND inicio_previsto <= DATE_ADD(NOW(), INTERVAL 30 DAY)
+                   AND fim_previsto > inicio_previsto
+                 LIMIT 1 FOR UPDATE",
+                [$novoPedido['id_disponibilidade']]
+            )->get_result()->fetch_assoc();
+            if (!$horario) {
+                throw new DomainException('Esse horário não está mais disponível. Atualize a data e tente novamente.');
+            }
+            $reservas = (int) consultarSolicitacoesAdmin(
+                $conexao,
+                "SELECT COUNT(*) AS total
+                 FROM agendamento a
+                 INNER JOIN solicitacao s ON s.id_solicitacao = a.id_solicitacao
+                 INNER JOIN status_solicitacao ss ON ss.id_status = s.id_status_atual
+                 WHERE a.id_disponibilidade = ?
+                   AND a.status NOT IN ('CANCELADO', 'REAGENDADO')
+                   AND ss.terminal = 0",
+                [$novoPedido['id_disponibilidade']]
+            )->get_result()->fetch_assoc()['total'];
+            if ($reservas >= (int) $horario['capacidade']) {
+                throw new DomainException('Esse horário acabou de ficar cheio. Escolha outro horário.');
+            }
+
+            $status = consultarSolicitacoesAdmin(
+                $conexao,
+                "SELECT id_status FROM status_solicitacao WHERE codigo = 'AGENDADO' AND ativo = 1 LIMIT 1 FOR UPDATE"
+            )->get_result()->fetch_assoc();
+            if (!$status) {
+                throw new RuntimeException('O status Agendado não está configurado no banco.');
+            }
+
+            $idAtribuicao = null;
+            if ($novoPedido['id_tecnico'] !== null) {
+                $tecnico = consultarSolicitacoesAdmin(
+                    $conexao,
+                    'SELECT id_tecnico FROM tecnico WHERE id_tecnico = ? AND ativo = 1 LIMIT 1 FOR UPDATE',
+                    [$novoPedido['id_tecnico']]
+                )->get_result()->fetch_assoc();
+                if (!$tecnico) {
+                    throw new DomainException('O técnico selecionado está indisponível.');
+                }
+            }
+
+            $protocoloNovo = 'SRV-' . bin2hex(random_bytes(12));
+            consultarSolicitacoesAdmin(
+                $conexao,
+                "INSERT INTO solicitacao
+                 (protocolo, id_cliente, id_criador, id_tipo_servico, id_status_atual, nome_contato,
+                  telefone_contato, descricao_problema, urgente, origem, criada_em, atualizada_em)
+                 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', NOW(), NOW())",
+                [$protocoloNovo, $idAdministrador, $novoPedido['id_tipo_servico'], $status['id_status'],
+                 $novoPedido['nome'], $novoPedido['telefone'] !== '' ? $novoPedido['telefone'] : null,
+                 $novoPedido['descricao'] !== '' ? $novoPedido['descricao'] : null, (int) $novoPedido['urgente']]
+            );
+            $idSolicitacaoNova = (int) $conexao->insert_id;
+
+            consultarSolicitacoesAdmin(
+                $conexao,
+                'INSERT INTO endereco_atendimento (id_solicitacao, endereco_informado) VALUES (?, ?)',
+                [$idSolicitacaoNova, $novoPedido['endereco']]
+            );
+
+            if ($novoPedido['id_tecnico'] !== null) {
+                consultarSolicitacoesAdmin(
+                    $conexao,
+                    'INSERT INTO atribuicao_tecnica (id_solicitacao, id_tecnico, id_responsavel, inicio_em)
+                     VALUES (?, ?, ?, NOW())',
+                    [$idSolicitacaoNova, $novoPedido['id_tecnico'], $idAdministrador]
+                );
+                $idAtribuicao = (int) $conexao->insert_id;
+            }
+
+            consultarSolicitacoesAdmin(
+                $conexao,
+                "INSERT INTO agendamento (id_solicitacao, id_disponibilidade, id_atribuicao, status)
+                 VALUES (?, ?, ?, 'CONFIRMADO')",
+                [$idSolicitacaoNova, $novoPedido['id_disponibilidade'], $idAtribuicao]
+            );
+            consultarSolicitacoesAdmin(
+                $conexao,
+                'INSERT INTO historico_status (id_solicitacao, id_status_anterior, id_status_novo, id_responsavel, observacao)
+                 VALUES (?, NULL, ?, ?, ?)',
+                [$idSolicitacaoNova, $status['id_status'], $idAdministrador, 'Pedido cadastrado manualmente pela equipe no painel administrativo.']
+            );
+
+            $conexao->commit();
+            $conexao->close();
+            session_write_close();
+            responderSolicitacoesAdmin(201, [
+                'sucesso' => true,
+                'mensagem' => 'Pedido cadastrado e horário confirmado.',
+                'protocolo' => $protocoloNovo
+            ]);
+        } catch (DomainException $erro) {
+            $conexao->rollback();
+            $conexao->close();
+            session_write_close();
+            responderSolicitacoesAdmin(422, ['sucesso' => false, 'mensagem' => $erro->getMessage()]);
+        } catch (Throwable $erro) {
+            $conexao->rollback();
+            throw $erro;
+        }
+    }
+
+    $protocolo = validarProtocoloAdmin($entrada['protocolo'] ?? null);
 
     $conexao->begin_transaction();
     try {

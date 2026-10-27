@@ -310,7 +310,16 @@ try {
                 error_log('Falha ao liberar trava da agenda: ' . $erroTrava->getMessage());
             }
         }
+        $indiceLegadoImpedeRecriacao = $erro instanceof mysqli_sql_exception
+            && $erro->getCode() === 1062
+            && str_contains($erro->getMessage(), 'un_disponibilidade_inicio');
         $conexao->close();
+        if ($indiceLegadoImpedeRecriacao) {
+            responderAgendaAdmin(409, [
+                'sucesso' => false,
+                'mensagem' => 'O banco ainda impede recriar horários removidos. No phpMyAdmin, selecione hvac_db e execute: ALTER TABLE disponibilidade DROP INDEX un_disponibilidade_inicio, ADD INDEX idx_disponibilidade_inicio (inicio_previsto).'
+            ]);
+        }
         throw $erro;
     }
 } catch (InvalidArgumentException $erro) {
