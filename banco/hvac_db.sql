@@ -663,7 +663,7 @@ ALTER TABLE `condicao_pergunta`
 --
 ALTER TABLE `disponibilidade`
   ADD PRIMARY KEY (`id_disponibilidade`),
-  ADD UNIQUE KEY `un_disponibilidade_inicio` (`inicio_previsto`),
+  ADD KEY `idx_disponibilidade_inicio` (`inicio_previsto`),
   ADD KEY `fk_disponibilidade_editor` (`id_editor`);
 
 --
