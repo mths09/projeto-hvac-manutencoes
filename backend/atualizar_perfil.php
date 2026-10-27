@@ -84,8 +84,6 @@ try {
         512,
         JSON_THROW_ON_ERROR
     );
-
-    error_log('[debug-perfil] chaves: ' . implode(',', array_keys($dados)));
 } catch(JsonException $erro) {
     // JSON malformado
     responder(400, [
