@@ -12,6 +12,7 @@ const statuses = Object.values(STATUS_LABELS);
 const TODAY = localDate();
 let orders = [];
 let technicians = [];
+let serviceTypes = [];
 let page = "overview";
 let search = "";
 let filter = "Todos";
@@ -84,7 +85,7 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
       window.location.replace("./login.html");
       return;
     }
-    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.pedidos) || !Array.isArray(dados.tecnicos)) {
+    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.pedidos) || !Array.isArray(dados.tecnicos) || !Array.isArray(dados.servicos)) {
       throw new Error(dados?.mensagem || "Não foi possível carregar as solicitações.");
     }
     if (typeof dados.csrf !== "string") {
@@ -96,6 +97,10 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
       name: String(tecnico.nome),
       initials: iniciais(tecnico.nome),
       specialty: "Equipe técnica",
+    }));
+    serviceTypes = dados.servicos.map((servico) => ({
+      id: String(servico.id),
+      name: String(servico.nome),
     }));
     adminCsrf = dados.csrf;
     adminError = "";
@@ -1747,22 +1752,167 @@ document.querySelector("#notifications").addEventListener("click", () => {
 });
 
 document.querySelector("#new-order").addEventListener("click", () => {
-  form.reset();
-  form.elements.date.value = TODAY;
-  form.elements.time.value = "09:00";
-  dialog.showModal();
+  abrirModalNovoPedido();
 });
 
 document.querySelector("#cancel-order").addEventListener("click", () => {
   dialog.close();
 });
 
-form.addEventListener("submit", (event) => {
+document.querySelector("#close-order").addEventListener("click", () => dialog.close());
+
+function dataAposDias(dias) {
+  const data = new Date();
+  data.setDate(data.getDate() + dias);
+  return [data.getFullYear(), String(data.getMonth() + 1).padStart(2, "0"), String(data.getDate()).padStart(2, "0")].join("-");
+}
+
+function preencherOpcoesPedido() {
+  form.elements.equipment.innerHTML = [
+    '<option value="">Selecione o serviço</option>',
+    ...serviceTypes.map((servico) => `<option value="${escapeHTML(servico.id)}">${escapeHTML(servico.name)}</option>`),
+  ].join("");
+  form.elements.technician.innerHTML = [
+    '<option value="">Não atribuído</option>',
+    ...technicians.map((tecnico) => `<option value="${escapeHTML(tecnico.id)}">${escapeHTML(tecnico.name)}</option>`),
+  ].join("");
+}
+
+let requisicaoHorariosPedido = 0;
+async function carregarHorariosPedido() {
+  const data = form.elements.date.value;
+  const seletor = form.elements.time;
+  const feedback = document.querySelector("#order-feedback");
+  const requisicaoAtual = ++requisicaoHorariosPedido;
+  seletor.disabled = true;
+  document.querySelector("#submit-order").disabled = true;
+  seletor.innerHTML = '<option value="">Carregando horários...</option>';
+  feedback.hidden = true;
+  feedback.textContent = "";
+  if (!data) {
+    seletor.innerHTML = '<option value="">Selecione uma data</option>';
+    return;
+  }
+
+  const [ano, mes] = data.split("-").map(Number);
+  try {
+    const resposta = await fetch(`${AGENDA_API}?ano=${ano}&mes=${mes}`, {
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.horarios)) {
+      throw new Error(dados?.mensagem || "Não foi possível carregar os horários.");
+    }
+    if (typeof dados.csrf === "string") adminCsrf = dados.csrf;
+    if (requisicaoAtual !== requisicaoHorariosPedido) return;
+    const agora = new Date();
+    const disponiveis = dados.horarios.filter((horario) => {
+      if (horario.estado !== "free" || String(horario.inicio).slice(0, 10) !== data) return false;
+      const inicio = new Date(String(horario.inicio).replace(" ", "T"));
+      return !Number.isNaN(inicio.getTime()) && inicio > agora;
+    });
+    seletor.innerHTML = [
+      `<option value="">${disponiveis.length ? "Selecione o horário" : "Nenhum horário livre nesta data"}</option>`,
+      ...disponiveis.map((horario) => `<option value="${escapeHTML(horario.id)}">${escapeHTML(String(horario.inicio).slice(11, 16))}</option>`),
+    ].join("");
+    seletor.disabled = disponiveis.length === 0;
+  } catch (erro) {
+    if (requisicaoAtual !== requisicaoHorariosPedido) return;
+    seletor.innerHTML = '<option value="">Erro ao carregar horários</option>';
+    feedback.textContent = erro.message || "Não foi possível carregar os horários.";
+    feedback.hidden = false;
+    document.querySelector("#submit-order").disabled = true;
+  }
+}
+
+function abrirModalNovoPedido() {
+  if (adminLoading || !adminCsrf) {
+    adminMessage = adminLoading
+      ? "Aguarde o carregamento dos dados do painel para cadastrar um pedido."
+      : "Não foi possível carregar os dados necessários para cadastrar um pedido.";
+    adminMessageError = true;
+    render();
+    return;
+  }
+  form.reset();
+  preencherOpcoesPedido();
+  form.elements.date.min = TODAY;
+  form.elements.date.max = dataAposDias(30);
+  form.elements.date.value = TODAY;
+  form.elements.time.disabled = true;
+  form.elements.time.innerHTML = '<option value="">Carregando horários...</option>';
+  const feedback = document.querySelector("#order-feedback");
+  feedback.textContent = "";
+  feedback.hidden = true;
+  const botaoAdicionar = document.querySelector("#submit-order");
+  botaoAdicionar.disabled = true;
+  if (serviceTypes.length === 0) {
+    feedback.textContent = "Não há tipos de serviço ativos cadastrados no sistema.";
+    feedback.hidden = false;
+  }
+  dialog.showModal();
+  void carregarHorariosPedido();
+}
+
+form.elements.date.addEventListener("change", () => void carregarHorariosPedido());
+form.elements.time.addEventListener("change", () => {
+  document.querySelector("#submit-order").disabled = !form.elements.time.value || serviceTypes.length === 0;
+});
+
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  dialog.close();
-  adminMessage = "O cadastro manual de pedidos ainda não está ligado ao banco. Os pedidos feitos pelos clientes aparecem nesta lista automaticamente.";
-  adminMessageError = false;
-  render();
+  if (!form.reportValidity()) return;
+  const botao = document.querySelector("#submit-order");
+  const feedback = document.querySelector("#order-feedback");
+  botao.disabled = true;
+  feedback.hidden = true;
+  const dadosFormulario = new FormData(form);
+  const pedido = {
+    acao: "criar",
+    csrf: adminCsrf,
+    nome: String(dadosFormulario.get("client") || "").trim(),
+    telefone: String(dadosFormulario.get("phone") || "").trim(),
+    id_tipo_servico: String(dadosFormulario.get("equipment") || ""),
+    id_disponibilidade: String(dadosFormulario.get("time") || ""),
+    endereco: String(dadosFormulario.get("address") || "").trim(),
+    descricao: String(dadosFormulario.get("description") || "").trim(),
+    id_tecnico: String(dadosFormulario.get("technician") || ""),
+    prioridade: String(dadosFormulario.get("priority") || "normal"),
+  };
+  try {
+    const resposta = await fetch(API, {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(pedido),
+    });
+    const resultado = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || resultado?.sucesso !== true) {
+      throw new Error(resultado?.mensagem || "Não foi possível cadastrar o pedido.");
+    }
+    dialog.close();
+    form.reset();
+    adminMessage = `${resultado.mensagem || "Pedido cadastrado."} Protocolo: ${resultado.protocolo}.`;
+    adminMessageError = false;
+    await carregarSolicitacoesAdmin(false);
+    render();
+  } catch (erro) {
+    feedback.textContent = erro.message || "Não foi possível cadastrar o pedido.";
+    feedback.hidden = false;
+  } finally {
+    botao.disabled = !form.elements.time.value || form.elements.time.disabled || serviceTypes.length === 0;
+  }
 });
 
 form.elements.client.addEventListener("input", () => {
