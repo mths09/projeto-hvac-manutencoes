@@ -94,27 +94,53 @@
       <p>Ative o JavaScript do navegador para utilizar o painel.</p>
     </noscript>
 
-    <dialog id="order-dialog" class="order-dialog" aria-labelledby="dialog-title">
+    <dialog
+      id="order-dialog"
+      class="order-dialog"
+      aria-labelledby="dialog-title"
+    >
       <div class="order-dialog-heading">
         <h2 id="dialog-title">Adicionar Pedido</h2>
-        <button type="button" class="order-dialog-close" id="close-order" aria-label="Fechar">×</button>
+        <button
+          type="button"
+          class="order-dialog-close"
+          id="close-order"
+          aria-label="Fechar"
+        >
+          ×
+        </button>
       </div>
 
       <form id="order-form">
         <div class="form-grid">
           <label class="order-field">
             Cliente *
-            <input type="text" name="client" required maxlength="150" autocomplete="name" placeholder="Nome do cliente" />
+            <input
+              type="text"
+              name="client"
+              required
+              maxlength="150"
+              autocomplete="name"
+              placeholder="Nome do cliente"
+            />
           </label>
           <label class="order-field">
             Telefone
-            <input type="tel" name="phone" maxlength="25" autocomplete="tel" placeholder="(15) 9xxxx-xxxx" />
+            <input
+              type="tel"
+              name="phone"
+              maxlength="25"
+              autocomplete="tel"
+              placeholder="(15) 9xxxx-xxxx"
+            />
           </label>
         </div>
 
         <label class="order-field order-field-full">
           Tipo de Serviço
-          <select name="equipment" required><option value="">Carregando serviços...</option></select>
+          <select name="equipment" required>
+            <option value="">Carregando serviços...</option>
+          </select>
         </label>
 
         <div class="form-grid">
@@ -124,36 +150,59 @@
           </label>
           <label class="order-field">
             Horário *
-            <select name="time" required disabled><option value="">Selecione uma data</option></select>
+            <select name="time" required disabled>
+              <option value="">Selecione uma data</option>
+            </select>
           </label>
         </div>
 
         <label class="order-field order-field-full">
           Endereço *
-          <input type="text" name="address" required maxlength="500" autocomplete="street-address" placeholder="Rua, número — Bairro" />
+          <input
+            type="text"
+            name="address"
+            required
+            maxlength="500"
+            autocomplete="street-address"
+            placeholder="Rua, número — Bairro"
+          />
         </label>
 
         <label class="order-field order-field-full">
           Descrição do Problema
-          <textarea name="description" maxlength="3000" rows="3" placeholder="Descreva o problema..."></textarea>
+          <textarea
+            name="description"
+            maxlength="3000"
+            rows="3"
+            placeholder="Descreva o problema..."
+          ></textarea>
         </label>
 
         <div class="form-grid">
           <label class="order-field">
             Técnico
-            <select name="technician"><option value="">Não atribuído</option></select>
+            <select name="technician">
+              <option value="">Não atribuído</option>
+            </select>
           </label>
           <label class="order-field">
             Prioridade
-            <select name="priority"><option value="normal">Normal</option><option value="urgente">Urgente</option></select>
+            <select name="priority">
+              <option value="normal">Normal</option>
+              <option value="urgente">Urgente</option>
+            </select>
           </label>
         </div>
 
         <p class="order-feedback" id="order-feedback" role="alert" hidden></p>
 
         <div class="form-actions order-form-actions">
-          <button type="button" class="secondary" id="cancel-order">Cancelar</button>
-          <button type="submit" class="primary" id="submit-order">Adicionar</button>
+          <button type="button" class="secondary" id="cancel-order">
+            Cancelar
+          </button>
+          <button type="submit" class="primary" id="submit-order">
+            Adicionar
+          </button>
         </div>
       </form>
     </dialog>

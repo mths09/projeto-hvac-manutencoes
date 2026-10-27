@@ -881,9 +881,86 @@ body {
   font-weight: 500;
 }
 
-/* ========================= */
-/* RESPONSIVO */
-/* ========================= */
+.whatsapp-flutuante {
+  position: fixed;
+  right: max(1.5rem, env(safe-area-inset-right));
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 60px;
+  min-width: 60px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: #fff;
+  background: #25d366;
+  box-shadow: 0 10px 25px -5px rgba(37, 211, 102, 0.55);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    gap 0.25 ease;
+}
+
+/* anel em volta do botão*/
+.whatsapp-flutuante::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #25d366;
+  animation: whatsapp-pulso 2.4s ease-out infinite;
+}
+
+.whatsapp-flutuante-icone {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* texto aparece quando passa o mouse */
+.whatsapp-flutuante-texto {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-width 0.25 ease,
+    opacity 0.2s ease;
+}
+
+.whatsapp-flutuante:hover,
+.whatsapp-flutuante:focus-visible {
+  gap: 10px;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px -5px rgba(37, 211, 102, 0.7);
+}
+
+.whatsapp-flutuante:hover .whatsapp-flutuante-texto,
+.whatsapp-flutuante:focus-visible .whatsapp-flutuante-texto {
+  max-width: 140px;
+  opacity: 1;
+}
+
+.whatsapp-flutuante:focus-visible {
+  outline: 3px solid #00e5ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .whatsapp-flutuante {
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    height: 56px;
+    min-width: 56px;
+    padding: 0 12px;
+  }
+}
 
 @media (max-width: 700px) {
   .dados-cliente-grid {
