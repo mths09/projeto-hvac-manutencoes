@@ -51,7 +51,7 @@
   }
 
   function etapa(numero) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 4; i++) {
       elemento(`tela-etapa-${i}`).classList.toggle("escondido", i !== numero);
       elemento(`etapa-${i}`).classList.toggle("ativa", i === numero);
       elemento(`etapa-${i}`).classList.toggle("concluida", i < numero);
@@ -63,6 +63,11 @@
     return dados?.servicos.find((item) => item.codigo === servico)?.nome || "Ar Condicionado";
   }
 
+  function questionarioDisponivel(codigoServico) {
+    const perguntas = dados?.questionarios?.[codigoServico]?.perguntas;
+    return Array.isArray(perguntas) && perguntas.length >= 4 && perguntas.length <= 6;
+  }
+
   function atualizarServico() {
     for (const card of cards) {
       const marcado = tipos[card.dataset.servico] === servico ||
@@ -72,7 +77,83 @@
     }
     const texto = nomeServico() + (urgente ? " · Urgente" : "");
     elemento("nomeServicoEscolhido").textContent = texto;
+    elemento("nomeServicoTriagem").textContent = texto;
     elemento("botaoContinuar").textContent = `Continuar — ${texto} →`;
+  }
+
+  function renderizarTriagem(preservarRespostas = true) {
+    const area = elemento("perguntasTriagem");
+    const respostasAnteriores = {};
+    if (preservarRespostas) {
+      area.querySelectorAll('input[type="radio"]:checked').forEach((radio) => {
+        respostasAnteriores[radio.name.replace(/^triagem_/, "")] = radio.value;
+      });
+    }
+    area.replaceChildren();
+    const questionario = dados?.questionarios?.[servico];
+    if (!questionario) {
+      mensagem("A triagem deste serviço ainda não está publicada. Avise a equipe responsável pelo sistema.", true);
+      return false;
+    }
+    for (const pergunta of questionario.perguntas) {
+      const grupo = document.createElement("fieldset");
+      grupo.className = "pergunta-triagem";
+      const titulo = document.createElement("legend");
+      titulo.textContent = pergunta.enunciado;
+      grupo.append(titulo);
+      if (pergunta.ajuda) {
+        const ajuda = document.createElement("p");
+        ajuda.className = "ajuda-triagem";
+        ajuda.textContent = pergunta.ajuda;
+        grupo.append(ajuda);
+      }
+      const opcoes = document.createElement("div");
+      opcoes.className = "opcoes-triagem";
+      for (const opcao of pergunta.opcoes) {
+        const rotulo = document.createElement("label");
+        rotulo.className = "opcao-triagem";
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = `triagem_${pergunta.codigo}`;
+        radio.value = opcao.codigo;
+        radio.required = pergunta.obrigatoria;
+        radio.checked = respostasAnteriores[pergunta.codigo] === opcao.codigo;
+        const texto = document.createElement("span");
+        texto.textContent = opcao.rotulo;
+        rotulo.append(radio, texto);
+        opcoes.append(rotulo);
+      }
+      grupo.append(opcoes);
+      area.append(grupo);
+    }
+    return questionario.perguntas.length >= 4 && questionario.perguntas.length <= 6;
+  }
+
+  function coletarRespostasTriagem() {
+    const questionario = dados?.questionarios?.[servico];
+    if (!questionario) return null;
+    const respostas = {};
+    for (const pergunta of questionario.perguntas) {
+      const selecionada = document.querySelector(`input[name="triagem_${pergunta.codigo}"]:checked`);
+      if (pergunta.obrigatoria && !selecionada) {
+        return {erro: `Responda a pergunta: ${pergunta.enunciado}`};
+      }
+      if (selecionada) respostas[pergunta.codigo] = selecionada.value;
+    }
+    return respostas;
+  }
+
+  function adicionarResumoTriagem(respostas) {
+    const lista = elemento("resumoTriagem");
+    lista.replaceChildren();
+    const perguntas = dados?.questionarios?.[servico]?.perguntas || [];
+    for (const pergunta of perguntas) {
+      const codigoOpcao = respostas?.[pergunta.codigo];
+      const opcao = pergunta.opcoes.find((item) => item.codigo === codigoOpcao);
+      const linha = document.createElement("li");
+      linha.textContent = `${pergunta.enunciado} ${opcao?.rotulo || "Resposta não disponível"}`;
+      lista.append(linha);
+    }
   }
 
   for (const card of cards) {
@@ -81,8 +162,13 @@
       card.querySelector("p").textContent = "Marque junto com o tipo de serviço. A equipe avaliará a urgência.";
     }
     card.addEventListener("click", () => {
-      if (tipos[card.dataset.servico]) servico = tipos[card.dataset.servico];
-      else urgente = !urgente;
+      if (tipos[card.dataset.servico]) {
+        const novoServico = tipos[card.dataset.servico];
+        if (novoServico !== servico) {
+          servico = novoServico;
+          renderizarTriagem(false);
+        }
+      } else urgente = !urgente;
       atualizarServico();
     });
   }
@@ -260,16 +346,23 @@
       if (!elemento("endereco").value) elemento("endereco").value = dados.usuario.endereco || "";
       for (const card of cards) {
         if (tipos[card.dataset.servico]) {
-          card.disabled = !dados.servicos.some((tipo) => tipo.codigo === tipos[card.dataset.servico]);
+          const codigo = tipos[card.dataset.servico];
+          card.disabled = !dados.servicos.some((tipo) => tipo.codigo === codigo) || !questionarioDisponivel(codigo);
         }
       }
-      if (!dados.servicos.some((tipo) => tipo.codigo === servico)) servico = dados.servicos[0]?.codigo || "";
+      const primeiroServicoDisponivel = dados.servicos.find((tipo) => questionarioDisponivel(tipo.codigo));
+      if (!dados.servicos.some((tipo) => tipo.codigo === servico && questionarioDisponivel(tipo.codigo))) {
+        servico = primeiroServicoDisponivel?.codigo || "";
+      }
       atualizarServico();
+      if (!servico || !renderizarTriagem()) {
+        throw new Error("Não há questionários publicados com 4 a 6 perguntas. Confira o script banco/triagem_mvp.sql.");
+      }
       calendario();
       horarios();
       mensagem(dados.horarios.length
         ? "Selecione um horário. O pedido ficará aguardando aprovação da equipe."
-        : "Não há horários disponíveis nos próximos 60 dias. Entre em contato com a equipe.", false, false);
+        : "Não há horários disponíveis nos próximos 30 dias. Entre em contato com a equipe.", false, false);
       elemento("botaoContinuar").disabled = !servico;
       return true;
     } catch (erro) {
@@ -289,6 +382,7 @@
   }
 
   function resumo() {
+    const respostasTriagem = pedido.campos.respostas_triagem || {};
     const valores = {
       resumoNomeCompleto: pedido.campos.nome,
       resumoTelefone: pedido.campos.telefone,
@@ -299,19 +393,28 @@
       resumoDescricao: pedido.campos.descricao
     };
     for (const [id, valor] of Object.entries(valores)) elemento(id).textContent = valor;
+    adicionarResumoTriagem(respostasTriagem);
     elemento("resumoAnexosLinha").hidden = anexos.length === 0;
     elemento("resumoAnexos").textContent = `${anexos.length} ${anexos.length === 1 ? "arquivo" : "arquivos"}`;
     elemento("confirmarAgendamento").textContent = "Enviar pedido ✓";
     elemento("voltarDetalhes").disabled = incerto;
-    etapa(3);
+    etapa(4);
   }
 
-  elemento("botaoContinuar").addEventListener("click", () => { if (dados) etapa(2); });
-  for (const id of ["botaoVoltar", "alterarServico"]) {
-    elemento(id).addEventListener("click", () => etapa(1));
-  }
+  elemento("botaoContinuar").addEventListener("click", () => {
+    if (dados && renderizarTriagem()) etapa(2);
+  });
+  elemento("voltarTipoServico").addEventListener("click", () => etapa(1));
+  elemento("continuarTriagem").addEventListener("click", () => {
+    const respostas = coletarRespostasTriagem();
+    if (!respostas || respostas.erro) return mensagem(respostas?.erro || "Responda à triagem antes de continuar.", true);
+    mensagem("");
+    etapa(3);
+  });
+  elemento("botaoVoltar").addEventListener("click", () => etapa(2));
+  elemento("alterarServico").addEventListener("click", () => etapa(1));
   elemento("voltarDetalhes").addEventListener("click", () => {
-    if (!enviando && !incerto && !concluido) etapa(2);
+    if (!enviando && !incerto && !concluido) etapa(3);
   });
 
   elemento("botaoRevisar").addEventListener("click", async () => {
@@ -320,8 +423,10 @@
     const telefone = elemento("telefone").value.replace(/\D/g, "");
     const endereco = elemento("endereco").value.trim();
     const descricao = elemento("descricao").value.trim();
+    const respostasTriagem = coletarRespostasTriagem();
     let erro = "";
-    if (nome.split(" ").length < 2 || [...nome].length > 150) erro = "Informe nome e sobrenome, com até 150 caracteres.";
+    if (!respostasTriagem || respostasTriagem.erro) erro = respostasTriagem?.erro || "Responda à triagem antes de continuar.";
+    else if (nome.split(" ").length < 2 || [...nome].length > 150) erro = "Informe nome e sobrenome, com até 150 caracteres.";
     else if (!/^\d{10,11}$/.test(telefone)) erro = "Informe o telefone com DDD, com 10 ou 11 números.";
     else if ([...endereco].length < 10 || [...endereco].length > 500) erro = "Informe o endereço completo, entre 10 e 500 caracteres.";
     else if ([...descricao].length < 10 || [...descricao].length > 2000) erro = "Descreva o problema usando entre 10 e 2.000 caracteres.";
@@ -338,7 +443,8 @@
     }
     pedido = {
       protocolo: dados.protocolo, inicio: vaga.inicio, nomeServico: nomeServico(),
-      campos: {tipo_servico: servico, disponibilidade: horario, nome, telefone, endereco, descricao, urgente: urgente ? "1" : "0"}
+      campos: {tipo_servico: servico, disponibilidade: horario, nome, telefone, endereco, descricao,
+        urgente: urgente ? "1" : "0", respostas_triagem: respostasTriagem}
     };
     mensagem("Confira os dados. O horário ficará pendente de aprovação.", false, false);
     linkPedidos.hidden = true;
@@ -360,7 +466,9 @@
     elemento("confirmarAgendamento").textContent = "Enviando…";
     mensagem("Enviando seu pedido…", false, false);
     const formulario = new FormData();
-    for (const [chave, valor] of Object.entries(pedido.campos)) formulario.append(chave, valor);
+    for (const [chave, valor] of Object.entries(pedido.campos)) {
+      formulario.append(chave, chave === "respostas_triagem" ? JSON.stringify(valor) : valor);
+    }
     formulario.append("protocolo", pedido.protocolo);
     formulario.append("csrf", dados.csrf);
     for (const arquivo of anexos) formulario.append("anexos[]", arquivo, arquivo.name);
@@ -399,6 +507,19 @@
       if (!salvo) return;
       const anterior = JSON.parse(salvo);
       if (!/^SRV-[a-f0-9]{24}$/.test(anterior.protocolo) || !anterior.campos || typeof anterior.inicio !== "string") return;
+      if (!anterior.campos.respostas_triagem) {
+        mensagem("Há um envio antigo sem respostas de triagem. Confira Meus Pedidos antes de criar outro pedido.", true);
+        linkPedidos.hidden = false;
+        return;
+      }
+      if (!questionarioDisponivel(anterior.campos.tipo_servico)) {
+        mensagem("A triagem deste envio não está mais disponível. Confira Meus Pedidos antes de criar outro pedido.", true);
+        linkPedidos.hidden = false;
+        return;
+      }
+      servico = anterior.campos.tipo_servico;
+      urgente = anterior.campos.urgente === "1";
+      atualizarServico();
       pedido = anterior;
       incerto = true;
       linkPedidos.hidden = false;
