@@ -1848,3 +1848,96 @@ p {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Alvos de toque maiores no dashboard do cliente */
+@media (max-width: 639px) {
+  .botao-notificacoes,
+  .botao-sair {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .botao-principal,
+  .botao-secundario,
+  .botao-recarregar,
+  .botao-detalhes,
+  .link-documento,
+  .botao-fechar-dialog {
+    min-height: 46px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Painel de notificações adaptado a telas pequenas */
+@media (max-width: 639px) {
+  .painel-notificacoes {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 76px);
+    right: max(12px, env(safe-area-inset-right, 0px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    display: flex;
+    width: auto;
+    max-height: calc(100vh - 100px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    flex-direction: column;
+    border-radius: 16px;
+  }
+
+  .cabecalho-notificacoes {
+    flex-shrink: 0;
+    padding: 15px 16px;
+  }
+
+  .botao-fechar-notificacoes {
+    width: 44px;
+    height: 44px;
+  }
+
+  .lista-notificacoes {
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    overscroll-behavior: contain;
+  }
+
+  .notificacao-item {
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .acoes-notificacoes {
+    flex-shrink: 0;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .acoes-notificacoes .botao-secundario {
+    min-height: 44px;
+    flex: 1 1 calc(50% - 8px);
+    padding: 10px;
+    font-size: 12px;
+  }
+}
+
+@supports (height: 100dvh) {
+  @media (max-width: 639px) {
+    .painel-notificacoes {
+      max-height: calc(100dvh - 100px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .acoes-notificacoes {
+    flex-direction: column;
+  }
+
+  .acoes-notificacoes .botao-secundario {
+    width: 100%;
+    flex-basis: auto;
+  }
+}

@@ -632,3 +632,38 @@ body {
     gap: 0.75rem 1rem;
   }
 }
+
+/* Cabeçalho do cadastro organizado em telas estreitas */
+@media (max-width: 520px) {
+  .topo {
+    height: 72px;
+    padding-inline: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+  }
+
+  .topo .header-interno {
+    gap: 8px;
+  }
+
+  .logo-container {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+  }
+
+  .topo .logo-img {
+    width: min(54vw, 220px);
+    max-width: 100%;
+  }
+
+  .topo .voltar-site {
+    display: inline-flex;
+    min-height: 44px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 12px;
+    white-space: nowrap;
+  }
+}

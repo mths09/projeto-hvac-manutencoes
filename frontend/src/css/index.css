@@ -1644,3 +1644,23 @@ header {
   color: var(--ciano-palido);
   text-align: center;
 }
+
+/* Alvos de toque e campos legíveis em celular */
+@media (max-width: 680px) {
+  .menu-toggle,
+  .nav-menu a,
+  .btn-cliente {
+    min-height: 44px;
+  }
+
+  .form-servicos input,
+  .form-servicos select,
+  .form-servicos textarea {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .form-servicos button[type="submit"] {
+    min-height: 48px;
+  }
+}

@@ -523,3 +523,17 @@ button:focus-visible {
 html:has(dialog[open]) {
   overflow: hidden;
 }
+
+/* Campos e ações com tamanho adequado ao toque */
+@media (max-width: 639px) {
+  .campos-perfil input,
+  .campos-perfil textarea,
+  .campos-perfil select {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .acoes-formulario .botao {
+    min-height: 48px;
+  }
+}
