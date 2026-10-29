@@ -148,8 +148,6 @@ try {
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     require_once __DIR__ . '/conexao.php';
-    date_default_timezone_set('America/Sao_Paulo');
-    consultarSolicitacoesAdmin($conexao, 'SET time_zone = ?', [(new DateTimeImmutable())->format('P')]);
 
     $administrador = consultarSolicitacoesAdmin(
         $conexao,

@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Sao_Paulo');
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -16,3 +17,7 @@ $conexao = new mysqli(
 );
 
 $conexao->set_charset('utf8mb4');
+
+// Usa o mesmo fuso nas funções de data do PHP e nas consultas MySQL desta conexão.
+$offsetFusoBanco = (new DateTimeImmutable())->format('P');
+$conexao->query("SET time_zone = '{$offsetFusoBanco}'");

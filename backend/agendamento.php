@@ -118,12 +118,6 @@ function consultarAgendamento(mysqli $db, string $sql, array $parametros = []): 
     return $stmt;
 }
 
-function configurarFusoAgendamento(mysqli $db): void
-{
-    date_default_timezone_set('America/Sao_Paulo');
-    consultarAgendamento($db, 'SET time_zone = ?', [(new DateTimeImmutable())->format('P')]);
-}
-
 function conferirClienteAgendamento(?array $usuario): void
 {
     if (!$usuario || (int) $usuario['ativo'] !== 1) {
@@ -346,7 +340,6 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
         }
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
         require __DIR__ . '/conexao.php';
-        configurarFusoAgendamento($conexao);
         $usuario = consultarAgendamento($conexao,
             'SELECT id_usuario, nome, email, telefone, perfil, ativo,
                 (SELECT endereco_informado FROM endereco_usuario eu

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
-date_default_timezone_set('America/Sao_Paulo');
 
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
@@ -135,7 +134,6 @@ try {
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     require_once __DIR__ . '/conexao.php';
-    consultarAgendaAdmin($conexao, 'SET time_zone = ?', [(new DateTimeImmutable())->format('P')]);
     consultarAgendaAdmin($conexao, 'SET SESSION group_concat_max_len = 8192');
     $usuario = consultarAgendaAdmin($conexao, 'SELECT perfil, ativo FROM usuario WHERE id_usuario = ? LIMIT 1', [$idUsuario])
         ->get_result()->fetch_assoc();
