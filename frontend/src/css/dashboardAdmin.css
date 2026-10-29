@@ -841,6 +841,17 @@ label {
   margin: 22px 0;
 }
 
+.sr-triage-list {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 18px;
+  padding-left: 20px;
+}
+
+.sr-triage-list strong {
+  color: #f5f6fc;
+}
+
 .portfolio-admin {
   width: min(100%, 974px);
   margin: 0 auto;

@@ -425,6 +425,97 @@ body {
   display: none !important;
 }
 
+.triagem-etapa > .servico-escolhido {
+  margin-bottom: 24px;
+}
+
+.triagem-etapa > .servico-escolhido p {
+  margin-top: 5px;
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.perguntas-triagem {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pergunta-triagem {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--borda-card);
+  border-radius: 14px;
+  background: rgba(7, 19, 49, 0.76);
+}
+
+.pergunta-triagem legend {
+  padding: 0 6px;
+  color: #f5f7ff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ajuda-triagem {
+  margin: 2px 0 12px;
+  color: var(--texto-secundario);
+  font-size: 12px;
+}
+
+.opcoes-triagem {
+  display: grid;
+  gap: 8px;
+}
+
+.opcao-triagem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--texto-secundario);
+  cursor: pointer;
+}
+
+.opcao-triagem:has(input:checked) {
+  border-color: var(--borda-clara);
+  background: rgba(0, 229, 255, 0.08);
+  color: #fff;
+}
+
+.opcao-triagem input {
+  flex: 0 0 auto;
+  margin-top: 4px;
+  accent-color: var(--ciano);
+}
+
+.resumo-triagem-linha ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+}
+
+.resumo-triagem-linha li {
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .etapa {
+    min-width: 56px;
+    font-size: 9px;
+  }
+
+  .linha {
+    margin-inline: 5px;
+  }
+
+  .pergunta-triagem {
+    padding: 14px;
+  }
+}
+
 .servico-escolhido {
   display: flex;
   align-items: center;
