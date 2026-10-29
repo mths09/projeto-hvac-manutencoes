@@ -9,7 +9,7 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-const JANELA_TENTATIVAS_LOGIN_MINUTOS = 15;
+const JANELA_TENTATIVAS_LOGIN_MINUTOS = 5;
 const LIMITE_TENTATIVAS_EMAIL_LOGIN = 5;
 const LIMITE_TENTATIVAS_IP_LOGIN = 30;
 
@@ -65,7 +65,7 @@ function negarLogin(mysqli $conexao, string $emailHash, string $ipHash): never
     if ($bloqueado) {
         responderLogin(429, [
             'sucesso' => false,
-            'mensagem' => 'Muitas tentativas de acesso. Aguarde 15 minutos e tente novamente.'
+            'mensagem' => 'Muitas tentativas de acesso. Aguarde ' . JANELA_TENTATIVAS_LOGIN_MINUTOS . ' minutos e tente novamente.'
         ]);
     }
 
@@ -152,7 +152,7 @@ try {
         $conexao->close();
         responderLogin(429, [
             'sucesso' => false,
-            'mensagem' => 'Muitas tentativas de acesso. Aguarde 15 minutos e tente novamente.'
+            'mensagem' => 'Muitas tentativas de acesso. Aguarde ' . JANELA_TENTATIVAS_LOGIN_MINUTOS . ' minutos e tente novamente.'
         ]);
     }
 
