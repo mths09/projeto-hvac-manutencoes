@@ -1198,6 +1198,18 @@ ALTER TABLE `triagem`
   ADD CONSTRAINT `fk_triagem_questionario` FOREIGN KEY (`id_questionario`) REFERENCES `questionario` (`id_questionario`),
   ADD CONSTRAINT `fk_triagem_respondente` FOREIGN KEY (`id_respondente`) REFERENCES `usuario` (`id_usuario`),
   ADD CONSTRAINT `fk_triagem_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+-- Estrutura para tabela de limite de tentativas de login.
+DROP TABLE IF EXISTS `tentativa_login`;
+CREATE TABLE `tentativa_login` (
+  `id_tentativa` bigint(20) NOT NULL AUTO_INCREMENT,
+  `email_hash` char(64) NOT NULL,
+  `ip_hash` char(64) NOT NULL,
+  `tentada_em` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_tentativa`),
+  KEY `idx_tentativa_login_email_data` (`email_hash`, `tentada_em`),
+  KEY `idx_tentativa_login_ip_data` (`ip_hash`, `tentada_em`),
+  KEY `idx_tentativa_login_data` (`tentada_em`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
