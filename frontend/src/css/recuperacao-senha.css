@@ -1,0 +1,36 @@
+#mensagem-recuperacao,
+#mensagem-nova-senha {
+  padding: 12px 14px;
+  margin: 14px 0;
+  border: 1px solid #38bdf8;
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.1);
+  color: #bae6fd;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+#mensagem-recuperacao[hidden],
+#mensagem-nova-senha[hidden] {
+  display: none;
+}
+
+#mensagem-recuperacao[data-tipo="erro"],
+#mensagem-nova-senha[data-tipo="erro"] {
+  border-color: #fb7185;
+  background: rgba(251, 113, 133, 0.1);
+  color: #fecdd3;
+}
+
+#mensagem-recuperacao[data-tipo="sucesso"],
+#mensagem-nova-senha[data-tipo="sucesso"] {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+  color: #bbf7d0;
+}
+
+.card form button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}

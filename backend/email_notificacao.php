@@ -12,6 +12,7 @@ function configEmailHvac(): array
         'app_password' => '',
         'from_email' => '',
         'from_name' => 'HVAC Lex Company',
+        'app_url' => '',
     ];
     $local = __DIR__ . '/email_config.local.php';
     if (is_file($local)) {
@@ -20,7 +21,7 @@ function configEmailHvac(): array
     }
     foreach (['host' => 'HVAC_SMTP_HOST', 'port' => 'HVAC_SMTP_PORT', 'security' => 'HVAC_SMTP_SECURITY',
         'username' => 'HVAC_SMTP_USER', 'app_password' => 'HVAC_SMTP_APP_PASSWORD', 'from_email' => 'HVAC_EMAIL_FROM',
-        'from_name' => 'HVAC_EMAIL_FROM_NAME'] as $campo => $variavel) {
+        'from_name' => 'HVAC_EMAIL_FROM_NAME', 'app_url' => 'HVAC_APP_URL'] as $campo => $variavel) {
         $valor = getenv($variavel);
         if ($valor !== false && $valor !== '') $config[$campo] = $campo === 'port' ? (int) $valor : $valor;
     }
@@ -103,3 +104,4 @@ function enviarEmailHvac(string $destinatario, string $assunto, string $mensagem
         return ['enviado' => false, 'erro' => 'O Gmail não aceitou o envio. Confira a senha de app e as configurações SMTP.'];
     }
 }
+
