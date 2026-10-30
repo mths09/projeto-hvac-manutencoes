@@ -52,12 +52,24 @@
   --cor-whatsapp: var(--sucesso);
 
   /* Layout */
-  --altura-cabecalho: 80px; /* NOVO */
-  --largura-sidebar: 260px; /* ALTERADO (era 240px) */
-  --largura-conteudo: 1200px; /* NOVO: largura máxima do conteúdo */
+  --altura-cabecalho: 96px;
+  --altura-logo: 68px; /* altura da logo no cabeçalho */
+  --largura-sidebar: 260px;
+  --largura-conteudo: 1200px; /* largura máxima do conteúdo centralizado */
 
-  --raio-card: 15px;
-  --raio-botao: 10px;
+  /* Cores e superfícies iguais às da tela visualizar-servico */
+  --fundo-pagina: #080f25;
+  --superficie-card: rgb(255 255 255 / 5%);
+  --superficie-botao: rgb(255 255 255 / 7%);
+  --superficie-item: rgb(255 255 255 / 3%);
+  --borda-item: rgb(255 255 255 / 4%);
+  --borda-cabecalho: rgb(0 229 255 / 12%);
+  --texto-rotulo: rgb(255 255 255 / 42%);
+  --sombra-card: 0 12px 32px rgb(0 0 0 / 10%);
+
+  --raio-card: 22px;
+  --raio-item: 13px;
+  --raio-botao: 13px;
   --transicao-padrao: 180ms ease;
 
   --fonte-titulos: "Nunito", sans-serif;
@@ -81,7 +93,7 @@ html {
 
 body {
   min-height: 100vh;
-  background: var(--azul-marinho-mais-escuro);
+  background: var(--fundo-pagina);
   color: var(--texto-principal);
   font-family: var(--fonte-corpo);
   font-size: 15px;
@@ -105,6 +117,7 @@ textarea {
 
 button {
   color: inherit;
+  cursor: pointer;
 }
 
 button,
@@ -121,10 +134,6 @@ a:focus-visible {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-button {
-  cursor: pointer;
 }
 
 img {
@@ -150,11 +159,6 @@ p {
   display: none !important;
 }
 
-.container {
-  width: min(100% - 40px, 1500px);
-  margin-inline: auto;
-}
-
 /* =========================================
    CABEÇALHO
 ========================================= */
@@ -164,40 +168,35 @@ p {
   z-index: 100;
   top: 0;
   width: 100%;
-  border-bottom: 1px solid var(--borda);
-  background: rgb(5 9 30 / 94%);
-  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--borda-cabecalho);
+  background: var(--azul-marinho-escuro);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
 }
 
-/* ALTERADO: ocupa a largura toda, sem centralizar */
+/* Ocupa a largura toda, sem centralizar */
 .cabecalho-conteudo {
   display: flex;
   width: 100%;
-  max-width: none;
   min-height: var(--altura-cabecalho);
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-inline: 0;
   padding-inline: 24px;
 }
 
 .logo-dashboard {
   display: flex;
-  width: 240px;
-  height: 80px;
+  min-width: 0;
   flex-shrink: 0;
   align-items: center;
   justify-content: flex-start;
-  transform: translateY(10px);
 }
 
 .logo-dashboard img {
   display: block;
   width: auto;
-  max-width: 240px;
-  max-height: 70px;
-  height: auto;
+  height: var(--altura-logo);
+  max-width: min(340px, 45vw);
   object-fit: contain;
 }
 
@@ -216,16 +215,16 @@ p {
   gap: 12px;
 }
 
-.avatar-usuario {
+.avatar-usuario,
+.avatar-perfil {
   display: grid;
   width: 44px;
   height: 44px;
   flex-shrink: 0;
   place-items: center;
-  border: 1px solid rgb(0 229 255 / 25%);
-  border-radius: 50%;
-  background: var(--azul-marinho-medio);
-  color: var(--ciano);
+  border-radius: 12px;
+  background: var(--gradiente-chama);
+  color: #fff;
   font-family: var(--fonte-titulos);
   font-weight: 800;
 }
@@ -265,13 +264,17 @@ p {
   padding: 0 17px;
   border: 1px solid var(--borda);
   border-radius: var(--raio-botao);
-  background: transparent;
-  color: var(--texto-secundario);
+  background: var(--superficie-botao);
+  color: rgb(255 255 255 / 78%);
   font-weight: 700;
   transition:
-    background var(--transicao-padrao),
-    color var(--transicao-padrao),
-    border-color var(--transicao-padrao);
+    filter var(--transicao-padrao),
+    color var(--transicao-padrao);
+}
+
+.botao-sair:hover {
+  color: #fff;
+  filter: brightness(1.15);
 }
 
 /* =========================================
@@ -290,7 +293,7 @@ p {
   place-items: center;
   border: 1px solid var(--borda);
   border-radius: 12px;
-  background: var(--azul-marinho-escuro);
+  background: var(--superficie-botao);
   transition:
     border-color var(--transicao-padrao),
     background var(--transicao-padrao);
@@ -298,7 +301,7 @@ p {
 
 .botao-notificacoes:hover {
   border-color: rgb(0 229 255 / 35%);
-  background: var(--azul-marinho);
+  background: rgb(255 255 255 / 10%);
 }
 
 .icone-notificacao {
@@ -314,7 +317,7 @@ p {
   height: 19px;
   padding-inline: 4px;
   place-items: center;
-  border: 2px solid var(--azul-marinho-mais-escuro);
+  border: 2px solid var(--azul-marinho-escuro);
   border-radius: 999px;
   background: var(--perigo);
   color: #ffffff;
@@ -401,7 +404,7 @@ p {
   flex-shrink: 0;
   place-items: center;
   border-radius: 10px;
-  background: var(--azul-marinho);
+  background: var(--superficie-botao);
 }
 
 .notificacao-texto {
@@ -454,8 +457,8 @@ p {
   padding: 8px 11px;
   border: 1px solid var(--borda);
   border-radius: 8px;
-  background: transparent;
-  color: var(--texto-secundario);
+  background: var(--superficie-botao);
+  color: rgb(255 255 255 / 78%);
   font-size: 11px;
   font-weight: 700;
   transition:
@@ -474,17 +477,16 @@ p {
 
 .dashboard-container {
   min-height: calc(100vh - var(--altura-cabecalho));
-  padding: 0; /* ALTERADO: sem espaço em volta, a sidebar encosta nas bordas */
+  padding: 0;
 }
 
-/* ALTERADO: grid de ponta a ponta, sem max-width e sem centralizar */
+/* Grade de ponta a ponta: sidebar colada na esquerda + conteúdo */
 .dashboard {
   display: grid;
   grid-template-columns: var(--largura-sidebar) minmax(0, 1fr);
   align-items: start;
   gap: 0;
   width: 100%;
-  max-width: none;
   margin: 0;
 }
 
@@ -514,10 +516,10 @@ p {
 
 .sidebar-label,
 .etiqueta-secao {
-  color: var(--ciano);
+  color: var(--texto-secundario);
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.2px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -556,6 +558,28 @@ p {
   color: var(--texto-principal);
 }
 
+.link-menu.ativo {
+  border-color: rgb(0 229 255 / 17%);
+  background: rgb(0 229 255 / 9%);
+  color: var(--ciano);
+}
+
+.link-menu.ativo::before {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: -1px;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: var(--ciano);
+  content: "";
+}
+
+.link-menu:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: 3px;
+}
+
 .icone-menu {
   display: grid;
   width: 24px;
@@ -565,7 +589,7 @@ p {
   font-size: 17px;
 }
 
-/* ALTERADO: margin-top auto empurra o card de ajuda para o rodapé da sidebar */
+/* margin-top auto empurra o card de ajuda para o rodapé da sidebar */
 .sidebar-ajuda {
   display: flex;
   align-items: flex-start;
@@ -594,10 +618,9 @@ p {
 }
 
 /* =========================================
-   ÁREA DE CONTEÚDO
+   ÁREA DE CONTEÚDO (centralizada ao lado da sidebar)
 ========================================= */
 
-/* ALTERADO: colado na sidebar, alinhado à esquerda, com padding próprio */
 .conteudo-dashboard {
   width: 100%;
   min-width: 0;
@@ -664,7 +687,7 @@ p {
   border: 1px solid transparent;
   border-radius: var(--raio-botao);
   background: var(--gradiente-frio);
-  color: var(--azul-marinho-mais-escuro);
+  color: var(--fundo-pagina);
   font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
@@ -810,7 +833,8 @@ p {
   padding: 20px;
   border: 1px solid var(--borda);
   border-radius: var(--raio-card);
-  background: var(--azul-marinho-escuro);
+  background: var(--superficie-card);
+  box-shadow: var(--sombra-card);
   transition:
     transform var(--transicao-padrao),
     border-color var(--transicao-padrao);
@@ -868,7 +892,8 @@ p {
   padding: 20px;
   border: 1px solid var(--borda);
   border-radius: var(--raio-card);
-  background: var(--azul-marinho-escuro);
+  background: var(--superficie-card);
+  box-shadow: var(--sombra-card);
   transition: border-color var(--transicao-padrao);
 }
 
@@ -896,27 +921,32 @@ p {
 .detalhes-servico-resumo {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 20px;
+  gap: 12px;
   margin-top: 18px;
-  padding-top: 15px;
-  border-top: 1px solid var(--borda);
 }
 
 .detalhe-servico {
   min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--borda-item);
+  border-radius: var(--raio-item);
+  background: var(--superficie-item);
 }
 
 .detalhe-servico span {
   display: block;
-  margin-bottom: 4px;
-  color: var(--texto-secundario);
-  font-size: 11px;
+  margin-bottom: 5px;
+  color: var(--texto-rotulo);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .detalhe-servico strong {
   display: block;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -953,8 +983,8 @@ p {
   justify-content: center;
   padding: 28px;
   border: 1px dashed rgb(255 255 255 / 14%);
-  border-radius: var(--raio-card);
-  background: rgb(8 17 46 / 45%);
+  border-radius: 14px;
+  background: transparent;
   text-align: center;
 }
 
@@ -993,9 +1023,9 @@ p {
 }
 
 .etiqueta-laranja {
-  border-color: rgb(255 152 0 / 22%);
+  border-color: rgb(255 152 0 / 28%);
   background: rgb(255 152 0 / 10%);
-  color: var(--chama-laranja);
+  color: #ffb74d;
 }
 
 .etiqueta-verde {
@@ -1017,11 +1047,6 @@ p {
 }
 
 /* =========================================
-   >>> COLE AQUI O RESTANTE DO SEU CSS ATUAL <<<
-   (a partir do comentário "DOCUMENTOS", linha ~1000
-   do seu dashboard.css original, até o final do arquivo)
-========================================= */
-/* =========================================
    DOCUMENTOS
 ========================================= */
 
@@ -1038,8 +1063,9 @@ p {
   gap: 13px;
   padding: 17px;
   border: 1px solid var(--borda);
-  border-radius: 12px;
-  background: var(--azul-marinho-escuro);
+  border-radius: var(--raio-item);
+  background: var(--superficie-card);
+  box-shadow: var(--sombra-card);
   transition: border-color var(--transicao-padrao);
 }
 
@@ -1091,7 +1117,8 @@ p {
   padding: 24px;
   border: 1px solid var(--borda);
   border-radius: var(--raio-card);
-  background: var(--azul-marinho-escuro);
+  background: var(--superficie-card);
+  box-shadow: var(--sombra-card);
 }
 
 .cabecalho-cartao {
@@ -1124,7 +1151,7 @@ p {
   display: flex;
   width: 100%;
   flex-direction: column;
-  gap: 17px;
+  gap: 12px;
 }
 
 .campo-perfil {
@@ -1132,105 +1159,24 @@ p {
   min-width: 0;
   flex-direction: column;
   gap: 4px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--borda);
-}
-
-.campo-perfil:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--borda-item);
+  border-radius: var(--raio-item);
+  background: var(--superficie-item);
 }
 
 .rotulo-perfil {
-  color: var(--texto-secundario);
-  font-size: 11px;
+  color: var(--texto-rotulo);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .campo-perfil strong {
   overflow-wrap: anywhere;
   font-size: 13px;
   font-weight: 700;
-}
-
-.whatsapp-flutuante {
-  position: fixed;
-  right: max(1.5rem, env(safe-area-inset-right));
-  bottom: max(1.5rem, env(safe-area-inset-bottom));
-  z-index: 90;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  height: 60px;
-  min-width: 60px;
-  padding: 0 14px;
-  border-radius: 999px;
-  color: #fff;
-  background: #25d366;
-  box-shadow: 0 10px 25px -5px rgba(37, 211, 102, 0.55);
-  font-weight: 700;
-  font-size: 0.95rem;
-  text-decoration: none;
-  white-space: nowrap;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    gap 0.25s ease;
-}
-
-/* Anel em volta do botão */
-.whatsapp-flutuante::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: #25d366;
-  animation: whatsapp-pulso 2.4s ease-out infinite;
-}
-
-.whatsapp-flutuante-icone {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-/* Texto aparece ao passar o mouse */
-.whatsapp-flutuante-texto {
-  max-width: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition:
-    max-width 0.25s ease,
-    opacity 0.2s ease;
-}
-
-.whatsapp-flutuante:hover,
-.whatsapp-flutuante:focus-visible {
-  gap: 10px;
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px -5px rgba(37, 211, 102, 0.7);
-}
-
-.whatsapp-flutuante:hover .whatsapp-flutuante-texto,
-.whatsapp-flutuante:focus-visible .whatsapp-flutuante-texto {
-  max-width: 140px;
-  opacity: 1;
-}
-
-.whatsapp-flutuante:focus-visible {
-  outline: 3px solid #00e5ff;
-  outline-offset: 3px;
-}
-
-@media (max-width: 480px) {
-  .whatsapp-flutuante {
-    right: max(1rem, env(safe-area-inset-right));
-    bottom: max(1rem, env(safe-area-inset-bottom));
-    height: 56px;
-    min-width: 56px;
-    padding: 0 12px;
-  }
 }
 
 .endereco-card {
@@ -1254,45 +1200,50 @@ p {
   min-width: 0;
 }
 
-.endereco-card .rotulo-perfil {
-  display: block;
-  margin-bottom: 7px;
+/* Cabeçalho da aba com o botão "Editar perfil" à direita */
+.view-cabecalho-acao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
 }
 
-.endereco-usuario {
-  overflow-wrap: anywhere;
-  color: var(--texto-principal);
-  font-size: 13px;
-}
-
-.icone-endereco {
-  display: grid;
-  width: 45px;
-  height: 45px;
+.botao-editar-perfil {
   flex-shrink: 0;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--superficie-ciano);
-  font-size: 20px;
 }
 
-.endereco-card > div:last-child {
+/* Grade do endereço: CEP | Logradouro / Bairro | Cidade | UF */
+.dados-endereco {
+  display: grid;
   min-width: 0;
+  flex: 1;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px 20px;
 }
 
-.endereco-card .rotulo-perfil {
-  display: block;
-  margin-bottom: 7px;
+.dados-endereco .campo-cep {
+  grid-column: span 2;
 }
 
-.endereco-usuario {
-  overflow-wrap: anywhere;
-  color: var(--texto-principal);
-  font-size: 13px;
+.dados-endereco .campo-logradouro {
+  grid-column: span 4;
+}
+
+.dados-endereco .campo-bairro {
+  grid-column: span 3;
+}
+
+.dados-endereco .campo-cidade {
+  grid-column: span 2;
+}
+
+.dados-endereco .campo-uf {
+  grid-column: span 1;
 }
 
 /* =========================================
-   BOTÃO WHATSAPP
+   BOTÃO FLUTUANTE DO WHATSAPP
 ========================================= */
 
 .whatsapp-flutuante {
@@ -1408,7 +1359,7 @@ p {
 }
 
 /* =========================================
-   MODAL DE DETALHES
+   MODAIS (usados pela edição de perfil)
 ========================================= */
 
 .dialog-detalhes {
@@ -1449,18 +1400,103 @@ p {
   font-size: 22px;
 }
 
-.detalhes-servico {
+/* =========================================
+   MODAL — EDITAR PERFIL
+========================================= */
+
+.dialog-editar {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.form-perfil {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px 18px;
+  margin-top: 22px;
 }
 
-.detalhes-servico .detalhe-servico {
-  padding-bottom: 13px;
-  border-bottom: 1px solid var(--borda);
+.campo-form {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  grid-column: span 6;
 }
 
-.detalhes-servico .detalhe-servico:last-child {
-  border-bottom: 0;
+.campo-form > span {
+  color: var(--texto-secundario);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.campo-form input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--fundo-pagina);
+  color: var(--texto-principal);
+  font-size: 14px;
+  transition: border-color var(--transicao-padrao);
+}
+
+.campo-form input:focus {
+  border-color: var(--ciano);
+  outline: none;
+}
+
+.campo-form input::placeholder {
+  color: rgb(170 179 200 / 50%);
+}
+
+.campo-form.campo-cep {
+  grid-column: span 2;
+}
+
+.campo-form.campo-logradouro {
+  grid-column: span 4;
+}
+
+.campo-form.campo-bairro {
+  grid-column: span 3;
+}
+
+.campo-form.campo-cidade {
+  grid-column: span 2;
+}
+
+.campo-form.campo-uf {
+  grid-column: span 1;
+}
+
+.form-erro {
+  padding: 10px 12px;
+  border: 1px solid rgb(255 82 82 / 25%);
+  border-radius: 10px;
+  background: rgb(255 82 82 / 8%);
+  color: var(--perigo);
+  font-size: 12px;
+  grid-column: 1 / -1;
+}
+
+.acoes-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+  grid-column: 1 / -1;
+}
+
+.acoes-form .botao-secundario {
+  padding: 0 18px;
+  font-size: 13px;
+}
+
+.acoes-form button:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 /* =========================================
@@ -1478,33 +1514,6 @@ p {
 
 .dashboard-view.ativo {
   display: block;
-}
-
-/* Item selecionado na sidebar */
-.link-menu {
-  position: relative;
-}
-
-.link-menu.ativo {
-  border-color: rgb(0 229 255 / 17%);
-  background: rgb(0 229 255 / 9%);
-  color: var(--ciano);
-}
-
-.link-menu.ativo::before {
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  left: -1px;
-  width: 3px;
-  border-radius: 0 4px 4px 0;
-  background: var(--ciano);
-  content: "";
-}
-
-.link-menu:focus-visible {
-  outline: 2px solid var(--ciano);
-  outline-offset: 3px;
 }
 
 /* Cabeçalho das views secundárias */
@@ -1533,7 +1542,7 @@ p {
   gap: 2rem;
 }
 
-/* Botão "Ver todos" pode trocar de view sem rolar até uma âncora */
+/* Botão "Ver todos" troca de view sem rolar até uma âncora */
 [data-view-target] {
   cursor: pointer;
 }
@@ -1541,18 +1550,10 @@ p {
 /* =========================================
    RESPONSIVIDADE — TABLETS
 ========================================= */
+
 @media (max-width: 1100px) {
   :root {
     --largura-sidebar: 220px;
-  }
-
-  .container {
-    width: min(100% - 32px, 1300px);
-  }
-
-  .dashboard {
-    grid-template-columns: 220px minmax(0, 1fr);
-    gap: 22px;
   }
 
   .conteudo-dashboard {
@@ -1591,9 +1592,14 @@ p {
     grid-template-columns: 1fr;
   }
 
+  /* Sidebar vira uma faixa no topo, em largura total */
   .sidebar-dashboard {
     position: static;
+    height: auto;
+    overflow-y: visible;
     padding: 15px;
+    border-right: 0;
+    border-bottom: 1px solid var(--borda);
   }
 
   .sidebar-cabecalho {
@@ -1619,31 +1625,29 @@ p {
   }
 
   .conteudo-dashboard {
-    width: 100%;
+    max-width: none;
+    padding: 24px 20px 48px;
+  }
+
+  .cabecalho-conteudo {
+    padding-inline: 16px;
   }
 }
 
 /* =========================================
    RESPONSIVIDADE — CELULARES
 ========================================= */
+
 @media (max-width: 760px) {
-  .container {
-    width: min(100% - 30px, 1600px);
+  :root {
+    --raio-card: 18px;
+    --altura-cabecalho: 72px;
+    --altura-logo: 48px;
   }
 
   .cabecalho-conteudo {
-    min-height: 70px;
+    min-height: var(--altura-cabecalho);
     gap: 12px;
-  }
-
-  .logo-dashboard {
-    width: 135px;
-    height: 45px;
-  }
-
-  .logo-dashboard img {
-    max-width: 135px;
-    max-height: 45px;
   }
 
   .acoes-cabecalho {
@@ -1670,14 +1674,6 @@ p {
     font-size: 12px;
   }
 
-  .dashboard-container {
-    padding-top: 20px;
-  }
-
-  .dashboard {
-    gap: 20px;
-  }
-
   .sidebar-dashboard {
     padding: 12px;
   }
@@ -1702,6 +1698,10 @@ p {
     width: 21px;
     height: 21px;
     font-size: 16px;
+  }
+
+  .conteudo-dashboard {
+    padding: 20px 16px 44px;
   }
 
   .breadcrumb-dashboard {
@@ -1786,34 +1786,52 @@ p {
     gap: 1.25rem;
   }
 
-  .botao-whatsapp {
-    right: 16px;
-    bottom: 16px;
-    width: 50px;
-    height: 50px;
-  }
-
   .dialog-conteudo {
     padding: 19px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Endereço no perfil */
+  .dados-endereco {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dados-endereco .campo-cep,
+  .dados-endereco .campo-logradouro,
+  .dados-endereco .campo-bairro {
+    grid-column: 1 / -1;
+  }
+
+  .dados-endereco .campo-cidade,
+  .dados-endereco .campo-uf {
+    grid-column: span 1;
+  }
+
+  /* Formulário de edição */
+  .campo-form.campo-cep,
+  .campo-form.campo-logradouro,
+  .campo-form.campo-bairro {
+    grid-column: 1 / -1;
+  }
+
+  .campo-form.campo-cidade,
+  .campo-form.campo-uf {
+    grid-column: span 3;
   }
 }
 
 /* =========================================
    RESPONSIVIDADE — TELAS MUITO PEQUENAS
 ========================================= */
-@media (max-width: 420px) {
-  .container {
-    width: calc(100% - 22px);
-  }
 
-  .logo-dashboard {
-    width: 105px;
-    height: 40px;
+@media (max-width: 420px) {
+  :root {
+    --altura-logo: 42px;
   }
 
   .logo-dashboard img {
-    max-width: 105px;
-    max-height: 40px;
+    max-width: 140px;
   }
 
   .acoes-cabecalho {
@@ -1860,180 +1878,7 @@ p {
     width: 100%;
   }
 }
-/* =========================================
-   PERFIL — BOTÃO EDITAR E ENDEREÇO SEPARADO
-========================================= */
 
-/* Cabeçalho da aba com o botão "Editar perfil" à direita */
-.view-cabecalho-acao {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px 24px;
-}
-
-.botao-editar-perfil {
-  flex-shrink: 0;
-}
-
-/* Grade do endereço: CEP | Logradouro / Bairro | Cidade | UF */
-.dados-endereco {
-  display: grid;
-  min-width: 0;
-  flex: 1;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px 20px;
-}
-
-.dados-endereco .campo-cep {
-  grid-column: span 2;
-}
-
-.dados-endereco .campo-logradouro {
-  grid-column: span 4;
-}
-
-.dados-endereco .campo-bairro {
-  grid-column: span 3;
-}
-
-.dados-endereco .campo-cidade {
-  grid-column: span 2;
-}
-
-.dados-endereco .campo-uf {
-  grid-column: span 1;
-}
-
-@media (max-width: 600px) {
-  .dados-endereco {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dados-endereco .campo-cep,
-  .dados-endereco .campo-logradouro,
-  .dados-endereco .campo-bairro {
-    grid-column: 1 / -1;
-  }
-
-  .dados-endereco .campo-cidade,
-  .dados-endereco .campo-uf {
-    grid-column: span 1;
-  }
-}
-
-/* =========================================
-   MODAL — EDITAR PERFIL
-========================================= */
-
-.dialog-editar {
-  width: min(640px, calc(100vw - 32px));
-}
-
-.form-perfil {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px 18px;
-  margin-top: 22px;
-}
-
-.campo-form {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 6px;
-  grid-column: span 6;
-}
-
-.campo-form > span {
-  color: var(--texto-secundario);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.campo-form input {
-  width: 100%;
-  height: 44px;
-  padding: 0 13px;
-  border: 1px solid var(--borda);
-  border-radius: 10px;
-  background: var(--azul-marinho-mais-escuro);
-  color: var(--texto-principal);
-  font-size: 14px;
-  transition: border-color var(--transicao-padrao);
-}
-
-.campo-form input:focus {
-  border-color: var(--ciano);
-  outline: none;
-}
-
-.campo-form input::placeholder {
-  color: rgb(170 179 200 / 50%);
-}
-
-.campo-form.campo-cep {
-  grid-column: span 2;
-}
-
-.campo-form.campo-logradouro {
-  grid-column: span 4;
-}
-
-.campo-form.campo-bairro {
-  grid-column: span 3;
-}
-
-.campo-form.campo-cidade {
-  grid-column: span 2;
-}
-
-.campo-form.campo-uf {
-  grid-column: span 1;
-}
-
-.form-erro {
-  padding: 10px 12px;
-  border: 1px solid rgb(255 82 82 / 25%);
-  border-radius: 10px;
-  background: rgb(255 82 82 / 8%);
-  color: var(--perigo);
-  font-size: 12px;
-  grid-column: 1 / -1;
-}
-
-.acoes-form {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 6px;
-  grid-column: 1 / -1;
-}
-
-.acoes-form .botao-secundario {
-  padding: 0 18px;
-  font-size: 13px;
-}
-
-.acoes-form button:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-
-@media (max-width: 600px) {
-  .campo-form.campo-cep,
-  .campo-form.campo-logradouro,
-  .campo-form.campo-bairro {
-    grid-column: 1 / -1;
-  }
-
-  .campo-form.campo-cidade,
-  .campo-form.campo-uf {
-    grid-column: span 3;
-  }
-}
 /* =========================================
    ACESSIBILIDADE
 ========================================= */
@@ -2145,167 +1990,5 @@ p {
   .acoes-notificacoes .botao-secundario {
     width: 100%;
     flex-basis: auto;
-  }
-
-  /* =========================================
-   AJUSTE DE POSICIONAMENTO DO DASHBOARD
-========================================= */
-
-  @media (min-width: 901px) {
-    .dashboard-container {
-      width: 100%;
-      padding-top: 24px;
-      padding-bottom: 40px;
-    }
-
-    .dashboard {
-      /* Posiciona o conjunto um pouco mais à esquerda */
-      width: min(calc(100% - 100px), 1500px);
-      max-width: 1500px;
-
-      margin-left: clamp(24px, 4vw, 64px);
-      margin-right: auto;
-
-      /* Sidebar + conteúdo */
-      display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
-      gap: 28px;
-
-      /* Permite que a sidebar acompanhe a altura */
-      align-items: stretch;
-    }
-
-    /* SIDEBAR */
-    .sidebar-dashboard {
-      position: sticky;
-      top: 104px;
-
-      width: 100%;
-      min-width: 0;
-      min-height: calc(100vh - 128px);
-
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-self: stretch;
-
-      box-sizing: border-box;
-    }
-
-    /* Conteúdo principal */
-    .conteudo-dashboard {
-      width: 100%;
-      min-width: 0;
-      max-width: none;
-    }
-  }
-
-  /* Tablets e celulares */
-  @media (max-width: 900px) {
-    .dashboard {
-      width: calc(100% - 32px);
-      margin-inline: auto;
-      grid-template-columns: minmax(0, 1fr);
-      align-items: start;
-    }
-
-    .sidebar-dashboard {
-      position: static;
-      min-height: auto;
-      width: 100%;
-    }
-  }
-  /* =========================================
-   AJUSTES DE LAYOUT (cole no FINAL do arquivo,
-   para sobrescrever media queries antigas)
-========================================= */
-
-  @media (max-width: 900px) {
-    .dashboard {
-      grid-template-columns: 1fr;
-    }
-
-    .sidebar-dashboard {
-      position: static;
-      height: auto;
-      overflow-y: visible;
-      border-right: 0;
-      border-bottom: 1px solid var(--borda);
-    }
-
-    .sidebar-ajuda {
-      margin-top: 24px;
-    }
-
-    .conteudo-dashboard {
-      max-width: none;
-      padding: 24px 20px 48px;
-    }
-
-    .cabecalho-conteudo {
-      padding-inline: 16px;
-    }
-  }
-  /* =========================================
-   PERFIL — BOTÃO EDITAR E ENDEREÇO SEPARADO
-========================================= */
-
-  /* Cabeçalho da aba com o botão "Editar perfil" à direita */
-  .view-cabecalho-acao {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px 24px;
-  }
-
-  .botao-editar-perfil {
-    flex-shrink: 0;
-  }
-
-  /* Grade do endereço: CEP | Logradouro / Bairro | Cidade | UF */
-  .dados-endereco {
-    display: grid;
-    min-width: 0;
-    flex: 1;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 16px 20px;
-  }
-
-  .dados-endereco .campo-cep {
-    grid-column: span 2;
-  }
-
-  .dados-endereco .campo-logradouro {
-    grid-column: span 4;
-  }
-
-  .dados-endereco .campo-bairro {
-    grid-column: span 3;
-  }
-
-  .dados-endereco .campo-cidade {
-    grid-column: span 2;
-  }
-
-  .dados-endereco .campo-uf {
-    grid-column: span 1;
-  }
-
-  @media (max-width: 600px) {
-    .dados-endereco {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .dados-endereco .campo-cep,
-    .dados-endereco .campo-logradouro,
-    .dados-endereco .campo-bairro {
-      grid-column: 1 / -1;
-    }
-
-    .dados-endereco .campo-cidade,
-    .dados-endereco .campo-uf {
-      grid-column: span 1;
-    }
   }
 }
