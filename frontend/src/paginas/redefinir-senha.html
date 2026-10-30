@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Nova senha | HVAC</title>
+    <link rel="icon" href="../../assets/logoHVAC.png" />
+    <link rel="stylesheet" href="../css/login.css" />
+    <link rel="stylesheet" href="../css/recuperacao-senha.css" />
+    <script src="../js/redefinir-senha.js" defer></script>
+  </head>
+  <body>
+    <main class="conteudo-central">
+      <section class="card">
+        <img src="../../assets/logoHVAC.png" alt="HVAC" />
+        <h1>Crie uma nova senha</h1>
+        <p>Use uma senha com pelo menos 8 caracteres. O link vale por 30 minutos e só pode ser usado uma vez.</p>
+        <form id="form-nova-senha">
+          <label for="nova-senha">Nova senha</label>
+          <input id="nova-senha" name="senha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required />
+          <label for="confirmar-senha">Confirme a nova senha</label>
+          <input id="confirmar-senha" name="confirmar_senha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required />
+          <p id="mensagem-nova-senha" role="status" aria-live="polite" hidden></p>
+          <button class="btn-entrar" id="btn-nova-senha" type="submit">Salvar nova senha →</button>
+        </form>
+        <a class="link-senha" href="./login.html">Voltar ao login</a>
+      </section>
+    </main>
+  </body>
+</html>

@@ -2204,9 +2204,9 @@ document.querySelector("#admin-notification-list").addEventListener("click", asy
   }
 });
 
-document.querySelector("#close-technician").addEventListener("click", () => document.querySelector("#technician-dialog").close());
-document.querySelector("#cancel-technician").addEventListener("click", () => document.querySelector("#technician-dialog").close());
-document.querySelector("#technician-form").addEventListener("submit", async (event) => {
+document.querySelector("#close-technician")?.addEventListener("click", () => document.querySelector("#technician-dialog").close());
+document.querySelector("#cancel-technician")?.addEventListener("click", () => document.querySelector("#technician-dialog").close());
+document.querySelector("#technician-form")?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formTecnico = event.currentTarget;
   if (!formTecnico.reportValidity()) return;

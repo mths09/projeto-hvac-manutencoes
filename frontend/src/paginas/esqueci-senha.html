@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Recuperar senha | HVAC</title>
+    <link rel="icon" href="../../assets/logoHVAC.png" />
+    <link rel="stylesheet" href="../css/login.css" />
+    <link rel="stylesheet" href="../css/recuperacao-senha.css" />
+    <script src="../js/esqueci-senha.js" defer></script>
+  </head>
+  <body>
+    <main class="conteudo-central">
+      <section class="card">
+        <img src="../../assets/logoHVAC.png" alt="HVAC" />
+        <h1>Recuperar senha</h1>
+        <p>Informe o e-mail da sua conta. Se ela estiver ativa, enviaremos um link para criar uma nova senha.</p>
+        <form id="form-recuperacao" action="../../../backend/solicitar_redefinicao_senha.php" method="post">
+          <label for="email-recuperacao">E-mail</label>
+          <input id="email-recuperacao" name="email" type="email" autocomplete="email" maxlength="254" required />
+          <p id="mensagem-recuperacao" role="status" aria-live="polite" hidden></p>
+          <button class="btn-entrar" id="btn-recuperacao" type="submit">Enviar link →</button>
+        </form>
+        <a class="link-senha" href="./login.html">Voltar ao login</a>
+      </section>
+    </main>
+  </body>
+</html>

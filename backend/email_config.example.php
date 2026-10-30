@@ -10,4 +10,6 @@ return [
     'app_password' => '',
     'from_email' => '',
     'from_name' => 'HVAC Lex Company',
+    'app_url' => '', // URL pública do projeto, sem barra final
 ];
+

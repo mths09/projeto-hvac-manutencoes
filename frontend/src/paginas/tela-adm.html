@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../css/dashboardAdmin.css" />
 
     <script src="../js/proteger-admin.js" defer></script>
-    <script src="../js/dashboardAdmin.js" defer></script>
+    <script src="../js/dashboardAdmin.js?v=20261030-5" defer></script>
   </head>
 
   <body>
@@ -93,6 +93,22 @@
     <noscript>
       <p>Ative o JavaScript do navegador para utilizar o painel.</p>
     </noscript>
+
+    <dialog id="notifications-dialog" class="admin-notifications-dialog" aria-labelledby="notifications-title">
+      <div class="order-dialog-heading">
+        <div>
+          <h2 id="notifications-title">Notificações</h2>
+          <p id="notifications-summary">0 não lida(s)</p>
+        </div>
+        <button type="button" class="order-dialog-close" id="close-notifications" aria-label="Fechar">×</button>
+      </div>
+      <p id="admin-notification-feedback" role="status" hidden></p>
+      <div id="admin-notification-list" class="admin-notification-list"></div>
+      <div class="form-actions">
+        <button type="button" class="secondary" id="mark-notifications-read">Marcar todas como lidas</button>
+        <button type="button" class="secondary" id="clear-read-notifications">Limpar notificações lidas</button>
+      </div>
+    </dialog>
 
     <dialog
       id="order-dialog"
