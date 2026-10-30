@@ -480,6 +480,21 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados, arra
              VALUES (?, ?, ?, 'PEDIDO_RECEBIDO', 'Pedido recebido', ?, 'SITE', 'ENVIADO', NOW())",
             [$idCliente, $idSolicitacao, $idAgendamento, $resposta['mensagem'] . ' Protocolo: ' . $dados['protocolo']]
         );
+        $admins = consultarAgendamento(
+            $conexao,
+            "SELECT id_usuario FROM usuario
+             WHERE ativo = 1 AND perfil IN ('admin', 'administrador') ORDER BY id_usuario"
+        )->get_result()->fetch_all(MYSQLI_ASSOC);
+        foreach ($admins as $admin) {
+            consultarAgendamento(
+                $conexao,
+                "INSERT INTO notificacao (id_destinatario, id_solicitacao, id_agendamento, tipo_evento,
+                 titulo, mensagem, canal, status_envio, enviada_em)
+                 VALUES (?, ?, ?, 'NOVA_SOLICITACAO', 'Novo pedido recebido', ?, 'SITE', 'ENVIADO', NOW())",
+                [(int) $admin['id_usuario'], $idSolicitacao, $idAgendamento,
+                 'O cliente ' . $dados['nome'] . ' enviou o pedido ' . $dados['protocolo'] . '.']
+            );
+        }
         $conexao->commit();
         return $resposta;
     } catch (Throwable $erro) {

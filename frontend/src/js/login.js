@@ -42,6 +42,7 @@ formularioLogin.addEventListener('submit', async (evento) => {
 
     const destinosPermitidos = {
       admin: './tela-adm.html',
+      tecnico: './tela-tecnico.html',
       cliente: './dashboard.html'
     };
 

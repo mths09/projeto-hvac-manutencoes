@@ -27,8 +27,8 @@ function transicoesStatusAdmin(): array
 {
     return [
         'SOLICITADO' => ['AGENDADO', 'CANCELADO'],
-        'AGENDADO' => ['EM_ANDAMENTO', 'CANCELADO'],
-        'EM_ANDAMENTO' => ['CONCLUIDO', 'CANCELADO'],
+        'AGENDADO' => ['CANCELADO'],
+        'EM_ANDAMENTO' => ['CANCELADO'],
         'CONCLUIDO' => [],
         'CANCELADO' => []
     ];
@@ -92,6 +92,7 @@ function normalizarNovoPedidoAdmin(mixed $entrada): array
         'id_tipo_servico' => $id('id_tipo_servico'),
         'id_disponibilidade' => $id('id_disponibilidade'),
         'id_tecnico' => $id('id_tecnico', true),
+        'id_cliente' => $id('id_cliente', true),
         'urgente' => $entrada['prioridade'] === 'urgente',
     ];
 }
@@ -161,6 +162,36 @@ try {
     }
 
     if ($metodo === 'GET') {
+        if (($_GET['acao'] ?? '') === 'buscar_cliente') {
+            $telefoneBusca = $_GET['telefone'] ?? '';
+            if (!is_string($telefoneBusca)) {
+                $conexao->close();
+                responderSolicitacoesAdmin(422, ['sucesso' => false, 'mensagem' => 'Telefone inválido.']);
+            }
+            $telefoneBusca = preg_replace('/\D/', '', $telefoneBusca);
+            if (!preg_match('/^[1-9][0-9]{9,10}$/D', $telefoneBusca)) {
+                $conexao->close();
+                responderSolicitacoesAdmin(200, ['sucesso' => true, 'clientes' => []]);
+            }
+            $clientes = consultarSolicitacoesAdmin(
+                $conexao,
+                "SELECT id_usuario AS id, nome, email, telefone
+                 FROM usuario
+                 WHERE ativo = 1 AND perfil = 'cliente' AND telefone = ?
+                 ORDER BY nome, id_usuario LIMIT 10",
+                [$telefoneBusca]
+            )->get_result()->fetch_all(MYSQLI_ASSOC);
+            foreach ($clientes as &$cliente) {
+                $cliente['id'] = (string) $cliente['id'];
+                $cliente['nome'] = (string) $cliente['nome'];
+                $cliente['email'] = (string) $cliente['email'];
+                $cliente['telefone'] = (string) $cliente['telefone'];
+            }
+            unset($cliente);
+            $conexao->close();
+            session_write_close();
+            responderSolicitacoesAdmin(200, ['sucesso' => true, 'clientes' => $clientes]);
+        }
         session_write_close();
         $stmtPedidos = consultarSolicitacoesAdmin(
             $conexao,
@@ -310,6 +341,20 @@ try {
         $novoPedido = normalizarNovoPedidoAdmin($entrada);
         $conexao->begin_transaction();
         try {
+            if ($novoPedido['id_cliente'] !== null) {
+                $clienteVinculado = consultarSolicitacoesAdmin(
+                    $conexao,
+                    "SELECT telefone FROM usuario
+                     WHERE id_usuario = ? AND perfil = 'cliente' AND ativo = 1
+                     LIMIT 1 FOR UPDATE",
+                    [$novoPedido['id_cliente']]
+                )->get_result()->fetch_assoc();
+                $telefonePedido = preg_replace('/\D/', '', $novoPedido['telefone']);
+                if (!$clienteVinculado || $telefonePedido === '' || !hash_equals((string) $clienteVinculado['telefone'], $telefonePedido)) {
+                    throw new DomainException('A conta selecionada não corresponde ao telefone. Busque e selecione o cliente novamente.');
+                }
+            }
+
             $servico = consultarSolicitacoesAdmin(
                 $conexao,
                 'SELECT id_tipo_servico FROM tipo_servico WHERE id_tipo_servico = ? AND ativo = 1 LIMIT 1 FOR UPDATE',
@@ -374,8 +419,8 @@ try {
                 "INSERT INTO solicitacao
                  (protocolo, id_cliente, id_criador, id_tipo_servico, id_status_atual, nome_contato,
                   telefone_contato, descricao_problema, urgente, origem, criada_em, atualizada_em)
-                 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', NOW(), NOW())",
-                [$protocoloNovo, $idAdministrador, $novoPedido['id_tipo_servico'], $status['id_status'],
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', NOW(), NOW())",
+                [$protocoloNovo, $novoPedido['id_cliente'], $idAdministrador, $novoPedido['id_tipo_servico'], $status['id_status'],
                  $novoPedido['nome'], $novoPedido['telefone'] !== '' ? $novoPedido['telefone'] : null,
                  $novoPedido['descricao'] !== '' ? $novoPedido['descricao'] : null, (int) $novoPedido['urgente']]
             );
@@ -415,7 +460,9 @@ try {
             session_write_close();
             responderSolicitacoesAdmin(201, [
                 'sucesso' => true,
-                'mensagem' => 'Pedido cadastrado e horário confirmado.',
+                'mensagem' => $novoPedido['id_cliente'] === null
+                    ? 'Pedido cadastrado e horário confirmado sem vínculo com uma conta.'
+                    : 'Pedido cadastrado, horário confirmado e vinculado à conta do cliente.',
                 'protocolo' => $protocoloNovo
             ]);
         } catch (DomainException $erro) {
@@ -435,16 +482,22 @@ try {
     try {
         $pedido = consultarSolicitacoesAdmin(
             $conexao,
-            'SELECT s.id_solicitacao, s.id_cliente, s.id_status_atual, ss.codigo AS status_codigo, ss.nome AS status_nome
+            "SELECT s.id_solicitacao, s.id_cliente, s.id_status_atual,
+                    ss.codigo AS status_codigo, ss.nome AS status_nome,
+                    COALESCE(NULLIF(s.email_contato, ''), u.email, '') AS email_cliente
              FROM solicitacao s
              INNER JOIN status_solicitacao ss ON ss.id_status = s.id_status_atual
+             LEFT JOIN usuario u ON u.id_usuario = s.id_cliente
              WHERE s.protocolo = ? AND s.arquivada_em IS NULL
-             LIMIT 1 FOR UPDATE',
+             LIMIT 1 FOR UPDATE",
             [$protocolo]
         )->get_result()->fetch_assoc();
         if (!$pedido) {
             throw new OutOfBoundsException('Pedido não encontrado.');
         }
+
+        $idNotificacaoEmail = null;
+        $dadosEmailStatus = null;
 
         if ($acao === 'status') {
             $novoCodigo = $entrada['status'] ?? null;
@@ -510,6 +563,7 @@ try {
                 [$pedido['id_solicitacao'], $pedido['id_status_atual'], $statusDestino['id_status'], $idAdministrador,
                  'Status alterado pelo painel administrativo.']
             );
+            $mensagemStatus = 'Seu pedido ' . $protocolo . ' agora está ' . $statusDestino['nome'] . '.';
             if ($pedido['id_cliente'] !== null) {
                 consultarSolicitacoesAdmin(
                     $conexao,
@@ -517,8 +571,24 @@ try {
                      titulo, mensagem, canal, status_envio, enviada_em)
                      VALUES (?, ?, ?, 'STATUS_ALTERADO', ?, ?, 'SITE', 'ENVIADO', NOW())",
                     [$pedido['id_cliente'], $pedido['id_solicitacao'], $agendamento['id_agendamento'] ?? null,
-                     'Status do pedido atualizado', 'Seu pedido ' . $protocolo . ' agora está ' . $statusDestino['nome'] . '.']
+                     'Status do pedido atualizado', $mensagemStatus]
                 );
+            }
+            $emailCliente = trim((string) ($pedido['email_cliente'] ?? ''));
+            if ($pedido['id_cliente'] !== null && filter_var($emailCliente, FILTER_VALIDATE_EMAIL)) {
+                consultarSolicitacoesAdmin(
+                    $conexao,
+                    "INSERT INTO notificacao (id_destinatario, id_solicitacao, id_agendamento,
+                     tipo_evento, titulo, mensagem, canal, status_envio)
+                     VALUES (?, ?, ?, 'STATUS_ALTERADO', 'Atualização do seu pedido', ?, 'EMAIL', 'PENDENTE')",
+                    [$pedido['id_cliente'], $pedido['id_solicitacao'], $agendamento['id_agendamento'] ?? null, $mensagemStatus]
+                );
+                $idNotificacaoEmail = (int) $conexao->insert_id;
+                $dadosEmailStatus = [
+                    'destinatario' => $emailCliente,
+                    'assunto' => 'Atualização do pedido ' . $protocolo . ' — HVAC Lex Company',
+                    'mensagem' => "Olá,\n\n{$mensagemStatus}\n\nAcesse sua conta para ver os detalhes do atendimento.\n\nHVAC Lex Company",
+                ];
             }
             $mensagem = 'Status atualizado para ' . $statusDestino['nome'] . '.';
         } else {
@@ -600,6 +670,21 @@ try {
         }
 
         $conexao->commit();
+        if ($idNotificacaoEmail !== null && $dadosEmailStatus !== null) {
+            require_once __DIR__ . '/email_notificacao.php';
+            $resultadoEmail = enviarEmailHvac(
+                $dadosEmailStatus['destinatario'],
+                $dadosEmailStatus['assunto'],
+                $dadosEmailStatus['mensagem']
+            );
+            consultarSolicitacoesAdmin(
+                $conexao,
+                'UPDATE notificacao SET status_envio = ?, enviada_em = ?, erro_envio = ? WHERE id_notificacao = ?',
+                [$resultadoEmail['enviado'] ? 'ENVIADO' : 'FALHA', $resultadoEmail['enviado'] ? date('Y-m-d H:i:s') : null,
+                 $resultadoEmail['enviado'] ? null : $resultadoEmail['erro'], $idNotificacaoEmail]
+            );
+            if (!$resultadoEmail['enviado']) $mensagem .= ' Aviso por e-mail não enviado: configure o SMTP do Gmail.';
+        }
         $conexao->close();
         session_write_close();
         responderSolicitacoesAdmin(200, ['sucesso' => true, 'mensagem' => $mensagem]);

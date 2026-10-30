@@ -1,3 +1,4 @@
 .vscode/
 banco/
 hvac_db.sql
+backend/email_config.local.php
