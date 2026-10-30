@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
+
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -22,6 +23,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
 
 try {
     $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+
     if (!session_start([
         'use_strict_mode' => true,
         'use_only_cookies' => true,
@@ -38,6 +40,7 @@ try {
         FILTER_VALIDATE_INT,
         ['options' => ['min_range' => 1]]
     );
+
     if ($idUsuario === false || $idUsuario === null) {
         responderDashboard(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta para continuar.']);
     }
@@ -65,8 +68,11 @@ try {
         responderDashboard(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta de cliente para continuar.']);
     }
 
+    // -----------------------------------------
+    // ENDEREÇO SEPARADO (CEP, logradouro, bairro, cidade, UF)
+    // -----------------------------------------
     $stmt = $conexao->prepare(
-        'SELECT endereco_informado
+        'SELECT endereco_informado, cep, logradouro, bairro, cidade, uf
          FROM endereco_usuario
          WHERE id_usuario = ? AND ativo = 1
          ORDER BY principal DESC, id_endereco_usuario DESC
@@ -75,8 +81,24 @@ try {
     $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
     $registroEndereco = $stmt->get_result()->fetch_assoc();
-    $endereco = $registroEndereco['endereco_informado'] ?? '';
     $stmt->close();
+
+    $endereco = null;
+
+    if ($registroEndereco) {
+        $logradouro = trim((string) ($registroEndereco['logradouro'] ?? ''));
+
+        $endereco = [
+            'cep'        => (string) ($registroEndereco['cep'] ?? ''),
+            // Se o logradouro estiver vazio (cadastro antigo), usa o texto completo
+            'logradouro' => $logradouro !== ''
+                ? $logradouro
+                : (string) ($registroEndereco['endereco_informado'] ?? ''),
+            'bairro'     => (string) ($registroEndereco['bairro'] ?? ''),
+            'cidade'     => (string) ($registroEndereco['cidade'] ?? ''),
+            'uf'         => (string) ($registroEndereco['uf'] ?? ''),
+        ];
+    }
 
     $stmt = $conexao->prepare(
         "SELECT
@@ -123,6 +145,7 @@ try {
     $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
     $resultado = $stmt->get_result();
+
     $servicos = [];
     $resumo = ['total' => 0, 'andamento' => 0, 'concluidos' => 0, 'agendados' => 0];
 
@@ -143,11 +166,14 @@ try {
             'tecnico' => (string) ($linha['tecnico'] ?? ''),
             'telefone_tecnico' => (string) ($linha['telefone_tecnico'] ?? '')
         ];
+
         $resumo['total']++;
+
         if ($linha['status'] === 'EM_ANDAMENTO') $resumo['andamento']++;
         if ($linha['status'] === 'CONCLUIDO') $resumo['concluidos']++;
         if ($linha['status'] === 'AGENDADO') $resumo['agendados']++;
     }
+
     $stmt->close();
 
     $stmt = $conexao->prepare(
@@ -161,7 +187,9 @@ try {
     $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
     $resultado = $stmt->get_result();
+
     $documentos = [];
+
     while ($linha = $resultado->fetch_assoc()) {
         $documentos[] = [
             'id' => (string) $linha['id'],
@@ -171,6 +199,7 @@ try {
             'protocolo' => (string) $linha['protocolo']
         ];
     }
+
     $stmt->close();
 
     $stmt = $conexao->prepare(
@@ -185,7 +214,9 @@ try {
     $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
     $resultado = $stmt->get_result();
+
     $notificacoes = [];
+
     while ($linha = $resultado->fetch_assoc()) {
         $notificacoes[] = [
             'id' => (string) $linha['id'],
@@ -195,6 +226,7 @@ try {
             'criada_em' => (string) $linha['criada_em']
         ];
     }
+
     $stmt->close();
     $conexao->close();
 
@@ -205,7 +237,7 @@ try {
             'nome' => (string) $usuario['nome'],
             'email' => (string) $usuario['email'],
             'telefone' => (string) $usuario['telefone'],
-            'endereco' => is_string($endereco) && trim($endereco) !== '' ? (string) $endereco : 'Endereço não cadastrado',
+            'endereco' => $endereco,
             'criado_em' => (string) $usuario['criado_em']
         ],
         'resumo' => $resumo,
@@ -215,6 +247,7 @@ try {
     ]);
 } catch (Throwable $erro) {
     if (isset($conexao) && $conexao instanceof mysqli) $conexao->close();
+
     error_log('Falha ao carregar dashboard do cliente: ' . get_class($erro) . ', código ' . $erro->getCode());
     responderDashboard(500, ['sucesso' => false, 'mensagem' => 'Não foi possível carregar o painel agora. Tente novamente.']);
 }

@@ -2,6 +2,7 @@
   "use strict";
 
   const API = "../../../backend/dashboard_cliente.php";
+  const API_ATUALIZAR_PERFIL = "../../../backend/atualizar_perfil.php";
 
   const elemento = (seletor, raiz = document) => raiz.querySelector(seletor);
 
@@ -12,6 +13,7 @@
   const statusDashboard = elemento("#status-dashboard");
   const botaoRecarregar = elemento("#recarregar-dashboard");
   const botaoSair = elemento("#botao-sair");
+
   const botaoNotificacoes = elemento("#btn-notificacoes");
   const painelNotificacoes = elemento("#painel-notificacoes");
   const listaNotificacoes = elemento("#lista-notificacoes");
@@ -19,16 +21,22 @@
   const avisoNotificacoes = elemento("#status-notificacoes");
   const botaoMarcarLidas = elemento("#marcar-lidas");
   const botaoLimparLidas = elemento("#limpar-lidas");
+
   const listaAndamento = elemento("#servicos-andamento");
   const listaHistorico = elemento("#historico-lista");
   const listaDocumentos = elemento("#documentos");
+
   const dialogoDetalhes = elemento("#dialog-detalhes");
   const conteudoDetalhes = elemento("#detalhes-servico");
 
+  // Edição de perfil
+  const dialogoEditar = elemento("#dialog-editar-perfil");
+  const formEditar = elemento("#form-editar-perfil");
+  const erroEditar = elemento("#erro-editar-perfil");
+  const botaoSalvarPerfil = elemento("#salvar-perfil");
+
   const linksMenu = elementos(".menu-sidebar .link-menu[data-view]");
-
   const views = elementos(".dashboard-view[data-view-content]");
-
   const breadcrumbView = elemento("#breadcrumb-view");
 
   const nomesViews = {
@@ -99,6 +107,39 @@
     ).toUpperCase();
   }
 
+  function formatarCep(valor) {
+    const digitos = String(valor || "")
+      .replace(/\D/g, "")
+      .slice(0, 8);
+
+    return digitos.length > 5
+      ? `${digitos.slice(0, 5)}-${digitos.slice(5)}`
+      : digitos;
+  }
+
+  function formatarTelefone(valor) {
+    let digitos = String(valor || "").replace(/\D/g, "");
+
+    // Remove o código do país (55) quando vier salvo assim.
+    if (digitos.length > 11 && digitos.startsWith("55")) {
+      digitos = digitos.slice(2);
+    }
+
+    digitos = digitos.slice(0, 11);
+
+    if (digitos.length <= 2) return digitos;
+
+    if (digitos.length <= 6) {
+      return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
+    }
+
+    if (digitos.length <= 10) {
+      return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
+    }
+
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
+  }
+
   // =========================================
   // SISTEMA DE VIEWS / ABAS
   // =========================================
@@ -153,7 +194,6 @@
     linksMenu.forEach((link) => {
       link.addEventListener("click", (evento) => {
         evento.preventDefault();
-
         trocarView(link.dataset.view);
       });
     });
@@ -172,11 +212,34 @@
   // PERFIL DO CLIENTE
   // =========================================
 
+  function atualizarEndereco(usuario = {}) {
+    // Aceita endereco como objeto, como campos soltos em usuario,
+    // ou como texto (formato antigo, vai para o logradouro).
+    let end = usuario;
+
+    if (usuario.endereco && typeof usuario.endereco === "object") {
+      end = usuario.endereco;
+    } else if (typeof usuario.endereco === "string") {
+      end = { logradouro: usuario.endereco };
+    }
+
+    const texto = (valor, padrao = "Não informado") =>
+      String(valor ?? "").trim() || padrao;
+
+    definirTexto(
+      ".endereco-cep",
+      end.cep ? formatarCep(end.cep) : "Não informado",
+    );
+    definirTexto(".endereco-logradouro", texto(end.logradouro));
+    definirTexto(".endereco-bairro", texto(end.bairro));
+    definirTexto(".endereco-cidade", texto(end.cidade));
+    definirTexto(".endereco-uf", texto(end.uf, "—").toUpperCase());
+  }
+
   function atualizarPerfil(usuario = {}) {
     const nome = String(usuario.nome || "Cliente").trim() || "Cliente";
 
     definirTexto(".nome-usuario", nome);
-
     definirTexto(".usuario .email-usuario", usuario.email || "Sua conta");
 
     definirTexto(
@@ -186,13 +249,12 @@
 
     definirTexto(
       ".telefone-usuario",
-      usuario.telefone || "Telefone não informado",
+      usuario.telefone
+        ? formatarTelefone(usuario.telefone)
+        : "Telefone não informado",
     );
 
-    definirTexto(
-      ".endereco-usuario",
-      usuario.endereco || "Endereço não cadastrado",
-    );
+    atualizarEndereco(usuario);
 
     const avatar = elemento("#avatar-usuario");
     const avatarPerfil = elemento("#avatar-meu-perfil");
@@ -242,7 +304,6 @@
 
   function criarServico(servico) {
     const cartao = criar("article", "cartao-servico");
-
     cartao.dataset.servicoId = String(servico.id ?? "");
 
     const cabecalho = criar("div", "cabecalho-servico");
@@ -281,9 +342,7 @@
 
     campos.forEach(([rotulo, valor]) => {
       const campo = criar("div", "detalhe-servico");
-
       campo.append(criar("span", "", rotulo), criar("strong", "", valor));
-
       informacoes.append(campo);
     });
 
@@ -303,10 +362,8 @@
     const acoes = criar("div", "acoes-servico");
 
     const botao = criar("button", "botao-detalhes", "Ver detalhes completos →");
-
     botao.type = "button";
     botao.dataset.detalhesId = String(servico.id ?? "");
-
     acoes.append(botao);
 
     // Link opcional para o WhatsApp do técnico.
@@ -321,11 +378,9 @@
         : `55${telefoneInformado}`;
 
       const link = criar("a", "botao-detalhes", "WhatsApp do técnico");
-
       link.href = `https://wa.me/${telefone}`;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-
       acoes.append(link);
     }
 
@@ -345,7 +400,6 @@
     listaHistorico.replaceChildren();
 
     const andamento = servicos.filter((item) => item.status === "EM_ANDAMENTO");
-
     const historico = servicos.filter((item) => item.status !== "EM_ANDAMENTO");
 
     if (andamento.length) {
@@ -471,14 +525,17 @@
 
       const texto = criar("div", "notificacao-texto");
 
+      // O PHP envia "criada_em" (antes o JS procurava "criado_em").
+      const dataNotificacao = notificacao.criada_em || notificacao.criado_em;
+
       texto.append(
         criar("strong", "", notificacao.titulo || "Notificação"),
         criar("p", "", notificacao.mensagem || ""),
         criar(
           "time",
           "",
-          notificacao.criado_em
-            ? formatarDataHora(notificacao.criado_em)
+          dataNotificacao
+            ? formatarDataHora(dataNotificacao)
             : notificacao.lida
               ? "Lida"
               : "Não lida",
@@ -490,7 +547,6 @@
     });
 
     const naoLidas = notificacoes.filter((item) => !item.lida).length;
-
     const lidas = notificacoes.length - naoLidas;
 
     const contador = elemento("#contador-notificacoes");
@@ -662,9 +718,7 @@
 
     campos.forEach(([rotulo, valor]) => {
       const linha = criar("div", "detalhe-servico");
-
       linha.append(criar("span", "", rotulo), criar("strong", "", valor));
-
       conteudoDetalhes.append(linha);
     });
 
@@ -672,6 +726,154 @@
       dialogoDetalhes.showModal();
     } else {
       dialogoDetalhes.setAttribute("open", "");
+    }
+  }
+
+  // =========================================
+  // EDITAR PERFIL
+  // =========================================
+
+  function mostrarErroEdicao(mensagem) {
+    if (!erroEditar) return;
+
+    erroEditar.textContent = mensagem || "";
+    erroEditar.hidden = !mensagem;
+  }
+
+  function abrirEdicaoPerfil() {
+    if (!dialogoEditar || !formEditar) return;
+
+    if (!dadosAtuais) {
+      console.warn("Os dados do perfil ainda não foram carregados.");
+      return;
+    }
+
+    const usuario = dadosAtuais.usuario || {};
+
+    const endereco =
+      usuario.endereco && typeof usuario.endereco === "object"
+        ? usuario.endereco
+        : {};
+
+    const campos = formEditar.elements;
+
+    campos.nome.value = usuario.nome || "";
+    campos.telefone.value = formatarTelefone(usuario.telefone);
+    campos.cep.value = formatarCep(endereco.cep);
+    campos.logradouro.value = endereco.logradouro || "";
+    campos.bairro.value = endereco.bairro || "";
+    campos.cidade.value = endereco.cidade || "";
+    campos.uf.value = String(endereco.uf || "").toUpperCase();
+
+    mostrarErroEdicao("");
+
+    if (botaoSalvarPerfil) {
+      botaoSalvarPerfil.disabled = false;
+      botaoSalvarPerfil.textContent = "Salvar alterações";
+    }
+
+    if (typeof dialogoEditar.showModal === "function") {
+      dialogoEditar.showModal();
+    } else {
+      dialogoEditar.setAttribute("open", "");
+    }
+
+    campos.nome.focus();
+  }
+
+  // Opcional: preenche rua, bairro, cidade e UF a partir do CEP (ViaCEP).
+  // Se não quiser essa função, apague este bloco e o evento "blur" do CEP.
+  async function buscarCep() {
+    if (!formEditar) return;
+
+    const campos = formEditar.elements;
+    const cep = campos.cep.value.replace(/\D/g, "");
+
+    if (cep.length !== 8) return;
+
+    try {
+      const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const dados = await resposta.json();
+
+      if (!resposta.ok || dados.erro) return;
+
+      if (dados.logradouro) campos.logradouro.value = dados.logradouro;
+      if (dados.bairro) campos.bairro.value = dados.bairro;
+      if (dados.localidade) campos.cidade.value = dados.localidade;
+      if (dados.uf) campos.uf.value = String(dados.uf).toUpperCase();
+    } catch (erro) {
+      // Sem internet ou ViaCEP fora do ar: o usuário preenche manualmente.
+      console.warn("Não foi possível consultar o CEP:", erro);
+    }
+  }
+
+  async function salvarPerfil(evento) {
+    evento.preventDefault();
+
+    if (!formEditar) return;
+
+    if (!csrf) {
+      mostrarErroEdicao(
+        "Token de segurança indisponível. Atualize o painel e tente novamente.",
+      );
+      return;
+    }
+
+    const campos = formEditar.elements;
+
+    const corpo = new URLSearchParams({
+      csrf,
+      nome: campos.nome.value.trim(),
+      telefone: campos.telefone.value.replace(/\D/g, ""),
+      cep: campos.cep.value.replace(/\D/g, ""),
+      logradouro: campos.logradouro.value.trim(),
+      bairro: campos.bairro.value.trim(),
+      cidade: campos.cidade.value.trim(),
+      uf: campos.uf.value.trim().toUpperCase(),
+    });
+
+    mostrarErroEdicao("");
+
+    if (botaoSalvarPerfil) {
+      botaoSalvarPerfil.disabled = true;
+      botaoSalvarPerfil.textContent = "Salvando…";
+    }
+
+    try {
+      const resposta = await fetch(API_ATUALIZAR_PERFIL, {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: corpo,
+      });
+
+      if (resposta.status === 401) {
+        window.location.replace("./login.html");
+        return;
+      }
+
+      const resultado = await resposta.json();
+
+      if (!resposta.ok || resultado?.sucesso !== true) {
+        throw new Error(
+          resultado?.mensagem || "Não foi possível salvar as alterações.",
+        );
+      }
+
+      dialogoEditar?.close();
+
+      await carregarDashboard();
+    } catch (erro) {
+      mostrarErroEdicao(erro.message || "Ocorreu um erro ao salvar.");
+    } finally {
+      if (botaoSalvarPerfil) {
+        botaoSalvarPerfil.disabled = false;
+        botaoSalvarPerfil.textContent = "Salvar alterações";
+      }
     }
   }
 
@@ -834,6 +1036,45 @@
     if (evento.target === dialogoDetalhes) {
       dialogoDetalhes.close();
     }
+  });
+
+  // =========================================
+  // EVENTOS DA EDIÇÃO DE PERFIL
+  // =========================================
+
+  elemento("#editar-perfil")?.addEventListener("click", abrirEdicaoPerfil);
+
+  elemento("#fechar-editar-perfil")?.addEventListener("click", () =>
+    dialogoEditar?.close(),
+  );
+
+  elemento("#cancelar-editar-perfil")?.addEventListener("click", () =>
+    dialogoEditar?.close(),
+  );
+
+  dialogoEditar?.addEventListener("click", (evento) => {
+    if (evento.target === dialogoEditar) {
+      dialogoEditar.close();
+    }
+  });
+
+  formEditar?.addEventListener("submit", salvarPerfil);
+
+  // Máscaras simples enquanto o usuário digita.
+  formEditar?.elements.telefone?.addEventListener("input", (evento) => {
+    evento.target.value = formatarTelefone(evento.target.value);
+  });
+
+  formEditar?.elements.cep?.addEventListener("input", (evento) => {
+    evento.target.value = formatarCep(evento.target.value);
+  });
+
+  formEditar?.elements.cep?.addEventListener("blur", buscarCep);
+
+  formEditar?.elements.uf?.addEventListener("input", (evento) => {
+    evento.target.value = evento.target.value
+      .replace(/[^a-zA-Z]/g, "")
+      .toUpperCase();
   });
 
   // =========================================
