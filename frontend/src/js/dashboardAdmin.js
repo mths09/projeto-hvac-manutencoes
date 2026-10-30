@@ -32,6 +32,13 @@ const content = document.querySelector("#content");
 const dialog = document.querySelector("#order-dialog");
 const form = document.querySelector("#order-form");
 
+const ANEXO_MAX_ARQUIVOS = 5;
+const ANEXO_TAMANHO_MAXIMO = 25 * 1024 * 1024;
+
+if (arquivo.size > ANEXO_TAMANHO_MAXIMO) {
+  return renderizarAnexos(`"${arquivo.name}" passa de 25 MB.`);
+}
+
 function localDate() {
   const now = new Date();
   return [
@@ -839,18 +846,15 @@ function renderRequests(history = false) {
         <div class="sr-label">Arquivos registrados</div>
         <ul>
           ${attachments
-            .map((file) => {
-              const id = String(file?.id || "");
-              if (!/^\d+$/.test(id)) return "";
-              const url = `../../../backend/anexo_imagem.php?id=${encodeURIComponent(id)}`;
-              const legenda = escapeHTML(file.legenda || "Anexo do pedido");
-              const midia = file.mime === "video/mp4"
-                ? `<video controls playsinline preload="metadata"><source src="${escapeHTML(url)}" type="video/mp4"></video>`
-                : ["image/jpeg", "image/png"].includes(file.mime)
-                  ? `<a href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHTML(url)}" alt="${legenda}" loading="lazy"></a>`
-                  : "";
-              return midia ? `<li class="sr-description">${midia}<span>${legenda}</span></li>` : "";
-            })
+            .map(
+              (file) => `
+            <li class="sr-description">
+              ${escapeHTML(
+                typeof file === "string" ? file : file?.name || "Arquivo",
+              )}
+            </li>
+          `,
+            )
             .join("")}
         </ul>
       `
