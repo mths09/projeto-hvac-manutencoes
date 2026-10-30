@@ -173,8 +173,35 @@ try {
         if ($linha['status'] === 'CONCLUIDO') $resumo['concluidos']++;
         if ($linha['status'] === 'AGENDADO') $resumo['agendados']++;
     }
-
     $stmt->close();
+
+    $stmt = $conexao->prepare(
+    "SELECT a.id_solicitacao, f.id_arquivo, f.mime_type, a.legenda
+     FROM anexo_solicitacao a
+     JOIN arquivo f ON f.id_arquivo = a.id_arquivo
+     JOIN solicitacao s ON s.id_solicitacao = a.id_solicitacao
+     WHERE s.id_cliente = ?
+       AND f.mime_type IN ('image/jpeg', 'image/png', 'video/mp4')
+     ORDER BY a.id_solicitacao, a.ordem, a.id_anexo"
+    );
+    $stmt->bind_param('i', $idUsuario);
+    $stmt->execute();
+    $linhasAnexos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    $anexosPorSolicitacao = [];
+    foreach ($linhasAnexos as $linha) {
+        $anexosPorSolicitacao[(string) $linha['id_solicitacao']][] = [
+            'id' => (string) $linha['id_arquivo'],
+            'mime' => (string) $linha['mime_type'],
+            'legenda' => (string) ($linha['legenda'] ?? ''),
+        ];
+    }
+
+    foreach ($servicos as &$servico) {
+        $servico['anexos'] = $anexosPorSolicitacao[$servico['id']] ?? [];
+    }
+    unset($servico);
 
     $stmt = $conexao->prepare(
         'SELECT d.id_documento AS id, d.titulo, d.tipo, d.emitido_em, s.protocolo
