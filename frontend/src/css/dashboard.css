@@ -1223,6 +1223,23 @@ p {
   outline-offset: 3px;
 }
 
+.galeria-anexos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.galeria-anexos img,
+.galeria-anexos video {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #080d1d;
+}
+
 @media (max-width: 480px) {
   .whatsapp-flutuante {
     right: max(1rem, env(safe-area-inset-right));

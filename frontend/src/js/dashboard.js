@@ -694,6 +694,43 @@
   // DETALHES DO SERVIÇO
   // =========================================
 
+  function criarVisualizadorAnexo(anexo) {
+    const id = String(anexo.id || "");
+    if (!/^\d+$/.test(id)) return null;
+
+    const url = `../../../backend/anexo_imagem.php?id=${encodeURIComponent(id)}`;
+    const figura = document.createElement("figure");
+
+    if (anexo.mime === "image/jpeg" || anexo.mime === "image/png") {
+      const imagem = document.createElement("img");
+      imagem.src = url;
+      imagem.alt = anexo.legenda || "Imagem anexada ao pedido";
+      imagem.loading = "lazy";
+      figura.append(imagem);
+    } else if (anexo.mime === "video/mp4") {
+      const video = document.createElement("video");
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+
+      const fonte = document.createElement("source");
+      fonte.src = url;
+      fonte.type = anexo.mime;
+      video.append(fonte);
+      figura.append(video);
+    } else {
+      return null;
+    }
+
+    if (anexo.legenda) {
+      const legenda = document.createElement("figcaption");
+      legenda.textContent = anexo.legenda;
+      figura.append(legenda);
+    }
+
+    return figura;
+  }
+
   function abrirDetalhes(id) {
     const servico = dadosAtuais?.servicos?.find(
       (item) => String(item.id) === String(id),
@@ -721,6 +758,18 @@
       linha.append(criar("span", "", rotulo), criar("strong", "", valor));
       conteudoDetalhes.append(linha);
     });
+
+    const galeria = document.createElement("div");
+    galeria.className = "galeria-anexos";
+
+    for (const anexo of servico.anexos || []) {
+      const visualizador = criarVisualizadorAnexo(anexo);
+      if (visualizador) galeria.append(visualizador);
+    }
+
+    if (galeria.childElementCount > 0) {
+      conteudoDetalhes.append(galeria);
+    }
 
     if (typeof dialogoDetalhes.showModal === "function") {
       dialogoDetalhes.showModal();
