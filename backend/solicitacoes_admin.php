@@ -224,6 +224,33 @@ try {
                 'total_documentos' => (int) $linha['total_documentos']
             ];
         }
+
+        // Anexos
+        $linhasAnexos = consultarSolicitacoesAdmin(
+            $conexao,
+            "SELECT a.id_solicitacao, f.id_arquivo, f.mime_type, a.legenda
+            FROM anexo_solicitacao a
+            JOIN arquivo f ON f.id_arquivo = a.id_arquivo
+            JOIN solicitacao s ON s.id_solicitacao = a.id_solicitacao
+            WHERE s.arquivada_em IS NULL
+                AND f.mime_type IN ('image/jpeg', 'image/png', 'video/mp4')
+            ORDER BY a.id_solicitacao, a.ordem, a.id_anexo"
+        )->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $anexosPorSolicitacao = [];
+        foreach($linhasAnexos as $linha) {
+            $anexosPorSolicitacao[(string) $linha['id_solicitacao']][] = [
+                'id' => (string) $linha['id_arquivo'],
+                'mime' => (string) $linha['mime_type'],
+                'legenda' => (string) ($linha['legenda'] ?? ''),
+            ];
+        }
+
+        foreach ($pedidos as &$pedido) {
+            $pedido['anexos'] = $anexosPorSolicitacao[$pedido['id']] ?? [];
+        }
+        unset($pedido);
+
         $linhasTriagem = consultarSolicitacoesAdmin(
             $conexao,
             "SELECT tr.id_solicitacao, p.enunciado,

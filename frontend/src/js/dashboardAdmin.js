@@ -54,7 +54,8 @@ function normalizarPedido(pedido) {
     technicianId: String(pedido.tecnico_id || ""),
     date: inicio ? inicio.slice(0, 10) : criado.slice(0, 10),
     time: inicio ? inicio.slice(11, 16) : "—",
-    status: STATUS_LABELS[codigoStatus] || String(pedido.status_nome || codigoStatus),
+    status:
+      STATUS_LABELS[codigoStatus] || String(pedido.status_nome || codigoStatus),
     statusCode: codigoStatus,
     statusOptions: Array.isArray(pedido.status_permitidos)
       ? pedido.status_permitidos.filter((codigo) => STATUS_LABELS[codigo])
@@ -63,12 +64,20 @@ function normalizarPedido(pedido) {
     createdAt: criado.slice(0, 10),
     description: String(pedido.descricao || ""),
     address: String(pedido.endereco || ""),
-    triage: Array.isArray(pedido.triagem) ? pedido.triagem.map((item) => ({
-      question: String(item.pergunta || ""),
-      answer: String(item.resposta || ""),
-    })) : [],
+    triage: Array.isArray(pedido.triagem)
+      ? pedido.triagem.map((item) => ({
+          question: String(item.pergunta || ""),
+          answer: String(item.resposta || ""),
+        }))
+      : [],
     totalDocuments: Number(pedido.total_documentos) || 0,
-    attachments: [],
+    attachments: Array.isArray(pedido.anexos)
+      ? pedido.anexos.map((anexo) => ({
+          id: String(anexo.id),
+          mime: String(anexo.mime),
+          legenda: String(anexo.legenda || ""),
+        }))
+      : [],
   };
 }
 
@@ -89,11 +98,21 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
       window.location.replace("./login.html");
       return;
     }
-    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.pedidos) || !Array.isArray(dados.tecnicos) || !Array.isArray(dados.servicos)) {
-      throw new Error(dados?.mensagem || "Não foi possível carregar as solicitações.");
+    if (
+      !resposta.ok ||
+      dados?.sucesso !== true ||
+      !Array.isArray(dados.pedidos) ||
+      !Array.isArray(dados.tecnicos) ||
+      !Array.isArray(dados.servicos)
+    ) {
+      throw new Error(
+        dados?.mensagem || "Não foi possível carregar as solicitações.",
+      );
     }
     if (typeof dados.csrf !== "string") {
-      throw new Error("O servidor não forneceu a proteção de sessão do painel.");
+      throw new Error(
+        "O servidor não forneceu a proteção de sessão do painel.",
+      );
     }
     orders = dados.pedidos.map(normalizarPedido);
     technicians = dados.tecnicos.map((tecnico) => ({
@@ -112,7 +131,8 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
     if (mostrarCarregamento) render();
   } catch (erro) {
     adminLoading = false;
-    adminError = "Não foi possível carregar as solicitações do banco. Verifique o servidor e tente novamente.";
+    adminError =
+      "Não foi possível carregar as solicitações do banco. Verifique o servidor e tente novamente.";
     console.error(erro);
     render();
   }
@@ -129,8 +149,16 @@ async function enviarAcaoAdmin(pedido, acao, valores, controle) {
       method: "POST",
       credentials: "same-origin",
       cache: "no-store",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ csrf: adminCsrf, protocolo: pedido.id, acao, ...valores }),
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        csrf: adminCsrf,
+        protocolo: pedido.id,
+        acao,
+        ...valores,
+      }),
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
@@ -138,7 +166,9 @@ async function enviarAcaoAdmin(pedido, acao, valores, controle) {
       return;
     }
     if (!resposta.ok || dados?.sucesso !== true) {
-      throw new Error(dados?.mensagem || "Não foi possível atualizar o pedido.");
+      throw new Error(
+        dados?.mensagem || "Não foi possível atualizar o pedido.",
+      );
     }
     adminMessage = dados.mensagem || "Alteração salva.";
     if (renderSchedule.state) {
@@ -158,7 +188,10 @@ async function enviarAcaoAdmin(pedido, acao, valores, controle) {
 }
 
 function iniciais(nome) {
-  const partes = String(nome || "").trim().split(/\s+/).filter(Boolean);
+  const partes = String(nome || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
   if (!partes.length) return "?";
   return `${partes[0][0]}${partes.length > 1 ? partes.at(-1)[0] : ""}`.toUpperCase();
 }
@@ -227,9 +260,14 @@ function scheduleRow(order) {
 function renderOverview() {
   const todayOrders = sorted(orders.filter((order) => order.date === TODAY));
   const urgentOrders = sorted(
-    orders.filter((order) => order.urgent && !["CONCLUIDO", "CANCELADO"].includes(order.statusCode)),
+    orders.filter(
+      (order) =>
+        order.urgent && !["CONCLUIDO", "CANCELADO"].includes(order.statusCode),
+    ),
   );
-  const pending = orders.filter((order) => order.statusCode === "SOLICITADO").length;
+  const pending = orders.filter(
+    (order) => order.statusCode === "SOLICITADO",
+  ).length;
   const ongoing = orders.filter(
     (order) => order.status === "Em Andamento",
   ).length;
@@ -410,7 +448,9 @@ function renderRequests(history = false) {
     ["Cancelado", "Cancelados"],
   ];
 
-  const activeOrders = orders.filter((order) => order.statusCode !== "CONCLUIDO");
+  const activeOrders = orders.filter(
+    (order) => order.statusCode !== "CONCLUIDO",
+  );
 
   if (!filters.some(([value]) => value === filter)) {
     filter = "Todos";
@@ -437,7 +477,9 @@ function renderRequests(history = false) {
 
     const phone = order.phone || "";
     const documentCount = Number(order.totalDocuments) || 0;
-    const statusOptions = [...new Set([order.statusCode, ...order.statusOptions])];
+    const statusOptions = [
+      ...new Set([order.statusCode, ...order.statusOptions]),
+    ];
 
     return `
       <article class="sr-card ${order.urgent ? "urgent-card" : ""}">
@@ -508,12 +550,14 @@ function renderRequests(history = false) {
               aria-label="Status de ${escapeHTML(order.id)}"
             >
               ${statusOptions
-                .map((codigo) => `
+                .map(
+                  (codigo) => `
                 <option
                   value="${escapeHTML(codigo)}"
                   ${order.statusCode === codigo ? "selected" : ""}
                 >${escapeHTML(STATUS_LABELS[codigo])}</option>
-              `)
+              `,
+                )
                 .join("")}
             </select>
           </label>
@@ -527,12 +571,14 @@ function renderRequests(history = false) {
             >
               <option value="" ${order.technicianId === "" ? "selected" : ""}>Não atribuído</option>
               ${technicians
-                .map((tecnico) => `
+                .map(
+                  (tecnico) => `
                 <option
                   value="${escapeHTML(tecnico.id)}"
                   ${tecnico.id === order.technicianId ? "selected" : ""}
                 >${escapeHTML(tecnico.name)}</option>
-              `)
+              `,
+                )
                 .join("")}
             </select>
           </label>
@@ -659,9 +705,19 @@ function renderRequests(history = false) {
 
     if (statusId) {
       if (!order.statusOptions.includes(event.target.value)) return;
-      void enviarAcaoAdmin(order, "status", { status: event.target.value }, event.target);
+      void enviarAcaoAdmin(
+        order,
+        "status",
+        { status: event.target.value },
+        event.target,
+      );
     } else {
-      void enviarAcaoAdmin(order, "tecnico", { tecnico_id: event.target.value }, event.target);
+      void enviarAcaoAdmin(
+        order,
+        "tecnico",
+        { tecnico_id: event.target.value },
+        event.target,
+      );
     }
   });
 
@@ -686,9 +742,16 @@ function renderRequests(history = false) {
       if (!confirm(`Cancelar o pedido ${order.id} de ${order.client}?`)) {
         return;
       }
-      const controle = list.querySelector(`[data-sr-status="${CSS.escape(order.id)}"]`);
+      const controle = list.querySelector(
+        `[data-sr-status="${CSS.escape(order.id)}"]`,
+      );
       if (controle) {
-        void enviarAcaoAdmin(order, "status", { status: "CANCELADO" }, controle);
+        void enviarAcaoAdmin(
+          order,
+          "status",
+          { status: "CANCELADO" },
+          controle,
+        );
       }
       return;
     }
@@ -759,9 +822,11 @@ function renderRequests(history = false) {
         <div class="sr-label">Respostas da triagem</div>
         <ul class="sr-triage-list">
           ${triage
-            .map((item) => `
+            .map(
+              (item) => `
               <li class="sr-description"><strong>${escapeHTML(item.question)}</strong><br>${escapeHTML(item.answer)}</li>
-            `)
+            `,
+            )
             .join("")}
         </ul>
       `
@@ -774,15 +839,18 @@ function renderRequests(history = false) {
         <div class="sr-label">Arquivos registrados</div>
         <ul>
           ${attachments
-            .map(
-              (file) => `
-            <li class="sr-description">
-              ${escapeHTML(
-                typeof file === "string" ? file : file?.name || "Arquivo",
-              )}
-            </li>
-          `,
-            )
+            .map((file) => {
+              const id = String(file?.id || "");
+              if (!/^\d+$/.test(id)) return "";
+              const url = `../../../backend/anexo_imagem.php?id=${encodeURIComponent(id)}`;
+              const legenda = escapeHTML(file.legenda || "Anexo do pedido");
+              const midia = file.mime === "video/mp4"
+                ? `<video controls playsinline preload="metadata"><source src="${escapeHTML(url)}" type="video/mp4"></video>`
+                : ["image/jpeg", "image/png"].includes(file.mime)
+                  ? `<a href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHTML(url)}" alt="${legenda}" loading="lazy"></a>`
+                  : "";
+              return midia ? `<li class="sr-description">${midia}<span>${legenda}</span></li>` : "";
+            })
             .join("")}
         </ul>
       `
@@ -845,11 +913,19 @@ function renderSchedule() {
           window.location.replace("./login.html");
           throw new Error("Sessão administrativa encerrada.");
         }
-        if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.horarios)) {
-          throw new Error(dados?.mensagem || "Não foi possível carregar a agenda.");
+        if (
+          !resposta.ok ||
+          dados?.sucesso !== true ||
+          !Array.isArray(dados.horarios)
+        ) {
+          throw new Error(
+            dados?.mensagem || "Não foi possível carregar a agenda.",
+          );
         }
         if (typeof dados.csrf !== "string") {
-          throw new Error("O servidor não forneceu a proteção de sessão do painel.");
+          throw new Error(
+            "O servidor não forneceu a proteção de sessão do painel.",
+          );
         }
         if (state.requestedMonth !== monthKey) return;
         adminCsrf = dados.csrf;
@@ -858,16 +934,27 @@ function renderSchedule() {
           date: String(horario.inicio || "").slice(0, 10),
           time: String(horario.inicio || "").slice(11, 16),
           endTime: String(horario.fim || "").slice(11, 16),
-          status: horario.estado === "blocked" ? "blocked" : horario.estado === "full" ? "occupied" : "free",
+          status:
+            horario.estado === "blocked"
+              ? "blocked"
+              : horario.estado === "full"
+                ? "occupied"
+                : "free",
           capacity: Number(horario.capacidade) || 1,
           bookings: Number(horario.reservas) || 0,
-          protocols: Array.isArray(horario.protocolos) ? horario.protocolos.map(String) : [],
+          protocols: Array.isArray(horario.protocolos)
+            ? horario.protocolos.map(String)
+            : [],
         }));
         state.loadedMonth = monthKey;
         state.error = "";
       })
       .catch((erro) => {
-        if (state.requestedMonth !== monthKey || erro.message === "Sessão administrativa encerrada.") return;
+        if (
+          state.requestedMonth !== monthKey ||
+          erro.message === "Sessão administrativa encerrada."
+        )
+          return;
         state.loadedMonth = monthKey;
         state.error = erro.message || "Não foi possível carregar a agenda.";
       })
@@ -1248,7 +1335,10 @@ function renderSchedule() {
         method: "POST",
         credentials: "same-origin",
         cache: "no-store",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ csrf: adminCsrf, acao, ...valores }),
       });
       const dados = await resposta.json();
@@ -1257,7 +1347,9 @@ function renderSchedule() {
         return;
       }
       if (!resposta.ok || dados?.sucesso !== true) {
-        throw new Error(dados?.mensagem || "Não foi possível atualizar a agenda.");
+        throw new Error(
+          dados?.mensagem || "Não foi possível atualizar a agenda.",
+        );
       }
       state.notice = dados.mensagem || "Agenda atualizada.";
       state.addingTime = false;
@@ -1273,7 +1365,8 @@ function renderSchedule() {
   }
 
   const selectedSlots = slotsFor(state.selected);
-  const count = (status) => selectedSlots.filter((slot) => slot.status === status).length;
+  const count = (status) =>
+    selectedSlots.filter((slot) => slot.status === status).length;
 
   const firstWeekday = new Date(state.year, state.month, 1).getDay();
   const totalDays = new Date(state.year, state.month + 1, 0).getDate();
@@ -1284,7 +1377,18 @@ function renderSchedule() {
 
   const monthTitle = monthText.charAt(0).toUpperCase() + monthText.slice(1);
   const labels = { free: "Livre", occupied: "Lotado", blocked: "Bloqueado" };
-  const horariosPadrao = ["07:00", "08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+  const horariosPadrao = [
+    "07:00",
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+  ];
 
   content.innerHTML = `
     <section class="agenda-layout">
@@ -1365,7 +1469,9 @@ function renderSchedule() {
           <button class="agenda-add" id="agenda-add" ${state.busy || state.loading || state.selected < localDate() || state.selected > dateAfterDays(30) ? "disabled" : ""}>+ Horário</button>
         </div>
 
-        ${state.addingTime ? `
+        ${
+          state.addingTime
+            ? `
           <form class="agenda-add-row" id="agenda-add-form">
             <select name="inicio" aria-label="Horário de início" required ${state.busy || state.loading ? "disabled" : ""}>
               ${horariosPadrao.map((hora) => `<option value="${hora}" ${hora === "07:00" ? "selected" : ""}>${hora}</option>`).join("")}
@@ -1381,17 +1487,20 @@ function renderSchedule() {
             <button class="agenda-add" type="submit" ${state.busy || state.loading ? "disabled" : ""}>Adicionar</button>
             <button class="agenda-cancel" type="button" data-cancel-add ${state.busy || state.loading ? "disabled" : ""}>Cancelar</button>
           </form>
-        ` : ""}
+        `
+            : ""
+        }
 
         <div class="agenda-slots">
-          ${state.loading
-            ? '<div class="agenda-empty">Carregando horários do banco…</div>'
-            : !selectedSlots.length && state.error
-              ? `<div class="agenda-empty" role="status">${escapeHTML(state.error)}<br><button class="agenda-refresh" data-retry>↻ Tentar novamente</button></div>`
-              : selectedSlots.length
-                ? selectedSlots
-              .map(
-                (slot) => `
+          ${
+            state.loading
+              ? '<div class="agenda-empty">Carregando horários do banco…</div>'
+              : !selectedSlots.length && state.error
+                ? `<div class="agenda-empty" role="status">${escapeHTML(state.error)}<br><button class="agenda-refresh" data-retry>↻ Tentar novamente</button></div>`
+                : selectedSlots.length
+                  ? selectedSlots
+                      .map(
+                        (slot) => `
             <article class="agenda-slot ${slot.status}">
               <div class="agenda-slot-header">
                 <strong>${escapeHTML(slot.time)}–${escapeHTML(slot.endTime)}</strong>
@@ -1400,11 +1509,12 @@ function renderSchedule() {
 
               <p class="agenda-slot-meta">${slot.bookings} de ${slot.capacity} vagas ocupadas</p>
               ${slot.protocols.length ? `<p class="agenda-booking">${slot.protocols.map(escapeHTML).join(", ")}</p>` : ""}
-              ${slot.bookings > 0 && slot.status !== "blocked"
-                ? '<p class="agenda-locked">Não pode ser bloqueado ou removido enquanto houver reservas ativas.</p>'
-                : slot.status === "occupied"
-                  ? '<p class="agenda-locked">Capacidade atingida.</p>'
-                  : `
+              ${
+                slot.bookings > 0 && slot.status !== "blocked"
+                  ? '<p class="agenda-locked">Não pode ser bloqueado ou removido enquanto houver reservas ativas.</p>'
+                  : slot.status === "occupied"
+                    ? '<p class="agenda-locked">Capacidade atingida.</p>'
+                    : `
                 <div class="agenda-slot-actions">
                   <button
                     class="agenda-toggle"
@@ -1421,9 +1531,9 @@ function renderSchedule() {
               }
             </article>
           `,
-              )
-              .join("")
-                : `
+                      )
+                      .join("")
+                  : `
             <div class="agenda-empty">
               Nenhum horário disponível. Clique em “+ Horário” para adicionar.
             </div>
@@ -1452,7 +1562,10 @@ function renderSchedule() {
 
       state.year = next.getFullYear();
       state.month = next.getMonth();
-      const dia = Math.min(Number(state.selected.slice(8, 10)), new Date(state.year, state.month + 1, 0).getDate());
+      const dia = Math.min(
+        Number(state.selected.slice(8, 10)),
+        new Date(state.year, state.month + 1, 0).getDate(),
+      );
       state.selected = dateKey(state.year, state.month, dia);
       renderSchedule();
       return;
@@ -1472,11 +1585,17 @@ function renderSchedule() {
     }
 
     if (button.dataset.toggleId) {
-      const slot = state.slots.find((item) => item.id === button.dataset.toggleId);
+      const slot = state.slots.find(
+        (item) => item.id === button.dataset.toggleId,
+      );
       if (slot) {
         const acao = slot.status === "blocked" ? "liberar" : "bloquear";
         const verbo = acao === "liberar" ? "liberar" : "bloquear";
-        if (window.confirm(`Deseja ${verbo} o horário ${slot.time}–${slot.endTime}?`)) {
+        if (
+          window.confirm(
+            `Deseja ${verbo} o horário ${slot.time}–${slot.endTime}?`,
+          )
+        ) {
           enviarAcaoAgenda(acao, { horario_id: slot.id });
         }
       }
@@ -1484,8 +1603,15 @@ function renderSchedule() {
     }
 
     if (button.dataset.removeId) {
-      const slot = state.slots.find((item) => item.id === button.dataset.removeId);
-      if (slot && window.confirm(`Remover o horário ${slot.time}–${slot.endTime} da agenda?`)) {
+      const slot = state.slots.find(
+        (item) => item.id === button.dataset.removeId,
+      );
+      if (
+        slot &&
+        window.confirm(
+          `Remover o horário ${slot.time}–${slot.endTime} da agenda?`,
+        )
+      ) {
         enviarAcaoAgenda("remover", { horario_id: slot.id });
       }
       return;
@@ -1514,21 +1640,31 @@ function renderSchedule() {
     const atualizarFimPadrao = (valor) => {
       if (fimInput.dataset.editado === "true" || !valor) return;
       const partes = valor.split(":").map(Number);
-      if (partes[0] < 23) fimInput.value = String(partes[0] + 1).padStart(2, "0") + ":" + String(partes[1]).padStart(2, "0");
+      if (partes[0] < 23)
+        fimInput.value =
+          String(partes[0] + 1).padStart(2, "0") +
+          ":" +
+          String(partes[1]).padStart(2, "0");
     };
     inicioInput.addEventListener("change", () => {
       inicioPersonalizado.value = "";
       atualizarFimPadrao(inicioInput.value);
     });
-    inicioPersonalizado.addEventListener("input", () => atualizarFimPadrao(inicioPersonalizado.value));
-    fimInput.addEventListener("input", () => { fimInput.dataset.editado = "true"; });
+    inicioPersonalizado.addEventListener("input", () =>
+      atualizarFimPadrao(inicioPersonalizado.value),
+    );
+    fimInput.addEventListener("input", () => {
+      fimInput.dataset.editado = "true";
+    });
     addForm.addEventListener("submit", (event) => {
       event.preventDefault();
       if (!addForm.reportValidity()) return;
       const formData = new FormData(addForm);
       const valores = {
         data: state.selected,
-        inicio: String(formData.get("inicioPersonalizado") || formData.get("inicio") || ""),
+        inicio: String(
+          formData.get("inicioPersonalizado") || formData.get("inicio") || "",
+        ),
         fim: String(formData.get("fim") || ""),
         capacidade: String(formData.get("capacidade") || "1"),
       };
@@ -1557,21 +1693,38 @@ async function carregarPortfolioAdmin() {
       window.location.replace("./login.html");
       return;
     }
-    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.categorias) || !Array.isArray(dados.itens)) {
-      throw new Error(dados?.mensagem || "Não foi possível carregar o portfólio.");
+    if (
+      !resposta.ok ||
+      dados?.sucesso !== true ||
+      !Array.isArray(dados.categorias) ||
+      !Array.isArray(dados.itens)
+    ) {
+      throw new Error(
+        dados?.mensagem || "Não foi possível carregar o portfólio.",
+      );
     }
     if (typeof dados.csrf === "string") adminCsrf = dados.csrf;
     portfolioCategories = dados.categorias.map((categoria) => ({
-      id: String(categoria.id), name: String(categoria.nome), color: String(categoria.cor || "#00d8f3"),
+      id: String(categoria.id),
+      name: String(categoria.nome),
+      color: String(categoria.cor || "#00d8f3"),
     }));
     portfolioItems = dados.itens.map((item) => ({
-      id: String(item.id), categoryId: String(item.id_categoria), category: String(item.categoria || "Sem categoria"),
-      title: String(item.titulo || ""), description: String(item.descricao || ""), location: String(item.localidade_publica || ""),
-      image: String(item.imagem_url || ""), imageName: String(item.imagem_nome || ""), published: Boolean(item.publicado), createdAt: String(item.criado_em || "").slice(0, 10),
+      id: String(item.id),
+      categoryId: String(item.id_categoria),
+      category: String(item.categoria || "Sem categoria"),
+      title: String(item.titulo || ""),
+      description: String(item.descricao || ""),
+      location: String(item.localidade_publica || ""),
+      image: String(item.imagem_url || ""),
+      imageName: String(item.imagem_nome || ""),
+      published: Boolean(item.publicado),
+      createdAt: String(item.criado_em || "").slice(0, 10),
     }));
     portfolioLoaded = true;
   } catch (erro) {
-    portfolioError = erro.message || "Não foi possível carregar o portfólio do banco.";
+    portfolioError =
+      erro.message || "Não foi possível carregar o portfólio do banco.";
   } finally {
     portfolioLoading = false;
     if (page === "portfolio") renderPortfolio();
@@ -1591,7 +1744,8 @@ async function enviarPortfolio(formData) {
     window.location.replace("./login.html");
     throw new Error("Entre como administrador para continuar.");
   }
-  if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível salvar o item.");
+  if (!resposta.ok || dados?.sucesso !== true)
+    throw new Error(dados?.mensagem || "Não foi possível salvar o item.");
   return dados;
 }
 
@@ -1613,7 +1767,9 @@ function abrirPortfolioModal(item = null) {
       <div class="form-actions"><button type="button" class="secondary" data-cancel>Cancelar</button><button type="submit" class="primary">${editando ? "Salvar alterações" : "Adicionar item"}</button></div>
     </form>`;
   document.body.appendChild(modal);
-  modal.querySelector("[data-cancel]").addEventListener("click", () => modal.close());
+  modal
+    .querySelector("[data-cancel]")
+    .addEventListener("click", () => modal.close());
   modal.querySelector("form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const formElement = event.currentTarget;
@@ -1645,16 +1801,22 @@ function abrirPortfolioModal(item = null) {
 }
 
 function renderPortfolio() {
-  if (!portfolioLoaded && !portfolioLoading && !portfolioError) void carregarPortfolioAdmin();
+  if (!portfolioLoaded && !portfolioLoading && !portfolioError)
+    void carregarPortfolioAdmin();
   const categorias = [
     { id: "Todos", name: "Todos", count: portfolioItems.length },
     ...portfolioCategories.map((categoria) => ({
       ...categoria,
-      count: portfolioItems.filter((item) => item.categoryId === categoria.id).length,
+      count: portfolioItems.filter((item) => item.categoryId === categoria.id)
+        .length,
     })),
   ];
-  if (!categorias.some((categoria) => categoria.id === portfolioFilter)) portfolioFilter = "Todos";
-  const itensVisiveis = portfolioItems.filter((item) => portfolioFilter === "Todos" || item.categoryId === portfolioFilter);
+  if (!categorias.some((categoria) => categoria.id === portfolioFilter))
+    portfolioFilter = "Todos";
+  const itensVisiveis = portfolioItems.filter(
+    (item) =>
+      portfolioFilter === "Todos" || item.categoryId === portfolioFilter,
+  );
 
   content.innerHTML = `
     <section class="portfolio-admin" aria-label="Gerenciamento do portfólio">
@@ -1667,7 +1829,9 @@ function renderPortfolio() {
       ${portfolioLoading && !portfolioLoaded ? '<div class="panel empty">Carregando itens do portfólio…</div>' : ""}
       ${portfolioError ? `<section class="panel portfolio-error" role="alert"><p>${escapeHTML(portfolioError)}</p><button type="button" class="primary" id="portfolio-retry">Tentar novamente</button></section>` : ""}
       <div class="portfolio-grid-admin">
-        ${itensVisiveis.map((portfolioItem) => `
+        ${itensVisiveis
+          .map(
+            (portfolioItem) => `
           <article class="portfolio-card-admin">
             ${portfolioItem.image ? `<img src="${escapeHTML(portfolioItem.image)}" alt="${escapeHTML(portfolioItem.title)}" loading="lazy">` : '<div class="portfolio-image-empty" aria-hidden="true">▧</div>'}
             <div class="portfolio-card-body">
@@ -1675,46 +1839,66 @@ function renderPortfolio() {
               <span class="portfolio-card-category">${escapeHTML(portfolioItem.category)}</span>
               <div class="portfolio-card-meta"><span>${portfolioItem.createdAt ? escapeHTML(dateBR(portfolioItem.createdAt)) : "Sem data"}</span>${portfolioItem.published ? "" : '<span class="portfolio-publication draft">Rascunho</span>'}</div>
             </div>
-          </article>`).join("")}
+          </article>`,
+          )
+          .join("")}
         ${!portfolioLoading && !portfolioError && !itensVisiveis.length ? '<div class="panel empty portfolio-vazio">Nenhum item nesta categoria. Use “Adicionar Item” para incluir um serviço concluído.</div>' : ""}
       </div>
     </section>`;
 
-  content.querySelectorAll("[data-portfolio-filter]").forEach((button) => button.addEventListener("click", () => {
-    portfolioFilter = button.dataset.portfolioFilter;
-    renderPortfolio();
-  }));
-  content.querySelector("#portfolio-add").addEventListener("click", () => abrirPortfolioModal());
-  content.querySelector("#portfolio-retry")?.addEventListener("click", () => { portfolioLoaded = false; portfolioError = ""; void carregarPortfolioAdmin(); });
-  content.querySelectorAll("[data-portfolio-edit]").forEach((button) => button.addEventListener("click", () => {
-    const registro = portfolioItems.find((registro) => registro.id === button.dataset.portfolioEdit);
-    if (registro) abrirPortfolioModal(registro);
-  }));
-  content.querySelectorAll("[data-portfolio-delete]").forEach((button) => button.addEventListener("click", async () => {
-    const item = portfolioItems.find((registro) => registro.id === button.dataset.portfolioDelete);
-    if (!item || !confirm(`Excluir “${item.title}” do portfólio?`)) return;
-    const dados = new FormData();
-    dados.set("acao", "remover");
-    dados.set("csrf", adminCsrf);
-    dados.set("id", item.id);
-    button.disabled = true;
-    try {
-      const resultado = await enviarPortfolio(dados);
-      adminMessage = resultado.mensagem || "Item removido.";
-      adminMessageError = false;
-      portfolioLoaded = false;
-      await carregarPortfolioAdmin();
-      if (page === "portfolio") render();
-    } catch (erro) {
-      adminMessage = erro.message || "Não foi possível remover o item.";
-      adminMessageError = true;
-      render();
-    }
-  }));
+  content.querySelectorAll("[data-portfolio-filter]").forEach((button) =>
+    button.addEventListener("click", () => {
+      portfolioFilter = button.dataset.portfolioFilter;
+      renderPortfolio();
+    }),
+  );
+  content
+    .querySelector("#portfolio-add")
+    .addEventListener("click", () => abrirPortfolioModal());
+  content.querySelector("#portfolio-retry")?.addEventListener("click", () => {
+    portfolioLoaded = false;
+    portfolioError = "";
+    void carregarPortfolioAdmin();
+  });
+  content.querySelectorAll("[data-portfolio-edit]").forEach((button) =>
+    button.addEventListener("click", () => {
+      const registro = portfolioItems.find(
+        (registro) => registro.id === button.dataset.portfolioEdit,
+      );
+      if (registro) abrirPortfolioModal(registro);
+    }),
+  );
+  content.querySelectorAll("[data-portfolio-delete]").forEach((button) =>
+    button.addEventListener("click", async () => {
+      const item = portfolioItems.find(
+        (registro) => registro.id === button.dataset.portfolioDelete,
+      );
+      if (!item || !confirm(`Excluir “${item.title}” do portfólio?`)) return;
+      const dados = new FormData();
+      dados.set("acao", "remover");
+      dados.set("csrf", adminCsrf);
+      dados.set("id", item.id);
+      button.disabled = true;
+      try {
+        const resultado = await enviarPortfolio(dados);
+        adminMessage = resultado.mensagem || "Item removido.";
+        adminMessageError = false;
+        portfolioLoaded = false;
+        await carregarPortfolioAdmin();
+        if (page === "portfolio") render();
+      } catch (erro) {
+        adminMessage = erro.message || "Não foi possível remover o item.";
+        adminMessageError = true;
+        render();
+      }
+    }),
+  );
 }
 
 function render() {
-  const pending = orders.filter((order) => order.statusCode === "SOLICITADO").length;
+  const pending = orders.filter(
+    (order) => order.statusCode === "SOLICITADO",
+  ).length;
   document.querySelector("#pending-count").textContent = pending;
   document.querySelector("#notification-count").textContent = pending;
 
@@ -1726,7 +1910,8 @@ function render() {
   });
 
   if (adminLoading) {
-    content.innerHTML = '<section class="panel"><div class="empty">Carregando solicitações do banco…</div></section>';
+    content.innerHTML =
+      '<section class="panel"><div class="empty">Carregando solicitações do banco…</div></section>';
     return;
   }
   if (adminError) {
@@ -1735,7 +1920,9 @@ function render() {
         <div class="empty">${escapeHTML(adminError)}</div>
         <button type="button" class="primary" id="retry-admin-load">Tentar novamente</button>
       </section>`;
-    content.querySelector("#retry-admin-load").addEventListener("click", () => carregarSolicitacoesAdmin());
+    content
+      .querySelector("#retry-admin-load")
+      .addEventListener("click", () => carregarSolicitacoesAdmin());
     return;
   }
 
@@ -1779,22 +1966,34 @@ document.querySelector("#cancel-order").addEventListener("click", () => {
   dialog.close();
 });
 
-document.querySelector("#close-order").addEventListener("click", () => dialog.close());
+document
+  .querySelector("#close-order")
+  .addEventListener("click", () => dialog.close());
 
 function dataAposDias(dias) {
   const data = new Date();
   data.setDate(data.getDate() + dias);
-  return [data.getFullYear(), String(data.getMonth() + 1).padStart(2, "0"), String(data.getDate()).padStart(2, "0")].join("-");
+  return [
+    data.getFullYear(),
+    String(data.getMonth() + 1).padStart(2, "0"),
+    String(data.getDate()).padStart(2, "0"),
+  ].join("-");
 }
 
 function preencherOpcoesPedido() {
   form.elements.equipment.innerHTML = [
     '<option value="">Selecione o serviço</option>',
-    ...serviceTypes.map((servico) => `<option value="${escapeHTML(servico.id)}">${escapeHTML(servico.name)}</option>`),
+    ...serviceTypes.map(
+      (servico) =>
+        `<option value="${escapeHTML(servico.id)}">${escapeHTML(servico.name)}</option>`,
+    ),
   ].join("");
   form.elements.technician.innerHTML = [
     '<option value="">Não atribuído</option>',
-    ...technicians.map((tecnico) => `<option value="${escapeHTML(tecnico.id)}">${escapeHTML(tecnico.name)}</option>`),
+    ...technicians.map(
+      (tecnico) =>
+        `<option value="${escapeHTML(tecnico.id)}">${escapeHTML(tecnico.name)}</option>`,
+    ),
   ].join("");
 }
 
@@ -1826,26 +2025,40 @@ async function carregarHorariosPedido() {
       window.location.replace("./login.html");
       return;
     }
-    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.horarios)) {
-      throw new Error(dados?.mensagem || "Não foi possível carregar os horários.");
+    if (
+      !resposta.ok ||
+      dados?.sucesso !== true ||
+      !Array.isArray(dados.horarios)
+    ) {
+      throw new Error(
+        dados?.mensagem || "Não foi possível carregar os horários.",
+      );
     }
     if (typeof dados.csrf === "string") adminCsrf = dados.csrf;
     if (requisicaoAtual !== requisicaoHorariosPedido) return;
     const agora = new Date();
     const disponiveis = dados.horarios.filter((horario) => {
-      if (horario.estado !== "free" || String(horario.inicio).slice(0, 10) !== data) return false;
+      if (
+        horario.estado !== "free" ||
+        String(horario.inicio).slice(0, 10) !== data
+      )
+        return false;
       const inicio = new Date(String(horario.inicio).replace(" ", "T"));
       return !Number.isNaN(inicio.getTime()) && inicio > agora;
     });
     seletor.innerHTML = [
       `<option value="">${disponiveis.length ? "Selecione o horário" : "Nenhum horário livre nesta data"}</option>`,
-      ...disponiveis.map((horario) => `<option value="${escapeHTML(horario.id)}">${escapeHTML(String(horario.inicio).slice(11, 16))}</option>`),
+      ...disponiveis.map(
+        (horario) =>
+          `<option value="${escapeHTML(horario.id)}">${escapeHTML(String(horario.inicio).slice(11, 16))}</option>`,
+      ),
     ].join("");
     seletor.disabled = disponiveis.length === 0;
   } catch (erro) {
     if (requisicaoAtual !== requisicaoHorariosPedido) return;
     seletor.innerHTML = '<option value="">Erro ao carregar horários</option>';
-    feedback.textContent = erro.message || "Não foi possível carregar os horários.";
+    feedback.textContent =
+      erro.message || "Não foi possível carregar os horários.";
     feedback.hidden = false;
     document.querySelector("#submit-order").disabled = true;
   }
@@ -1866,23 +2079,29 @@ function abrirModalNovoPedido() {
   form.elements.date.max = dataAposDias(30);
   form.elements.date.value = TODAY;
   form.elements.time.disabled = true;
-  form.elements.time.innerHTML = '<option value="">Carregando horários...</option>';
+  form.elements.time.innerHTML =
+    '<option value="">Carregando horários...</option>';
   const feedback = document.querySelector("#order-feedback");
   feedback.textContent = "";
   feedback.hidden = true;
   const botaoAdicionar = document.querySelector("#submit-order");
   botaoAdicionar.disabled = true;
   if (serviceTypes.length === 0) {
-    feedback.textContent = "Não há tipos de serviço ativos cadastrados no sistema.";
+    feedback.textContent =
+      "Não há tipos de serviço ativos cadastrados no sistema.";
     feedback.hidden = false;
   }
   dialog.showModal();
   void carregarHorariosPedido();
 }
 
-form.elements.date.addEventListener("change", () => void carregarHorariosPedido());
+form.elements.date.addEventListener(
+  "change",
+  () => void carregarHorariosPedido(),
+);
 form.elements.time.addEventListener("change", () => {
-  document.querySelector("#submit-order").disabled = !form.elements.time.value || serviceTypes.length === 0;
+  document.querySelector("#submit-order").disabled =
+    !form.elements.time.value || serviceTypes.length === 0;
 });
 
 form.addEventListener("submit", async (event) => {
@@ -1910,7 +2129,10 @@ form.addEventListener("submit", async (event) => {
       method: "POST",
       credentials: "same-origin",
       cache: "no-store",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify(pedido),
     });
     const resultado = await resposta.json();
@@ -1919,7 +2141,9 @@ form.addEventListener("submit", async (event) => {
       return;
     }
     if (!resposta.ok || resultado?.sucesso !== true) {
-      throw new Error(resultado?.mensagem || "Não foi possível cadastrar o pedido.");
+      throw new Error(
+        resultado?.mensagem || "Não foi possível cadastrar o pedido.",
+      );
     }
     dialog.close();
     form.reset();
@@ -1928,10 +2152,14 @@ form.addEventListener("submit", async (event) => {
     await carregarSolicitacoesAdmin(false);
     render();
   } catch (erro) {
-    feedback.textContent = erro.message || "Não foi possível cadastrar o pedido.";
+    feedback.textContent =
+      erro.message || "Não foi possível cadastrar o pedido.";
     feedback.hidden = false;
   } finally {
-    botao.disabled = !form.elements.time.value || form.elements.time.disabled || serviceTypes.length === 0;
+    botao.disabled =
+      !form.elements.time.value ||
+      form.elements.time.disabled ||
+      serviceTypes.length === 0;
   }
 });
 
