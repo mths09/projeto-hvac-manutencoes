@@ -148,6 +148,70 @@
   // DADOS DO SERVIÇO
   // =========================================
 
+  function criarVisualizadorAnexo(anexo) {
+    if (!anexo || typeof anexo !== "object") return null;
+
+    const id = String(anexo.id ?? "");
+    if (!/^\d+$/.test(id)) return null;
+
+    const url = `../../../backend/anexo_imagem.php?id=${encodeURIComponent(id)}`;
+    const figura = document.createElement("figure");
+
+    if (anexo.mime === "image/jpeg" || anexo.mime === "image/png") {
+      const imagem = document.createElement("img");
+      imagem.src = url;
+      imagem.alt = anexo.legenda || "Imagem anexada ao pedido";
+      imagem.loading = "lazy";
+      figura.append(imagem);
+    } else if (anexo.mime === "video/mp4") {
+      const video = document.createElement("video");
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+
+      const fonte = document.createElement("source");
+      fonte.src = url;
+      fonte.type = anexo.mime;
+      video.append(fonte);
+      figura.append(video);
+    } else {
+      return null;
+    }
+
+    if (anexo.legenda) {
+      const legenda = document.createElement("figcaption");
+      legenda.textContent = anexo.legenda;
+      figura.append(legenda);
+    }
+
+    return figura;
+  }
+
+  function renderizarAnexos(anexos) {
+    const lista = $("#lista-fotos-atendimento");
+    if (!lista) return;
+
+    lista.replaceChildren();
+
+    const arquivos = Array.isArray(anexos) ? anexos : [];
+    const galeria = document.createElement("div");
+    galeria.className = "galeria-anexos";
+
+    for (const anexo of arquivos) {
+      const visualizador = criarVisualizadorAnexo(anexo);
+      if (visualizador) galeria.append(visualizador);
+    }
+
+    if (galeria.childElementCount === 0) {
+      lista.className = "estado-vazio";
+      lista.append(criar("p", "", "Não há anexos deste serviço por enquanto."));
+      return;
+    }
+
+    lista.className = "";
+    lista.append(galeria);
+  }
+
   function preencherServico(servico) {
     // Título: protocolo + tipo do serviço
     const titulo = $("#titulo-pedido");
@@ -184,6 +248,9 @@
     texto("#endereco-servico", servico.endereco, "Não informado");
     texto("#valor-servico", servico.valor, "Não informado");
     texto("#descricao-problema", servico.descricao, "Sem descrição adicional.");
+    texto("#descricao-problema", servico.descricao, "Sem descrição adicional.");
+
+    renderizarAnexos(servico.anexos);
 
     montarLinhaTempo(servico);
   }
