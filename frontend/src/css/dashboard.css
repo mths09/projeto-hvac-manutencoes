@@ -7,14 +7,17 @@
   --azul-marinho: #0d1b4b;
   --azul-marinho-medio: #12255e;
   --azul-marinho-claro: #1a3470;
+
   --ciano: #00e5ff;
   --ciano-escuro: #00b8d4;
   --ciano-palido: #e0faff;
+
   --chama-azul: #1565c0;
   --chama-violeta: #7b1fa2;
   --chama-magenta: #e040fb;
   --chama-laranja: #ff9800;
   --chama-dourada: #ffd600;
+
   --sucesso: #25d366;
   --perigo: #ff5252;
 
@@ -42,11 +45,17 @@
   --borda: rgb(255 255 255 / 10%);
   --superficie-hover: rgb(255 255 255 / 4%);
   --superficie-ciano: rgb(0 229 255 / 8%);
+
   --cor-sucesso: var(--sucesso);
   --cor-alerta: var(--chama-laranja);
   --cor-cancelado: var(--chama-magenta);
   --cor-whatsapp: var(--sucesso);
-  --largura-sidebar: 240px;
+
+  /* Layout */
+  --altura-cabecalho: 80px; /* NOVO */
+  --largura-sidebar: 260px; /* ALTERADO (era 240px) */
+  --largura-conteudo: 1200px; /* NOVO: largura máxima do conteúdo */
+
   --raio-card: 15px;
   --raio-botao: 10px;
   --transicao-padrao: 180ms ease;
@@ -160,12 +169,17 @@ p {
   backdrop-filter: blur(18px);
 }
 
+/* ALTERADO: ocupa a largura toda, sem centralizar */
 .cabecalho-conteudo {
   display: flex;
-  min-height: 80px;
+  width: 100%;
+  max-width: none;
+  min-height: var(--altura-cabecalho);
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  margin-inline: 0;
+  padding-inline: 24px;
 }
 
 .logo-dashboard {
@@ -459,33 +473,37 @@ p {
 ========================================= */
 
 .dashboard-container {
-  min-height: calc(100vh - 80px);
-  padding-block: 32px 60px;
+  min-height: calc(100vh - var(--altura-cabecalho));
+  padding: 0; /* ALTERADO: sem espaço em volta, a sidebar encosta nas bordas */
 }
 
+/* ALTERADO: grid de ponta a ponta, sem max-width e sem centralizar */
 .dashboard {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: var(--largura-sidebar) minmax(0, 1fr);
   align-items: start;
-  gap: 28px;
+  gap: 0;
   width: 100%;
-  max-width: 1500px;
-  margin-inline: auto;
+  max-width: none;
+  margin: 0;
 }
 
 /* =========================================
-   SIDEBAR
+   SIDEBAR (ocupa toda a lateral esquerda)
 ========================================= */
 
 .sidebar-dashboard {
   position: sticky;
-  top: 112px;
+  top: var(--altura-cabecalho);
   display: flex;
   min-width: 0;
+  height: calc(100vh - var(--altura-cabecalho));
   flex-direction: column;
-  padding: 22px 14px;
-  border: 1px solid var(--borda);
-  border-radius: var(--raio-card);
+  overflow-y: auto;
+  padding: 24px 16px;
+  border: 0;
+  border-right: 1px solid var(--borda);
+  border-radius: 0;
   background: var(--azul-marinho-escuro);
 }
 
@@ -547,11 +565,12 @@ p {
   font-size: 17px;
 }
 
+/* ALTERADO: margin-top auto empurra o card de ajuda para o rodapé da sidebar */
 .sidebar-ajuda {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  margin-top: 32px;
+  margin-top: auto;
   padding: 15px 12px;
   border: 1px solid rgb(0 229 255 / 14%);
   border-radius: 12px;
@@ -578,10 +597,13 @@ p {
    ÁREA DE CONTEÚDO
 ========================================= */
 
+/* ALTERADO: colado na sidebar, alinhado à esquerda, com padding próprio */
 .conteudo-dashboard {
-  min-width: 0;
   width: 100%;
-  max-width: none;
+  min-width: 0;
+  max-width: var(--largura-conteudo);
+  margin-inline: auto;
+  padding: 32px 40px 60px;
 }
 
 .breadcrumb-dashboard {
@@ -994,6 +1016,11 @@ p {
   color: var(--ciano);
 }
 
+/* =========================================
+   >>> COLE AQUI O RESTANTE DO SEU CSS ATUAL <<<
+   (a partir do comentário "DOCUMENTOS", linha ~1000
+   do seu dashboard.css original, até o final do arquivo)
+========================================= */
 /* =========================================
    DOCUMENTOS
 ========================================= */
@@ -1833,7 +1860,180 @@ p {
     width: 100%;
   }
 }
+/* =========================================
+   PERFIL — BOTÃO EDITAR E ENDEREÇO SEPARADO
+========================================= */
 
+/* Cabeçalho da aba com o botão "Editar perfil" à direita */
+.view-cabecalho-acao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.botao-editar-perfil {
+  flex-shrink: 0;
+}
+
+/* Grade do endereço: CEP | Logradouro / Bairro | Cidade | UF */
+.dados-endereco {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.dados-endereco .campo-cep {
+  grid-column: span 2;
+}
+
+.dados-endereco .campo-logradouro {
+  grid-column: span 4;
+}
+
+.dados-endereco .campo-bairro {
+  grid-column: span 3;
+}
+
+.dados-endereco .campo-cidade {
+  grid-column: span 2;
+}
+
+.dados-endereco .campo-uf {
+  grid-column: span 1;
+}
+
+@media (max-width: 600px) {
+  .dados-endereco {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dados-endereco .campo-cep,
+  .dados-endereco .campo-logradouro,
+  .dados-endereco .campo-bairro {
+    grid-column: 1 / -1;
+  }
+
+  .dados-endereco .campo-cidade,
+  .dados-endereco .campo-uf {
+    grid-column: span 1;
+  }
+}
+
+/* =========================================
+   MODAL — EDITAR PERFIL
+========================================= */
+
+.dialog-editar {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.form-perfil {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px 18px;
+  margin-top: 22px;
+}
+
+.campo-form {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  grid-column: span 6;
+}
+
+.campo-form > span {
+  color: var(--texto-secundario);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.campo-form input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--azul-marinho-mais-escuro);
+  color: var(--texto-principal);
+  font-size: 14px;
+  transition: border-color var(--transicao-padrao);
+}
+
+.campo-form input:focus {
+  border-color: var(--ciano);
+  outline: none;
+}
+
+.campo-form input::placeholder {
+  color: rgb(170 179 200 / 50%);
+}
+
+.campo-form.campo-cep {
+  grid-column: span 2;
+}
+
+.campo-form.campo-logradouro {
+  grid-column: span 4;
+}
+
+.campo-form.campo-bairro {
+  grid-column: span 3;
+}
+
+.campo-form.campo-cidade {
+  grid-column: span 2;
+}
+
+.campo-form.campo-uf {
+  grid-column: span 1;
+}
+
+.form-erro {
+  padding: 10px 12px;
+  border: 1px solid rgb(255 82 82 / 25%);
+  border-radius: 10px;
+  background: rgb(255 82 82 / 8%);
+  color: var(--perigo);
+  font-size: 12px;
+  grid-column: 1 / -1;
+}
+
+.acoes-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+  grid-column: 1 / -1;
+}
+
+.acoes-form .botao-secundario {
+  padding: 0 18px;
+  font-size: 13px;
+}
+
+.acoes-form button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+@media (max-width: 600px) {
+  .campo-form.campo-cep,
+  .campo-form.campo-logradouro,
+  .campo-form.campo-bairro {
+    grid-column: 1 / -1;
+  }
+
+  .campo-form.campo-cidade,
+  .campo-form.campo-uf {
+    grid-column: span 3;
+  }
+}
 /* =========================================
    ACESSIBILIDADE
 ========================================= */
@@ -1882,7 +2082,10 @@ p {
     left: max(12px, env(safe-area-inset-left, 0px));
     display: flex;
     width: auto;
-    max-height: calc(100vh - 100px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      100vh - 100px - env(safe-area-inset-top, 0px) -
+        env(safe-area-inset-bottom, 0px)
+    );
     flex-direction: column;
     border-radius: 16px;
   }
@@ -1926,7 +2129,10 @@ p {
 @supports (height: 100dvh) {
   @media (max-width: 639px) {
     .painel-notificacoes {
-      max-height: calc(100dvh - 100px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      max-height: calc(
+        100dvh - 100px - env(safe-area-inset-top, 0px) -
+          env(safe-area-inset-bottom, 0px)
+      );
     }
   }
 }
@@ -1939,5 +2145,167 @@ p {
   .acoes-notificacoes .botao-secundario {
     width: 100%;
     flex-basis: auto;
+  }
+
+  /* =========================================
+   AJUSTE DE POSICIONAMENTO DO DASHBOARD
+========================================= */
+
+  @media (min-width: 901px) {
+    .dashboard-container {
+      width: 100%;
+      padding-top: 24px;
+      padding-bottom: 40px;
+    }
+
+    .dashboard {
+      /* Posiciona o conjunto um pouco mais à esquerda */
+      width: min(calc(100% - 100px), 1500px);
+      max-width: 1500px;
+
+      margin-left: clamp(24px, 4vw, 64px);
+      margin-right: auto;
+
+      /* Sidebar + conteúdo */
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 28px;
+
+      /* Permite que a sidebar acompanhe a altura */
+      align-items: stretch;
+    }
+
+    /* SIDEBAR */
+    .sidebar-dashboard {
+      position: sticky;
+      top: 104px;
+
+      width: 100%;
+      min-width: 0;
+      min-height: calc(100vh - 128px);
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-self: stretch;
+
+      box-sizing: border-box;
+    }
+
+    /* Conteúdo principal */
+    .conteudo-dashboard {
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+    }
+  }
+
+  /* Tablets e celulares */
+  @media (max-width: 900px) {
+    .dashboard {
+      width: calc(100% - 32px);
+      margin-inline: auto;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .sidebar-dashboard {
+      position: static;
+      min-height: auto;
+      width: 100%;
+    }
+  }
+  /* =========================================
+   AJUSTES DE LAYOUT (cole no FINAL do arquivo,
+   para sobrescrever media queries antigas)
+========================================= */
+
+  @media (max-width: 900px) {
+    .dashboard {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar-dashboard {
+      position: static;
+      height: auto;
+      overflow-y: visible;
+      border-right: 0;
+      border-bottom: 1px solid var(--borda);
+    }
+
+    .sidebar-ajuda {
+      margin-top: 24px;
+    }
+
+    .conteudo-dashboard {
+      max-width: none;
+      padding: 24px 20px 48px;
+    }
+
+    .cabecalho-conteudo {
+      padding-inline: 16px;
+    }
+  }
+  /* =========================================
+   PERFIL — BOTÃO EDITAR E ENDEREÇO SEPARADO
+========================================= */
+
+  /* Cabeçalho da aba com o botão "Editar perfil" à direita */
+  .view-cabecalho-acao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px 24px;
+  }
+
+  .botao-editar-perfil {
+    flex-shrink: 0;
+  }
+
+  /* Grade do endereço: CEP | Logradouro / Bairro | Cidade | UF */
+  .dados-endereco {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 16px 20px;
+  }
+
+  .dados-endereco .campo-cep {
+    grid-column: span 2;
+  }
+
+  .dados-endereco .campo-logradouro {
+    grid-column: span 4;
+  }
+
+  .dados-endereco .campo-bairro {
+    grid-column: span 3;
+  }
+
+  .dados-endereco .campo-cidade {
+    grid-column: span 2;
+  }
+
+  .dados-endereco .campo-uf {
+    grid-column: span 1;
+  }
+
+  @media (max-width: 600px) {
+    .dados-endereco {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dados-endereco .campo-cep,
+    .dados-endereco .campo-logradouro,
+    .dados-endereco .campo-bairro {
+      grid-column: 1 / -1;
+    }
+
+    .dados-endereco .campo-cidade,
+    .dados-endereco .campo-uf {
+      grid-column: span 1;
+    }
   }
 }
