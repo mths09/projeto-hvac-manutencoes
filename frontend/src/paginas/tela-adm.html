@@ -137,6 +137,16 @@
         </div>
 
         <label class="order-field order-field-full">
+          Vincular à conta do cliente (opcional)
+          <select name="client_id" disabled>
+            <option value="">Informe o telefone para buscar contas</option>
+          </select>
+          <small class="order-client-feedback" id="client-match-feedback" role="status">
+            O pedido só aparece no painel do cliente quando for vinculado a uma conta.
+          </small>
+        </label>
+
+        <label class="order-field order-field-full">
           Tipo de Serviço
           <select name="equipment" required>
             <option value="">Carregando serviços...</option>

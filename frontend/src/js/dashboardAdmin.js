@@ -2068,6 +2068,103 @@ async function carregarHorariosPedido() {
   }
 }
 
+let sequenciaBuscaCliente = 0;
+let temporizadorBuscaCliente;
+let buscaClienteEmAndamento = false;
+let buscaClienteFalhou = false;
+
+function resetarBuscaCliente() {
+  sequenciaBuscaCliente += 1;
+  clearTimeout(temporizadorBuscaCliente);
+  buscaClienteEmAndamento = false;
+  buscaClienteFalhou = false;
+  const seletor = form.elements.client_id;
+  seletor.replaceChildren(
+    new Option("Informe o telefone para buscar contas", ""),
+  );
+  seletor.disabled = true;
+  document.querySelector("#client-match-feedback").textContent =
+    "O pedido só aparece no painel do cliente quando for vinculado a uma conta.";
+}
+
+form.elements.phone.addEventListener("input", () => {
+  const seletor = form.elements.client_id;
+  const feedback = document.querySelector("#client-match-feedback");
+  const telefone = form.elements.phone.value.replace(/\D/g, "");
+  const sequencia = ++sequenciaBuscaCliente;
+  clearTimeout(temporizadorBuscaCliente);
+  buscaClienteEmAndamento = false;
+  buscaClienteFalhou = false;
+  seletor.replaceChildren(new Option("Buscando conta do cliente...", ""));
+  seletor.disabled = true;
+
+  if (!/^\d{10,11}$/.test(telefone)) {
+    seletor.replaceChildren(new Option("Informe um telefone com DDD", ""));
+    feedback.textContent =
+      "Digite um telefone com DDD (10 ou 11 números) para procurar uma conta.";
+    return;
+  }
+
+  feedback.textContent = "Procurando contas cadastradas com este telefone…";
+  buscaClienteEmAndamento = true;
+  temporizadorBuscaCliente = setTimeout(async () => {
+    try {
+      const url = `${API}?acao=buscar_cliente&telefone=${encodeURIComponent(telefone)}`;
+      const resposta = await fetch(url, {
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+      const resultado = await resposta.json();
+      if (sequencia !== sequenciaBuscaCliente) return;
+      if (resposta.status === 401 || resposta.status === 403) {
+        window.location.replace("./login.html");
+        return;
+      }
+      if (!resposta.ok || resultado?.sucesso !== true) {
+        throw new Error(resultado?.mensagem || "Falha ao buscar cliente.");
+      }
+      buscaClienteEmAndamento = false;
+
+      const clientes = Array.isArray(resultado.clientes)
+        ? resultado.clientes
+        : [];
+      seletor.replaceChildren(new Option("Não vincular a uma conta", ""));
+      for (const cliente of clientes) {
+        const opcao = new Option(
+          `${cliente.nome} — ${cliente.email}`,
+          String(cliente.id),
+        );
+        opcao.dataset.nome = String(cliente.nome || "");
+        opcao.dataset.telefone = String(cliente.telefone || "");
+        seletor.add(opcao);
+      }
+      seletor.disabled = clientes.length === 0;
+      feedback.textContent = clientes.length
+        ? `${clientes.length} conta(s) encontrada(s). Selecione a conta correta para vincular este pedido.`
+        : "Nenhuma conta foi encontrada com este telefone. O pedido ficará sem vínculo com uma conta.";
+    } catch (erro) {
+      if (sequencia !== sequenciaBuscaCliente) return;
+      buscaClienteEmAndamento = false;
+      buscaClienteFalhou = true;
+      seletor.replaceChildren(new Option("Busca indisponível", ""));
+      seletor.disabled = true;
+      feedback.textContent =
+        erro.message || "Não foi possível buscar a conta do cliente.";
+    }
+  }, 300);
+});
+
+form.elements.client_id.addEventListener("change", () => {
+  const opcao = form.elements.client_id.selectedOptions[0];
+  if (!opcao?.value) return;
+  form.elements.client.value = opcao.dataset.nome || form.elements.client.value;
+  form.elements.phone.value =
+    opcao.dataset.telefone || form.elements.phone.value;
+  document.querySelector("#client-match-feedback").textContent =
+    "Conta selecionada. O pedido ficará associado e aparecerá no painel deste cliente.";
+});
+
 function abrirModalNovoPedido() {
   if (adminLoading || !adminCsrf) {
     adminMessage = adminLoading
@@ -2078,6 +2175,7 @@ function abrirModalNovoPedido() {
     return;
   }
   form.reset();
+  resetarBuscaCliente();
   preencherOpcoesPedido();
   form.elements.date.min = TODAY;
   form.elements.date.max = dataAposDias(30);
@@ -2110,6 +2208,16 @@ form.elements.time.addEventListener("change", () => {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (buscaClienteEmAndamento) {
+    document.querySelector("#client-match-feedback").textContent =
+      "Aguarde a busca da conta do cliente terminar antes de cadastrar.";
+    return;
+  }
+  if (buscaClienteFalhou) {
+    document.querySelector("#client-match-feedback").textContent =
+      "Não foi possível verificar as contas. Confira a conexão e tente buscar novamente antes de cadastrar.";
+    return;
+  }
   if (!form.reportValidity()) return;
   const botao = document.querySelector("#submit-order");
   const feedback = document.querySelector("#order-feedback");
@@ -2121,6 +2229,7 @@ form.addEventListener("submit", async (event) => {
     csrf: adminCsrf,
     nome: String(dadosFormulario.get("client") || "").trim(),
     telefone: String(dadosFormulario.get("phone") || "").trim(),
+    id_cliente: String(dadosFormulario.get("client_id") || ""),
     id_tipo_servico: String(dadosFormulario.get("equipment") || ""),
     id_disponibilidade: String(dadosFormulario.get("time") || ""),
     endereco: String(dadosFormulario.get("address") || "").trim(),

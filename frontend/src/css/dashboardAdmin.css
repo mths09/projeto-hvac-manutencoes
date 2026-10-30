@@ -473,6 +473,12 @@ dialog h2 {
 #order-form .order-field-full {
   grid-column: 1 / -1;
 }
+.order-client-feedback {
+  color: #aeb4c5;
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.4;
+}
 #order-form input,
 #order-form select,
 #order-form textarea {

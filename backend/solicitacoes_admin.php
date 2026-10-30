@@ -92,6 +92,7 @@ function normalizarNovoPedidoAdmin(mixed $entrada): array
         'id_tipo_servico' => $id('id_tipo_servico'),
         'id_disponibilidade' => $id('id_disponibilidade'),
         'id_tecnico' => $id('id_tecnico', true),
+        'id_cliente' => $id('id_cliente', true),
         'urgente' => $entrada['prioridade'] === 'urgente',
     ];
 }
@@ -161,6 +162,37 @@ try {
     }
 
     if ($metodo === 'GET') {
+        if (($_GET['acao'] ?? '') === 'buscar_cliente') {
+            $telefone = $_GET['telefone'] ?? '';
+            if (!is_string($telefone)) {
+                $conexao->close();
+                responderSolicitacoesAdmin(422, ['sucesso' => false, 'mensagem' => 'Telefone inválido.']);
+            }
+            $telefone = preg_replace('/\\D/', '', $telefone);
+            if (!preg_match('/^[1-9][0-9]{9,10}$/D', $telefone)) {
+                $conexao->close();
+                responderSolicitacoesAdmin(200, ['sucesso' => true, 'clientes' => []]);
+            }
+            $clientes = consultarSolicitacoesAdmin(
+                $conexao,
+                "SELECT id_usuario AS id, nome, email, telefone
+                 FROM usuario
+                 WHERE ativo = 1 AND perfil = 'cliente' AND telefone = ?
+                 ORDER BY nome, id_usuario
+                 LIMIT 10",
+                [$telefone]
+            )->get_result()->fetch_all(MYSQLI_ASSOC);
+            foreach ($clientes as &$cliente) {
+                $cliente['id'] = (string) $cliente['id'];
+                $cliente['nome'] = (string) $cliente['nome'];
+                $cliente['email'] = (string) $cliente['email'];
+                $cliente['telefone'] = (string) $cliente['telefone'];
+            }
+            unset($cliente);
+            $conexao->close();
+            session_write_close();
+            responderSolicitacoesAdmin(200, ['sucesso' => true, 'clientes' => $clientes]);
+        }
         session_write_close();
         $stmtPedidos = consultarSolicitacoesAdmin(
             $conexao,
@@ -310,6 +342,24 @@ try {
         $novoPedido = normalizarNovoPedidoAdmin($entrada);
         $conexao->begin_transaction();
         try {
+            if ($novoPedido['id_cliente'] !== null) {
+                $clienteExistente = consultarSolicitacoesAdmin(
+                    $conexao,
+                    "SELECT id_usuario, telefone
+                     FROM usuario
+                     WHERE id_usuario = ? AND perfil = 'cliente' AND ativo = 1
+                     LIMIT 1 FOR UPDATE",
+                    [$novoPedido['id_cliente']]
+                )->get_result()->fetch_assoc();
+                if (!$clienteExistente) {
+                    throw new DomainException('A conta selecionada não está mais disponível. Busque o cliente novamente.');
+                }
+                $telefonePedido = preg_replace('/\D/', '', $novoPedido['telefone']);
+                if ($telefonePedido === '' || !hash_equals((string) $clienteExistente['telefone'], $telefonePedido)) {
+                    throw new DomainException('O telefone informado não corresponde à conta selecionada. Busque o cliente pelo telefone novamente.');
+                }
+            }
+
             $servico = consultarSolicitacoesAdmin(
                 $conexao,
                 'SELECT id_tipo_servico FROM tipo_servico WHERE id_tipo_servico = ? AND ativo = 1 LIMIT 1 FOR UPDATE',
@@ -374,8 +424,8 @@ try {
                 "INSERT INTO solicitacao
                  (protocolo, id_cliente, id_criador, id_tipo_servico, id_status_atual, nome_contato,
                   telefone_contato, descricao_problema, urgente, origem, criada_em, atualizada_em)
-                 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', NOW(), NOW())",
-                [$protocoloNovo, $idAdministrador, $novoPedido['id_tipo_servico'], $status['id_status'],
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', NOW(), NOW())",
+                [$protocoloNovo, $novoPedido['id_cliente'], $idAdministrador, $novoPedido['id_tipo_servico'], $status['id_status'],
                  $novoPedido['nome'], $novoPedido['telefone'] !== '' ? $novoPedido['telefone'] : null,
                  $novoPedido['descricao'] !== '' ? $novoPedido['descricao'] : null, (int) $novoPedido['urgente']]
             );
@@ -415,7 +465,9 @@ try {
             session_write_close();
             responderSolicitacoesAdmin(201, [
                 'sucesso' => true,
-                'mensagem' => 'Pedido cadastrado e horário confirmado.',
+                'mensagem' => $novoPedido['id_cliente'] === null
+                    ? 'Pedido cadastrado e horário confirmado. Não foi vinculado a uma conta de cliente.'
+                    : 'Pedido cadastrado, horário confirmado e vinculado à conta do cliente.',
                 'protocolo' => $protocoloNovo
             ]);
         } catch (DomainException $erro) {
