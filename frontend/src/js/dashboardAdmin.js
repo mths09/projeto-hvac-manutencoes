@@ -32,13 +32,6 @@ const content = document.querySelector("#content");
 const dialog = document.querySelector("#order-dialog");
 const form = document.querySelector("#order-form");
 
-const ANEXO_MAX_ARQUIVOS = 5;
-const ANEXO_TAMANHO_MAXIMO = 25 * 1024 * 1024;
-
-if (arquivo.size > ANEXO_TAMANHO_MAXIMO) {
-  return renderizarAnexos(`"${arquivo.name}" passa de 25 MB.`);
-}
-
 function localDate() {
   const now = new Date();
   return [
@@ -772,6 +765,43 @@ function renderRequests(history = false) {
     }
   });
 
+  function criarVisualizadorAnexo(anexo) {
+    const id = String(anexo.id || "");
+    if (!/^\d+$/.test(id)) return null;
+
+    const url = `../../../backend/anexo_imagem.php?id=${encodeURIComponent(id)}`;
+    const figura = document.createElement("figure");
+
+    if (anexo.mime === "image/jpeg" || anexo.mime === "image/png") {
+      const imagem = document.createElement("img");
+      imagem.src = url;
+      imagem.alt = anexo.legenda || "Imagem anexada ao pedido";
+      imagem.loading = "lazy";
+      figura.append(imagem);
+    } else if (anexo.mime === "video/mp4") {
+      const video = document.createElement("video");
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+
+      const fonte = document.createElement("source");
+      fonte.src = url;
+      fonte.type = anexo.mime;
+      video.append(fonte);
+      figura.append(video);
+    } else {
+      return null;
+    }
+
+    if (anexo.legenda) {
+      const legenda = document.createElement("figcaption");
+      legenda.textContent = anexo.legenda;
+      figura.append(legenda);
+    }
+
+    return figura;
+  }
+
   function openDetails(order) {
     const modal = document.createElement("dialog");
     modal.setAttribute("aria-labelledby", "sr-detail-title");
@@ -844,19 +874,7 @@ function renderRequests(history = false) {
         attachments.length
           ? `
         <div class="sr-label">Arquivos registrados</div>
-        <ul>
-          ${attachments
-            .map(
-              (file) => `
-            <li class="sr-description">
-              ${escapeHTML(
-                typeof file === "string" ? file : file?.name || "Arquivo",
-              )}
-            </li>
-          `,
-            )
-            .join("")}
-        </ul>
+        <div class="galeria-anexos" data-anexos-pedido></div>
       `
           : ""
       }
@@ -865,6 +883,14 @@ function renderRequests(history = false) {
         <button class="primary" data-sr-close>Fechar</button>
       </div>
     `;
+
+    const galeria = modal.querySelector("[data-anexos-pedido]");
+    if (galeria) {
+      for (const anexo of attachments) {
+        const visualizador = criarVisualizadorAnexo(anexo);
+        if (visualizador) galeria.append(visualizador);
+      }
+    }
 
     document.body.appendChild(modal);
 

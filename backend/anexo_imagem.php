@@ -139,7 +139,8 @@ try {
     header('Content-Disposition: inline');
     header('Accept-Ranges: bytes');
     header('Content-Length: ' . $comprimento);
-    header('Cache-Control: private, max-age=86400');
+    // O navegador deve repetir a autorização em cada acesso ao arquivo.
+    header('Cache-Control: private, no-store');
 
     if ($status === 206) {
         header("Content-Range: bytes {$inicio}-{$fim}/{$tamanho}");
