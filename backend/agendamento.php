@@ -14,7 +14,7 @@ final class ErroAgendamento extends RuntimeException
 
 // Limites dos anexos de foto/vídeo enviados junto com o pedido.
 const ANEXO_MAX_ARQUIVOS = 5;
-const ANEXO_TAMANHO_MAXIMO = 5 * 1024 * 1024; // 5 MB por arquivo, conforme informado na tela.
+const ANEXO_TAMANHO_MAXIMO = 25 * 1024 * 1024; // 25 MB por arquivo, conforme informado na tela.
 const ANEXO_MIME_EXTENSAO = [
     'image/jpeg' => 'jpg',
     'image/png' => 'png',
@@ -57,7 +57,7 @@ function validarAnexosAgendamento(array $arquivosBrutos): array
             throw new ErroAgendamento('Não foi possível receber um dos arquivos enviados. Tente novamente.', 422);
         }
         if ($arquivo['size'] <= 0 || $arquivo['size'] > ANEXO_TAMANHO_MAXIMO) {
-            throw new ErroAgendamento('Cada arquivo deve ter até 5 MB.', 422);
+            throw new ErroAgendamento('Cada arquivo deve ter até 25 MB.', 422);
         }
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($arquivo['tmp_name']);

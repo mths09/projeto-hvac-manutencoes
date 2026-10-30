@@ -175,7 +175,7 @@
 
   // Fotos/vídeos anexados ao pedido (validados aqui e de novo no servidor).
   const ANEXO_MAX_ARQUIVOS = 5;
-  const ANEXO_TAMANHO_MAXIMO = 25 * 1024 * 1024; // 5 MB, igual ao texto exibido na tela.
+  const ANEXO_TAMANHO_MAXIMO = 25 * 1024 * 1024; // 25 MB por arquivo, igual ao texto exibido na tela.
   const ANEXO_TIPOS_ACEITOS = ["image/jpeg", "image/png", "video/mp4"];
   let anexos = [];
   const campoArquivo = elemento("arquivo");
@@ -223,7 +223,7 @@
         return renderizarAnexos(`"${arquivo.name}" não é JPG, PNG ou MP4.`);
       }
       if (arquivo.size > ANEXO_TAMANHO_MAXIMO) {
-        return renderizarAnexos(`"${arquivo.name}" passa de 5 MB.`);
+        return renderizarAnexos(`"${arquivo.name}" passa de 25 MB.`);
       }
       anexos.push(arquivo);
     }

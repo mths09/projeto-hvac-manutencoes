@@ -6,8 +6,8 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 header('X-Content-Type-Options: nosniff');
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
-    header('Allow: GET');
+if (!in_array($_SERVER['REQUEST_METHOD'] ?? '', ['GET', 'HEAD'], true)) {
+    header('Allow: GET, HEAD');
     http_response_code(405);
     exit;
 }
@@ -91,12 +91,89 @@ try {
         exit;
     }
 
+    $tamanho = filesize($caminho);
+    if ($tamanho === false || $tamanho <= 0) {
+        http_response_code(404);
+        exit;
+    }
+
+    $inicio = 0;
+    $fim = $tamanho - 1;
+    $status = 200;
+    $range = trim((string) ($_SERVER['HTTP_RANGE'] ?? ''));
+
+    if ($range !== '') {
+        if (!preg_match('/^bytes=(\d*)-(\d*)$/D', $range, $partes)
+            || ($partes[1] === '' && $partes[2] === '')) {
+            http_response_code(416);
+            header("Content-Range: bytes */{$tamanho}");
+            exit;
+        }
+
+        if($partes[1] === '' && $partes[2] !== '') {
+            $sufixo = (int) $partes[2];
+            if ($sufixo <= 0) {
+                http_response_code(416);
+                header("Content-Range: bytes */{$tamanho}");
+                exit;
+            }
+            $inicio = max(0, $tamanho - $sufixo);
+        } else {
+            $inicio = (int) $partes[1];
+            $fim = $partes[2] === '' ? $tamanho - 1 : min((int) $partes[2], $tamanho - 1);
+        }
+
+        if ($inicio >= $tamanho || $fim < $inicio) {
+            http_response_code(416);
+            header("Content-Range: bytes */{$tamanho}");
+            exit;
+        }
+
+        $status = 206;
+    }
+
+    $comprimento = $fim - $inicio + 1;
+
+    http_response_code($status);
     header('Content-Type: ' . $arquivo['mime_type']);
-    header('Content-Length: ' . (string) filesize($caminho));
     header('Content-Disposition: inline');
-    // Privado: cada anexo só é visível para o dono do pedido e para admins, então não deve ir a um cache compartilhado.
+    header('Accept-Ranges: bytes');
+    header('Content-Length: ' . $comprimento);
     header('Cache-Control: private, max-age=86400');
-    readfile($caminho);
+
+    if ($status === 206) {
+        header("Content-Range: bytes {$inicio}-{$fim}/{$tamanho}");
+    }
+
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'HEAD') {
+        exit;
+    }
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    $stream = fopen($caminho, 'rb');
+    if ($stream === false) {
+        http_response_code(404);
+        exit;
+    }
+
+    fseek($stream, $inicio);
+    $restante = $comprimento;
+
+    while ($restante > 0 && !feof($stream)) {
+        $bloco = fread($stream, min(8192, $restante));
+        if ($bloco === false || $bloco === '') {
+            break;
+        }
+
+        echo $bloco;
+        $restante -= strlen($bloco);
+    }
+
+    fclose($stream);
+
 } catch (Throwable $erro) {
     error_log('Falha ao carregar anexo da solicitação: ' . get_class($erro) . ', código ' . $erro->getCode());
     http_response_code(404);
