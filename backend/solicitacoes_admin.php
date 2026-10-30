@@ -27,8 +27,8 @@ function transicoesStatusAdmin(): array
 {
     return [
         'SOLICITADO' => ['AGENDADO', 'CANCELADO'],
-        'AGENDADO' => ['EM_ANDAMENTO', 'CANCELADO'],
-        'EM_ANDAMENTO' => ['CONCLUIDO', 'CANCELADO'],
+        'AGENDADO' => ['CANCELADO'],
+        'EM_ANDAMENTO' => ['CANCELADO'],
         'CONCLUIDO' => [],
         'CANCELADO' => []
     ];
@@ -163,13 +163,13 @@ try {
 
     if ($metodo === 'GET') {
         if (($_GET['acao'] ?? '') === 'buscar_cliente') {
-            $telefone = $_GET['telefone'] ?? '';
-            if (!is_string($telefone)) {
+            $telefoneBusca = $_GET['telefone'] ?? '';
+            if (!is_string($telefoneBusca)) {
                 $conexao->close();
                 responderSolicitacoesAdmin(422, ['sucesso' => false, 'mensagem' => 'Telefone inválido.']);
             }
-            $telefone = preg_replace('/\\D/', '', $telefone);
-            if (!preg_match('/^[1-9][0-9]{9,10}$/D', $telefone)) {
+            $telefoneBusca = preg_replace('/\D/', '', $telefoneBusca);
+            if (!preg_match('/^[1-9][0-9]{9,10}$/D', $telefoneBusca)) {
                 $conexao->close();
                 responderSolicitacoesAdmin(200, ['sucesso' => true, 'clientes' => []]);
             }
@@ -178,9 +178,8 @@ try {
                 "SELECT id_usuario AS id, nome, email, telefone
                  FROM usuario
                  WHERE ativo = 1 AND perfil = 'cliente' AND telefone = ?
-                 ORDER BY nome, id_usuario
-                 LIMIT 10",
-                [$telefone]
+                 ORDER BY nome, id_usuario LIMIT 10",
+                [$telefoneBusca]
             )->get_result()->fetch_all(MYSQLI_ASSOC);
             foreach ($clientes as &$cliente) {
                 $cliente['id'] = (string) $cliente['id'];
@@ -343,20 +342,16 @@ try {
         $conexao->begin_transaction();
         try {
             if ($novoPedido['id_cliente'] !== null) {
-                $clienteExistente = consultarSolicitacoesAdmin(
+                $clienteVinculado = consultarSolicitacoesAdmin(
                     $conexao,
-                    "SELECT id_usuario, telefone
-                     FROM usuario
+                    "SELECT telefone FROM usuario
                      WHERE id_usuario = ? AND perfil = 'cliente' AND ativo = 1
                      LIMIT 1 FOR UPDATE",
                     [$novoPedido['id_cliente']]
                 )->get_result()->fetch_assoc();
-                if (!$clienteExistente) {
-                    throw new DomainException('A conta selecionada não está mais disponível. Busque o cliente novamente.');
-                }
                 $telefonePedido = preg_replace('/\D/', '', $novoPedido['telefone']);
-                if ($telefonePedido === '' || !hash_equals((string) $clienteExistente['telefone'], $telefonePedido)) {
-                    throw new DomainException('O telefone informado não corresponde à conta selecionada. Busque o cliente pelo telefone novamente.');
+                if (!$clienteVinculado || $telefonePedido === '' || !hash_equals((string) $clienteVinculado['telefone'], $telefonePedido)) {
+                    throw new DomainException('A conta selecionada não corresponde ao telefone. Busque e selecione o cliente novamente.');
                 }
             }
 
@@ -466,7 +461,7 @@ try {
             responderSolicitacoesAdmin(201, [
                 'sucesso' => true,
                 'mensagem' => $novoPedido['id_cliente'] === null
-                    ? 'Pedido cadastrado e horário confirmado. Não foi vinculado a uma conta de cliente.'
+                    ? 'Pedido cadastrado e horário confirmado sem vínculo com uma conta.'
                     : 'Pedido cadastrado, horário confirmado e vinculado à conta do cliente.',
                 'protocolo' => $protocoloNovo
             ]);
@@ -487,16 +482,22 @@ try {
     try {
         $pedido = consultarSolicitacoesAdmin(
             $conexao,
-            'SELECT s.id_solicitacao, s.id_cliente, s.id_status_atual, ss.codigo AS status_codigo, ss.nome AS status_nome
+            "SELECT s.id_solicitacao, s.id_cliente, s.id_status_atual,
+                    ss.codigo AS status_codigo, ss.nome AS status_nome,
+                    COALESCE(NULLIF(s.email_contato, ''), u.email, '') AS email_cliente
              FROM solicitacao s
              INNER JOIN status_solicitacao ss ON ss.id_status = s.id_status_atual
+             LEFT JOIN usuario u ON u.id_usuario = s.id_cliente
              WHERE s.protocolo = ? AND s.arquivada_em IS NULL
-             LIMIT 1 FOR UPDATE',
+             LIMIT 1 FOR UPDATE",
             [$protocolo]
         )->get_result()->fetch_assoc();
         if (!$pedido) {
             throw new OutOfBoundsException('Pedido não encontrado.');
         }
+
+        $idNotificacaoEmail = null;
+        $dadosEmailStatus = null;
 
         if ($acao === 'status') {
             $novoCodigo = $entrada['status'] ?? null;
@@ -562,6 +563,7 @@ try {
                 [$pedido['id_solicitacao'], $pedido['id_status_atual'], $statusDestino['id_status'], $idAdministrador,
                  'Status alterado pelo painel administrativo.']
             );
+            $mensagemStatus = 'Seu pedido ' . $protocolo . ' agora está ' . $statusDestino['nome'] . '.';
             if ($pedido['id_cliente'] !== null) {
                 consultarSolicitacoesAdmin(
                     $conexao,
@@ -569,8 +571,24 @@ try {
                      titulo, mensagem, canal, status_envio, enviada_em)
                      VALUES (?, ?, ?, 'STATUS_ALTERADO', ?, ?, 'SITE', 'ENVIADO', NOW())",
                     [$pedido['id_cliente'], $pedido['id_solicitacao'], $agendamento['id_agendamento'] ?? null,
-                     'Status do pedido atualizado', 'Seu pedido ' . $protocolo . ' agora está ' . $statusDestino['nome'] . '.']
+                     'Status do pedido atualizado', $mensagemStatus]
                 );
+            }
+            $emailCliente = trim((string) ($pedido['email_cliente'] ?? ''));
+            if ($pedido['id_cliente'] !== null && filter_var($emailCliente, FILTER_VALIDATE_EMAIL)) {
+                consultarSolicitacoesAdmin(
+                    $conexao,
+                    "INSERT INTO notificacao (id_destinatario, id_solicitacao, id_agendamento,
+                     tipo_evento, titulo, mensagem, canal, status_envio)
+                     VALUES (?, ?, ?, 'STATUS_ALTERADO', 'Atualização do seu pedido', ?, 'EMAIL', 'PENDENTE')",
+                    [$pedido['id_cliente'], $pedido['id_solicitacao'], $agendamento['id_agendamento'] ?? null, $mensagemStatus]
+                );
+                $idNotificacaoEmail = (int) $conexao->insert_id;
+                $dadosEmailStatus = [
+                    'destinatario' => $emailCliente,
+                    'assunto' => 'Atualização do pedido ' . $protocolo . ' — HVAC Lex Company',
+                    'mensagem' => "Olá,\n\n{$mensagemStatus}\n\nAcesse sua conta para ver os detalhes do atendimento.\n\nHVAC Lex Company",
+                ];
             }
             $mensagem = 'Status atualizado para ' . $statusDestino['nome'] . '.';
         } else {
@@ -652,6 +670,21 @@ try {
         }
 
         $conexao->commit();
+        if ($idNotificacaoEmail !== null && $dadosEmailStatus !== null) {
+            require_once __DIR__ . '/email_notificacao.php';
+            $resultadoEmail = enviarEmailHvac(
+                $dadosEmailStatus['destinatario'],
+                $dadosEmailStatus['assunto'],
+                $dadosEmailStatus['mensagem']
+            );
+            consultarSolicitacoesAdmin(
+                $conexao,
+                'UPDATE notificacao SET status_envio = ?, enviada_em = ?, erro_envio = ? WHERE id_notificacao = ?',
+                [$resultadoEmail['enviado'] ? 'ENVIADO' : 'FALHA', $resultadoEmail['enviado'] ? date('Y-m-d H:i:s') : null,
+                 $resultadoEmail['enviado'] ? null : $resultadoEmail['erro'], $idNotificacaoEmail]
+            );
+            if (!$resultadoEmail['enviado']) $mensagem .= ' Aviso por e-mail não enviado: configure o SMTP do Gmail.';
+        }
         $conexao->close();
         session_write_close();
         responderSolicitacoesAdmin(200, ['sucesso' => true, 'mensagem' => $mensagem]);

@@ -178,15 +178,27 @@ try {
     $perfil = strtolower(trim((string) $usuario['perfil']));
     $ehAdministrador = in_array($perfil, ['admin', 'administrador'], true);
     $ehCliente = $perfil === 'cliente';
+    $ehTecnico = $perfil === 'tecnico';
 
-    if (!$ehAdministrador && !$ehCliente) {
+    if (!$ehAdministrador && !$ehCliente && !$ehTecnico) {
         negarLogin($conexao, $emailHash, $ipHash);
+    }
+
+    if ($ehTecnico) {
+        $stmtTecnico = $conexao->prepare(
+            'SELECT id_tecnico FROM tecnico WHERE id_usuario = ? AND ativo = 1 LIMIT 1'
+        );
+        $stmtTecnico->bind_param('i', $usuario['id_usuario']);
+        $stmtTecnico->execute();
+        $tecnicoAtivo = $stmtTecnico->get_result()->fetch_assoc();
+        $stmtTecnico->close();
+        if (!$tecnicoAtivo) negarLogin($conexao, $emailHash, $ipHash);
     }
 
     limparTentativasLoginBemSucedidas($conexao, $emailHash, $ipHash);
     $conexao->close();
 
-    $area = $ehAdministrador ? 'admin' : 'cliente';
+    $area = $ehAdministrador ? 'admin' : ($ehTecnico ? 'tecnico' : 'cliente');
 
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
@@ -217,7 +229,9 @@ try {
         'sucesso' => true,
         'mensagem' => 'Login realizado! Abrindo seu painel...',
         'area' => $area,
-        'destino' => $ehAdministrador ? './tela-adm.html' : './dashboard.html'
+        'destino' => $ehAdministrador
+            ? './tela-adm.html'
+            : ($ehTecnico ? './tela-tecnico.html' : './dashboard.html')
     ]);
 } catch (Throwable $erro) {
     error_log(

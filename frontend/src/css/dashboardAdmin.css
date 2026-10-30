@@ -473,12 +473,6 @@ dialog h2 {
 #order-form .order-field-full {
   grid-column: 1 / -1;
 }
-.order-client-feedback {
-  color: #aeb4c5;
-  font-size: 9px;
-  font-weight: 400;
-  line-height: 1.4;
-}
 #order-form input,
 #order-form select,
 #order-form textarea {
@@ -622,6 +616,52 @@ label {
   .primary {
     padding: 10px;
   }
+}
+
+.history-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) repeat(3, minmax(120px, 1fr)) repeat(2, minmax(130px, .8fr)) auto;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.history-filters label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
+.history-filters input, .history-filters select {
+  width: 100%; min-height: 36px; padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: 9px; background: #ffffff0c; color: var(--text); color-scheme: dark;
+}
+.history-clear { min-height: 36px; white-space: nowrap; }
+.technicians-toolbar { align-items: center; }
+.technicians-toolbar h1 { margin: 0 0 5px; }
+.technicians-toolbar p { margin: 0; color: var(--muted); }
+.technician-admin-list { display: grid; gap: 12px; }
+.technician-admin-card { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 18px; }
+.technician-admin-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.technician-admin-identity > div:last-child { display: grid; gap: 4px; min-width: 0; }
+.technician-admin-identity small { color: var(--muted); overflow-wrap: anywhere; }
+.technician-admin-actions { display: flex; gap: 8px; }
+.admin-notifications-dialog { width: min(580px, calc(100% - 24px)); }
+.admin-notification-list { display: grid; max-height: min(56vh, 520px); overflow: auto; gap: 7px; margin: 10px 0; }
+.admin-notification-row { display: grid; grid-template-columns: 10px 1fr; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #ffffff08; color: var(--text); text-align: left; }
+.admin-notification-row.unread { background: #00d8f312; }
+.admin-notification-row > span:last-child { display: grid; gap: 5px; }
+.admin-notification-row small, .admin-notification-row time { color: var(--muted); line-height: 1.4; }
+.admin-notification-dot { width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--cyan); }
+.admin-notification-row.read .admin-notification-dot { background: var(--muted); }
+.admin-notifications-dialog .form-actions { margin-top: 10px; }
+@media (max-width: 1000px) {
+  .history-filters { grid-template-columns: repeat(3, minmax(130px, 1fr)); }
+  .history-filters label:first-child { grid-column: span 2; }
+}
+@media (max-width: 650px) {
+  .history-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .history-filters label:first-child { grid-column: 1 / -1; }
+  .history-clear { grid-column: 1 / -1; }
+  .technician-admin-card { grid-template-columns: 1fr auto; }
+  .technician-admin-identity { grid-column: 1 / -1; }
+  .technician-admin-actions { grid-column: 1 / -1; }
+  .technician-admin-actions > button { flex: 1; }
+  .admin-notifications-dialog .form-actions { flex-direction: column; }
 }
 @media (max-width: 380px) {
   .brand small {

@@ -1,6 +1,8 @@
 const API = "../../../backend/solicitacoes_admin.php";
 const AGENDA_API = "../../../backend/agenda_admin.php";
 const PORTFOLIO_API = "../../../backend/portfolio_admin.php";
+const TECH_API = "../../../backend/tecnicos_admin.php";
+const ADMIN_NOTIFICATIONS_API = "../../../backend/notificacoes_admin.php";
 const STATUS_LABELS = {
   SOLICITADO: "Solicitado",
   AGENDADO: "Agendado",
@@ -27,17 +29,17 @@ let portfolioFilter = "Todos";
 let portfolioLoaded = false;
 let portfolioLoading = false;
 let portfolioError = "";
+let adminNotifications = [];
+let notificationsCsrf = "";
+let techniciansAdmin = [];
+let technicianCsrf = "";
+let techniciansLoading = false;
+let techniciansError = "";
+let techniciansLoaded = false;
 
 const content = document.querySelector("#content");
 const dialog = document.querySelector("#order-dialog");
 const form = document.querySelector("#order-form");
-
-const ANEXO_MAX_ARQUIVOS = 5;
-const ANEXO_TAMANHO_MAXIMO = 25 * 1024 * 1024;
-
-if (arquivo.size > ANEXO_TAMANHO_MAXIMO) {
-  return renderizarAnexos(`"${arquivo.name}" passa de 25 MB.`);
-}
 
 function localDate() {
   const now = new Date();
@@ -136,6 +138,7 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
     adminError = "";
     adminLoading = false;
     if (mostrarCarregamento) render();
+    void carregarNotificacoesAdmin();
   } catch (erro) {
     adminLoading = false;
     adminError =
@@ -317,27 +320,6 @@ function renderOverview() {
             todayOrders.map(scheduleRow).join("") ||
             '<div class="empty">Nenhum atendimento agendado.</div>'
           }
-        </section>
-
-        <section class="technicians" aria-label="Equipe técnica">
-          ${technicians
-            .map((technician) => {
-              const active = orders.filter(
-                (order) =>
-                  order.technician === technician.name &&
-                  order.status !== "Concluído",
-              ).length;
-              return `
-              <div class="technician">
-                <div class="avatar">${technician.initials}</div>
-                <div>
-                  <strong>${technician.name}</strong>
-                  <small>${technician.specialty}</small>
-                  <small class="active-jobs">${active} atendimentos ativos</small>
-                </div>
-              </div>`;
-            })
-            .join("")}
         </section>`;
 }
 
@@ -394,9 +376,17 @@ function table(list, editable) {
 
 function filteredOrders(history) {
   return orders.filter((order) => {
+    const statusHistorico = content.querySelector("#history-status")?.value || "Todos";
+    const servicoHistorico = content.querySelector("#history-service")?.value || "Todos";
+    const tecnicoHistorico = content.querySelector("#history-technician")?.value || "Todos";
+    const dataInicial = content.querySelector("#history-date-from")?.value || "";
+    const dataFinal = content.querySelector("#history-date-to")?.value || "";
+    const textoBusca = history
+      ? content.querySelector("#history-search")?.value || ""
+      : search;
     const matchesPage = history
-      ? order.status === "Concluído"
-      : order.status !== "Concluído";
+      ? ["CONCLUIDO", "CANCELADO"].includes(order.statusCode)
+      : order.statusCode !== "CONCLUIDO";
     const matchesSearch = [
       order.id,
       order.client,
@@ -405,10 +395,20 @@ function filteredOrders(history) {
     ]
       .join(" ")
       .toLocaleLowerCase("pt-BR")
-      .includes(search.toLocaleLowerCase("pt-BR"));
+      .includes(textoBusca.toLocaleLowerCase("pt-BR"));
+    const matchesStatus = !history || statusHistorico === "Todos" || order.statusCode === statusHistorico;
+    const matchesService = !history || servicoHistorico === "Todos" || order.equipment === servicoHistorico;
+    const matchesTechnician = !history || tecnicoHistorico === "Todos" || (order.technician || "Não atribuído") === tecnicoHistorico;
+    const matchesStart = !history || !dataInicial || order.date >= dataInicial;
+    const matchesEnd = !history || !dataFinal || order.date <= dataFinal;
     return (
       matchesPage &&
       matchesSearch &&
+      matchesStatus &&
+      matchesService &&
+      matchesTechnician &&
+      matchesStart &&
+      matchesEnd &&
       (filter === "Todos" || order.status === filter)
     );
   });
@@ -420,29 +420,58 @@ function renderRequests(history = false) {
     content.innerHTML = `
       <div class="toolbar">
         <h1>Histórico</h1>
-
-        <input
-          id="history-search"
-          placeholder="Buscar cliente, pedido ou técnico..."
-          aria-label="Buscar no histórico"
-          value="${escapeHTML(search)}"
-        >
       </div>
+
+      <section class="panel history-filters" aria-label="Filtros do histórico">
+        <label>Buscar
+          <input id="history-search" placeholder="Cliente, protocolo, serviço ou técnico..." aria-label="Buscar no histórico">
+        </label>
+        <label>Status
+          <select id="history-status">
+            <option value="Todos">Todos</option>
+            <option value="CONCLUIDO">Concluído</option>
+            <option value="CANCELADO">Cancelado</option>
+          </select>
+        </label>
+        <label>Serviço
+          <select id="history-service">
+            <option value="Todos">Todos</option>
+            ${[...new Set(orders.map((order) => order.equipment))].sort((a,b) => a.localeCompare(b, "pt-BR")).map((nome) => `<option value="${escapeHTML(nome)}">${escapeHTML(nome)}</option>`).join("")}
+          </select>
+        </label>
+        <label>Técnico
+          <select id="history-technician">
+            <option value="Todos">Todos</option>
+            ${[...new Set(orders.map((order) => order.technician || "Não atribuído"))].sort((a,b) => a.localeCompare(b, "pt-BR")).map((nome) => `<option value="${escapeHTML(nome)}">${escapeHTML(nome)}</option>`).join("")}
+          </select>
+        </label>
+        <label>De
+          <input type="date" id="history-date-from" aria-label="Data inicial do histórico">
+        </label>
+        <label>Até
+          <input type="date" id="history-date-to" aria-label="Data final do histórico">
+        </label>
+        <button type="button" class="secondary history-clear" id="history-clear">Limpar filtros</button>
+      </section>
 
       <section class="panel" id="history-results">
         ${table(filteredOrders(true), false)}
       </section>
     `;
 
-    content
-      .querySelector("#history-search")
-      .addEventListener("input", (event) => {
-        search = event.target.value;
+    const atualizarHistorico = () => {
         content.querySelector("#history-results").innerHTML = table(
           filteredOrders(true),
           false,
         );
-      });
+    };
+    content.querySelectorAll("#history-search, #history-status, #history-service, #history-technician, #history-date-from, #history-date-to")
+      .forEach((campo) => campo.addEventListener(campo.tagName === "INPUT" && campo.type === "text" ? "input" : "change", atualizarHistorico));
+    content.querySelector("#history-clear").addEventListener("click", () => {
+      content.querySelectorAll("#history-search, #history-status, #history-service, #history-technician, #history-date-from, #history-date-to")
+        .forEach((campo) => { campo.value = campo.tagName === "SELECT" ? "Todos" : ""; });
+      atualizarHistorico();
+    });
 
     return;
   }
@@ -1804,6 +1833,103 @@ function abrirPortfolioModal(item = null) {
   modal.showModal();
 }
 
+async function carregarTecnicosAdmin(mostrarCarregamento = true) {
+  if (mostrarCarregamento) {
+    techniciansLoading = true;
+    techniciansError = "";
+    render();
+  }
+  try {
+    const resposta = await fetch(TECH_API, {
+      credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.tecnicos)) {
+      throw new Error(dados?.mensagem || "Não foi possível carregar os técnicos.");
+    }
+    techniciansAdmin = dados.tecnicos;
+    technicianCsrf = String(dados.csrf || "");
+    techniciansLoaded = true;
+    techniciansError = "";
+  } catch (erro) {
+    techniciansError = erro.message || "Falha ao carregar técnicos.";
+  } finally {
+    techniciansLoading = false;
+    if (page === "technicians") render();
+  }
+}
+
+function renderTechnicians() {
+  if (techniciansLoading) {
+    content.innerHTML = '<section class="panel"><div class="empty">Carregando técnicos…</div></section>';
+    return;
+  }
+  if (techniciansError) {
+    content.innerHTML = `<section class="panel"><div class="empty">${escapeHTML(techniciansError)}</div><button class="primary" id="retry-technicians">Tentar novamente</button></section>`;
+    content.querySelector("#retry-technicians").addEventListener("click", () => void carregarTecnicosAdmin());
+    return;
+  }
+  const ativos = techniciansAdmin.filter((t) => t.ativo).length;
+  content.innerHTML = `
+    <div class="toolbar technicians-toolbar">
+      <div><h1>Técnicos</h1><p>${ativos} ativos · ${techniciansAdmin.length} cadastrados</p></div>
+      <button type="button" class="primary" id="add-technician">+ Novo Técnico</button>
+    </div>
+    <section class="technician-admin-list">
+      ${techniciansAdmin.map((tecnico) => `
+        <article class="panel technician-admin-card">
+          <div class="technician-admin-identity"><div class="avatar">${escapeHTML(iniciais(tecnico.nome))}</div><div><strong>${escapeHTML(tecnico.nome)}</strong><small>${escapeHTML(tecnico.email || "Sem conta de acesso")}</small><small>${escapeHTML(tecnico.telefone)}</small></div></div>
+          <span class="sr-badge ${tecnico.ativo ? "sr-done" : "sr-cancelled"}">${tecnico.ativo ? "Ativo" : "Inativo"}</span>
+          <div class="technician-admin-actions"><button type="button" class="secondary" data-edit-technician="${escapeHTML(tecnico.id)}">Editar</button><button type="button" class="secondary" data-toggle-technician="${escapeHTML(tecnico.id)}" data-active="${tecnico.ativo ? "1" : "0"}">${tecnico.ativo ? "Desativar" : "Ativar"}</button></div>
+        </article>`).join("") || '<div class="panel empty">Nenhum técnico cadastrado.</div>'}
+    </section>`;
+  content.querySelector("#add-technician").addEventListener("click", () => abrirDialogTecnico());
+  content.querySelectorAll("[data-edit-technician]").forEach((botao) => botao.addEventListener("click", () => {
+    const tecnico = techniciansAdmin.find((item) => item.id === botao.dataset.editTechnician);
+    if (tecnico) abrirDialogTecnico(tecnico);
+  }));
+  content.querySelectorAll("[data-toggle-technician]").forEach((botao) => botao.addEventListener("click", () => void alternarAtivoTecnico(botao.dataset.toggleTechnician, botao.dataset.active !== "1")));
+}
+
+function abrirDialogTecnico(tecnico = null) {
+  const formTecnico = document.querySelector("#technician-form");
+  formTecnico.reset();
+  formTecnico.elements.technician_id.value = tecnico?.id || "";
+  formTecnico.elements.name.value = tecnico?.nome || "";
+  formTecnico.elements.email.value = tecnico?.email || "";
+  formTecnico.elements.phone.value = tecnico?.telefone || "";
+  formTecnico.elements.password.required = !tecnico;
+  document.querySelector("#technician-dialog-title").textContent = tecnico ? "Editar técnico" : "Novo técnico";
+  document.querySelector("#save-technician").textContent = tecnico ? "Salvar alterações" : "Criar acesso";
+  document.querySelector("#technician-feedback").hidden = true;
+  document.querySelector("#technician-dialog").showModal();
+}
+
+async function alternarAtivoTecnico(id, ativo) {
+  if (!technicianCsrf) return;
+  if (!ativo && !window.confirm("Desativar este técnico? Ele não poderá mais entrar no sistema.")) return;
+  try {
+    const resposta = await fetch(TECH_API, {
+      method: "POST", credentials: "same-origin", cache: "no-store",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ acao: "ativo", id, ativo, csrf: technicianCsrf }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível atualizar o técnico.");
+    adminMessage = dados.mensagem;
+    adminMessageError = false;
+    await carregarTecnicosAdmin(false);
+  } catch (erro) {
+    adminMessage = erro.message || "Falha ao atualizar técnico.";
+    adminMessageError = true;
+    render();
+  }
+}
+
 function renderPortfolio() {
   if (!portfolioLoaded && !portfolioLoading && !portfolioError)
     void carregarPortfolioAdmin();
@@ -1899,12 +2025,76 @@ function renderPortfolio() {
   );
 }
 
+function renderAdminNotifications() {
+  const lista = document.querySelector("#admin-notification-list");
+  const resumo = document.querySelector("#notifications-summary");
+  const naoLidas = adminNotifications.filter((item) => !item.lida).length;
+  document.querySelector("#notification-count").textContent = naoLidas;
+  resumo.textContent = `${naoLidas} não lida(s)`;
+  lista.innerHTML = adminNotifications.length
+    ? adminNotifications.map((item) => `
+        <button type="button" class="admin-notification-row ${item.lida ? "read" : "unread"}"
+          data-admin-notification-id="${escapeHTML(item.id)}"
+          data-admin-notification-protocol="${escapeHTML(item.protocolo || "")}">
+          <span class="admin-notification-dot" aria-hidden="true"></span>
+          <span><strong>${escapeHTML(item.titulo)}</strong><small>${escapeHTML(item.mensagem)}</small><time>${escapeHTML(dateBR(String(item.criada_em || "").slice(0, 10)))} ${escapeHTML(String(item.criada_em || "").slice(11, 16))}</time></span>
+        </button>`).join("")
+    : '<div class="empty">Você não tem notificações.</div>';
+}
+
+async function carregarNotificacoesAdmin() {
+  try {
+    const resposta = await fetch(ADMIN_NOTIFICATIONS_API, {
+      credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.notificacoes)) {
+      throw new Error(dados?.mensagem || "Falha ao carregar notificações.");
+    }
+    adminNotifications = dados.notificacoes;
+    notificationsCsrf = String(dados.csrf || adminCsrf);
+    renderAdminNotifications();
+  } catch (erro) {
+    console.error("Falha ao carregar notificações administrativas.", erro);
+  }
+}
+
+async function acaoNotificacaoAdmin(acao, id = "") {
+  const feedback = document.querySelector("#admin-notification-feedback");
+  feedback.hidden = true;
+  try {
+    const resposta = await fetch(ADMIN_NOTIFICATIONS_API, {
+      method: "POST", credentials: "same-origin", cache: "no-store",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ acao, id, csrf: notificationsCsrf || adminCsrf }),
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return false;
+    }
+    if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível atualizar as notificações.");
+    feedback.textContent = dados.mensagem || "Notificações atualizadas.";
+    feedback.hidden = false;
+    await carregarNotificacoesAdmin();
+    return true;
+  } catch (erro) {
+    feedback.textContent = erro.message || "Falha ao atualizar notificações.";
+    feedback.hidden = false;
+    return false;
+  }
+}
+
 function render() {
   const pending = orders.filter(
     (order) => order.statusCode === "SOLICITADO",
   ).length;
   document.querySelector("#pending-count").textContent = pending;
-  document.querySelector("#notification-count").textContent = pending;
+  document.querySelector("#notification-count").textContent = adminNotifications.filter((item) => !item.lida).length;
 
   document.querySelectorAll(".tab").forEach((tab) => {
     const active = tab.dataset.page === page;
@@ -1935,6 +2125,7 @@ function render() {
   if (page === "history") renderRequests(true);
   if (page === "schedule") renderSchedule();
   if (page === "portfolio") renderPortfolio();
+  if (page === "technicians") renderTechnicians();
 
   if (adminMessage) {
     content.insertAdjacentHTML(
@@ -1949,6 +2140,7 @@ function navigate(nextPage) {
   search = "";
   filter = "Todos";
   render();
+  if (nextPage === "technicians" && !techniciansLoaded) void carregarTecnicosAdmin();
 }
 
 document.querySelectorAll(".tab").forEach((tab) => {
@@ -1956,10 +2148,71 @@ document.querySelectorAll(".tab").forEach((tab) => {
 });
 
 document.querySelector("#notifications").addEventListener("click", () => {
-  page = "requests";
-  search = "";
-  filter = "Solicitado";
-  render();
+  renderAdminNotifications();
+  document.querySelector("#admin-notification-feedback").hidden = true;
+  document.querySelector("#notifications-dialog").showModal();
+  void carregarNotificacoesAdmin();
+});
+
+document.querySelector("#close-notifications").addEventListener("click", () => document.querySelector("#notifications-dialog").close());
+document.querySelector("#mark-notifications-read").addEventListener("click", () => void acaoNotificacaoAdmin("ler_todas"));
+document.querySelector("#clear-read-notifications").addEventListener("click", () => void acaoNotificacaoAdmin("limpar_lidas"));
+document.querySelector("#admin-notification-list").addEventListener("click", async (event) => {
+  const botao = event.target.closest("[data-admin-notification-id]");
+  if (!botao) return;
+  const protocolo = botao.dataset.adminNotificationProtocol || "";
+  const marcado = await acaoNotificacaoAdmin("ler", botao.dataset.adminNotificationId);
+  if (protocolo && marcado) {
+    document.querySelector("#notifications-dialog").close();
+    page = "requests";
+    search = protocolo;
+    filter = "Todos";
+    render();
+  }
+});
+
+document.querySelector("#close-technician").addEventListener("click", () => document.querySelector("#technician-dialog").close());
+document.querySelector("#cancel-technician").addEventListener("click", () => document.querySelector("#technician-dialog").close());
+document.querySelector("#technician-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formTecnico = event.currentTarget;
+  if (!formTecnico.reportValidity()) return;
+  const botao = document.querySelector("#save-technician");
+  const feedback = document.querySelector("#technician-feedback");
+  botao.disabled = true;
+  feedback.hidden = true;
+  const id = String(formTecnico.elements.technician_id.value || "");
+  try {
+    const resposta = await fetch(TECH_API, {
+      method: "POST", credentials: "same-origin", cache: "no-store",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        acao: id ? "atualizar" : "criar", id,
+        nome: String(formTecnico.elements.name.value || "").trim(),
+        email: String(formTecnico.elements.email.value || "").trim(),
+        telefone: String(formTecnico.elements.phone.value || "").trim(),
+        senha: String(formTecnico.elements.password.value || ""),
+        csrf: technicianCsrf,
+      }),
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 403) {
+      window.location.replace("./login.html");
+      return;
+    }
+    if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível salvar o técnico.");
+    document.querySelector("#technician-dialog").close();
+    formTecnico.reset();
+    adminMessage = dados.mensagem;
+    adminMessageError = false;
+    techniciansLoaded = false;
+    await carregarTecnicosAdmin(false);
+  } catch (erro) {
+    feedback.textContent = erro.message || "Falha ao salvar técnico.";
+    feedback.hidden = false;
+  } finally {
+    botao.disabled = false;
+  }
 });
 
 document.querySelector("#new-order").addEventListener("click", () => {
@@ -2068,101 +2321,87 @@ async function carregarHorariosPedido() {
   }
 }
 
-let sequenciaBuscaCliente = 0;
-let temporizadorBuscaCliente;
-let buscaClienteEmAndamento = false;
+let buscaClienteSequencia = 0;
+let buscaClienteTemporizador;
+let buscaClientePendente = false;
 let buscaClienteFalhou = false;
 
 function resetarBuscaCliente() {
-  sequenciaBuscaCliente += 1;
-  clearTimeout(temporizadorBuscaCliente);
-  buscaClienteEmAndamento = false;
+  buscaClienteSequencia += 1;
+  clearTimeout(buscaClienteTemporizador);
+  buscaClientePendente = false;
   buscaClienteFalhou = false;
-  const seletor = form.elements.client_id;
-  seletor.replaceChildren(
-    new Option("Informe o telefone para buscar contas", ""),
-  );
+  const seletor = form.elements.namedItem("client_id");
+  const feedback = document.querySelector("#client-match-feedback");
+  if (!seletor || !feedback) return;
+  seletor.replaceChildren(new Option("Informe o telefone para buscar contas", ""));
   seletor.disabled = true;
-  document.querySelector("#client-match-feedback").textContent =
-    "O pedido só aparece no painel do cliente quando for vinculado a uma conta.";
+  feedback.textContent = "O pedido aparecerá no painel do cliente se for vinculado a uma conta.";
 }
 
 form.elements.phone.addEventListener("input", () => {
-  const seletor = form.elements.client_id;
+  const seletor = form.elements.namedItem("client_id");
   const feedback = document.querySelector("#client-match-feedback");
+  if (!seletor || !feedback) return;
   const telefone = form.elements.phone.value.replace(/\D/g, "");
-  const sequencia = ++sequenciaBuscaCliente;
-  clearTimeout(temporizadorBuscaCliente);
-  buscaClienteEmAndamento = false;
+  const sequencia = ++buscaClienteSequencia;
+  clearTimeout(buscaClienteTemporizador);
+  buscaClientePendente = false;
   buscaClienteFalhou = false;
-  seletor.replaceChildren(new Option("Buscando conta do cliente...", ""));
+  seletor.replaceChildren(new Option("Buscando conta…", ""));
   seletor.disabled = true;
-
   if (!/^\d{10,11}$/.test(telefone)) {
-    seletor.replaceChildren(new Option("Informe um telefone com DDD", ""));
-    feedback.textContent =
-      "Digite um telefone com DDD (10 ou 11 números) para procurar uma conta.";
+    seletor.replaceChildren(new Option("Informe telefone com DDD", ""));
+    feedback.textContent = "Digite um telefone válido com DDD para procurar uma conta.";
     return;
   }
-
+  buscaClientePendente = true;
   feedback.textContent = "Procurando contas cadastradas com este telefone…";
-  buscaClienteEmAndamento = true;
-  temporizadorBuscaCliente = setTimeout(async () => {
+  buscaClienteTemporizador = setTimeout(async () => {
     try {
-      const url = `${API}?acao=buscar_cliente&telefone=${encodeURIComponent(telefone)}`;
-      const resposta = await fetch(url, {
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: { Accept: "application/json" },
+      const resposta = await fetch(`${API}?acao=buscar_cliente&telefone=${encodeURIComponent(telefone)}`, {
+        credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
       });
       const resultado = await resposta.json();
-      if (sequencia !== sequenciaBuscaCliente) return;
+      if (sequencia !== buscaClienteSequencia) return;
       if (resposta.status === 401 || resposta.status === 403) {
         window.location.replace("./login.html");
         return;
       }
       if (!resposta.ok || resultado?.sucesso !== true) {
-        throw new Error(resultado?.mensagem || "Falha ao buscar cliente.");
+        throw new Error(resultado?.mensagem || "Não foi possível buscar a conta.");
       }
-      buscaClienteEmAndamento = false;
-
-      const clientes = Array.isArray(resultado.clientes)
-        ? resultado.clientes
-        : [];
+      buscaClientePendente = false;
+      const clientes = Array.isArray(resultado.clientes) ? resultado.clientes : [];
       seletor.replaceChildren(new Option("Não vincular a uma conta", ""));
-      for (const cliente of clientes) {
-        const opcao = new Option(
-          `${cliente.nome} — ${cliente.email}`,
-          String(cliente.id),
-        );
+      clientes.forEach((cliente) => {
+        const opcao = new Option(`${cliente.nome} — ${cliente.email}`, String(cliente.id));
         opcao.dataset.nome = String(cliente.nome || "");
         opcao.dataset.telefone = String(cliente.telefone || "");
         seletor.add(opcao);
-      }
+      });
       seletor.disabled = clientes.length === 0;
       feedback.textContent = clientes.length
-        ? `${clientes.length} conta(s) encontrada(s). Selecione a conta correta para vincular este pedido.`
-        : "Nenhuma conta foi encontrada com este telefone. O pedido ficará sem vínculo com uma conta.";
+        ? `${clientes.length} conta(s) encontrada(s). Selecione a conta correta para vincular.`
+        : "Nenhuma conta encontrada. O pedido será salvo sem vínculo com uma conta.";
     } catch (erro) {
-      if (sequencia !== sequenciaBuscaCliente) return;
-      buscaClienteEmAndamento = false;
+      if (sequencia !== buscaClienteSequencia) return;
+      buscaClientePendente = false;
       buscaClienteFalhou = true;
       seletor.replaceChildren(new Option("Busca indisponível", ""));
       seletor.disabled = true;
-      feedback.textContent =
-        erro.message || "Não foi possível buscar a conta do cliente.";
+      feedback.textContent = erro.message || "Falha ao buscar conta do cliente.";
     }
   }, 300);
 });
 
-form.elements.client_id.addEventListener("change", () => {
-  const opcao = form.elements.client_id.selectedOptions[0];
+form.elements.namedItem("client_id")?.addEventListener("change", (event) => {
+  const opcao = event.currentTarget.selectedOptions[0];
   if (!opcao?.value) return;
   form.elements.client.value = opcao.dataset.nome || form.elements.client.value;
-  form.elements.phone.value =
-    opcao.dataset.telefone || form.elements.phone.value;
-  document.querySelector("#client-match-feedback").textContent =
-    "Conta selecionada. O pedido ficará associado e aparecerá no painel deste cliente.";
+  form.elements.phone.value = opcao.dataset.telefone || form.elements.phone.value;
+  const feedback = document.querySelector("#client-match-feedback");
+  if (feedback) feedback.textContent = "Conta selecionada. O pedido aparecerá no painel desse cliente.";
 });
 
 function abrirModalNovoPedido() {
@@ -2208,14 +2447,14 @@ form.elements.time.addEventListener("change", () => {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (buscaClienteEmAndamento) {
+  if (buscaClientePendente) {
     document.querySelector("#client-match-feedback").textContent =
-      "Aguarde a busca da conta do cliente terminar antes de cadastrar.";
+      "Aguarde a busca da conta terminar antes de cadastrar o pedido.";
     return;
   }
   if (buscaClienteFalhou) {
     document.querySelector("#client-match-feedback").textContent =
-      "Não foi possível verificar as contas. Confira a conexão e tente buscar novamente antes de cadastrar.";
+      "A busca falhou. Altere o telefone e tente novamente antes de salvar.";
     return;
   }
   if (!form.reportValidity()) return;
