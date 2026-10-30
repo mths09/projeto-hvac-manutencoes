@@ -58,13 +58,20 @@
 
         <div class="etapa" id="etapa-2">
           <div class="numero">2</div>
-          <span>Data e Detalhes</span>
+          <span>Triagem</span>
         </div>
 
         <div class="linha"></div>
 
         <div class="etapa" id="etapa-3">
           <div class="numero">3</div>
+          <span>Data e Detalhes</span>
+        </div>
+
+        <div class="linha"></div>
+
+        <div class="etapa" id="etapa-4">
+          <div class="numero">4</div>
           <span>Confirmação</span>
         </div>
       </div>
@@ -222,7 +229,24 @@
         <!-- ETAPA 2 -->
         <!-- ========================= -->
 
-        <section class="data-detalhes escondido" id="tela-etapa-2">
+        <section class="triagem-etapa escondido" id="tela-etapa-2">
+          <div class="servico-escolhido">
+            <div class="servico-escolhido-icone"><i data-lucide="clipboard-list"></i></div>
+            <div>
+              <h3 id="nomeServicoTriagem">Ar Condicionado</h3>
+              <p>Responda às perguntas para que a equipe entenda melhor o atendimento.</p>
+            </div>
+          </div>
+
+          <div class="perguntas-triagem" id="perguntasTriagem" aria-live="polite"></div>
+
+          <div class="botoes-etapa">
+            <button type="button" class="botao-voltar" id="voltarTipoServico">← Alterar tipo</button>
+            <button type="button" class="botao-revisar" id="continuarTriagem">Continuar para data e detalhes →</button>
+          </div>
+        </section>
+
+        <section class="data-detalhes escondido" id="tela-etapa-3">
           <!-- SERVIÇO ESCOLHIDO -->
           <div class="servico-escolhido">
             <div class="servico-escolhido-icone" id="iconeServicoEscolhido">
@@ -354,10 +378,10 @@
         </section>
 
         <!-- ========================= -->
-        <!-- ETAPA 3 -->
+        <!-- ETAPA 4 -->
         <!-- ========================= -->
 
-        <section class="confirmacao escondido" id="tela-etapa-3">
+        <section class="confirmacao escondido" id="tela-etapa-4">
           <div class="confirmacao-card">
             <div class="confirmacao-icone">
               <i data-lucide="calendar-check"></i>
@@ -401,6 +425,11 @@
               <div class="resumo-linha descricao-resumo">
                 <span>Descrição</span>
                 <strong id="resumoDescricao"></strong>
+              </div>
+
+              <div class="resumo-linha resumo-triagem-linha">
+                <span>Triagem</span>
+                <ul id="resumoTriagem"></ul>
               </div>
 
               <div class="resumo-linha" id="resumoAnexosLinha" hidden>

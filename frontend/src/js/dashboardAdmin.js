@@ -63,6 +63,10 @@ function normalizarPedido(pedido) {
     createdAt: criado.slice(0, 10),
     description: String(pedido.descricao || ""),
     address: String(pedido.endereco || ""),
+    triage: Array.isArray(pedido.triagem) ? pedido.triagem.map((item) => ({
+      question: String(item.pergunta || ""),
+      answer: String(item.resposta || ""),
+    })) : [],
     totalDocuments: Number(pedido.total_documentos) || 0,
     attachments: [],
   };
@@ -719,6 +723,7 @@ function renderRequests(history = false) {
     const attachments = Array.isArray(order.attachments)
       ? order.attachments
       : [];
+    const triage = Array.isArray(order.triage) ? order.triage : [];
 
     modal.innerHTML = `
       <h2 id="sr-detail-title">Pedido ${escapeHTML(order.id)}</h2>
@@ -747,6 +752,21 @@ function renderRequests(history = false) {
           )
           .join("")}
       </div>
+
+      ${
+        triage.length
+          ? `
+        <div class="sr-label">Respostas da triagem</div>
+        <ul class="sr-triage-list">
+          ${triage
+            .map((item) => `
+              <li class="sr-description"><strong>${escapeHTML(item.question)}</strong><br>${escapeHTML(item.answer)}</li>
+            `)
+            .join("")}
+        </ul>
+      `
+          : ""
+      }
 
       ${
         attachments.length

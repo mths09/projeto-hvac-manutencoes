@@ -128,6 +128,185 @@ function conferirClienteAgendamento(?array $usuario): void
     }
 }
 
+// Busca somente o questionário publicado mais recente e suas opções para um serviço.
+function obterQuestionarioAgendamento(mysqli $db, string $codigoServico): ?array
+{
+    $questionario = consultarAgendamento($db,
+        "SELECT q.id_questionario, q.titulo, q.versao, t.codigo AS codigo_servico
+         FROM questionario q
+         JOIN tipo_servico t ON t.id_tipo_servico = q.id_tipo_servico
+         WHERE t.codigo = ? AND t.ativo = 1 AND q.status = 'PUBLICADO'
+         ORDER BY q.versao DESC LIMIT 1",
+        [$codigoServico]
+    )->get_result()->fetch_assoc();
+    if (!$questionario) {
+        return null;
+    }
+
+    $perguntas = consultarAgendamento($db,
+        'SELECT p.id_pergunta, p.codigo, p.enunciado, p.ajuda, p.tipo_resposta, p.obrigatoria, p.ordem,
+                o.id_opcao, o.codigo AS codigo_opcao, o.rotulo AS rotulo_opcao, o.ordem AS ordem_opcao
+         FROM pergunta_triagem p
+         LEFT JOIN opcao_pergunta o ON o.id_pergunta = p.id_pergunta
+         WHERE p.id_questionario = ?
+         ORDER BY p.ordem, p.id_pergunta, o.ordem, o.id_opcao',
+        [$questionario['id_questionario']]
+    )->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    $porId = [];
+    foreach ($perguntas as $linha) {
+        $idPergunta = (string) $linha['id_pergunta'];
+        if (!isset($porId[$idPergunta])) {
+            $porId[$idPergunta] = [
+                'id_pergunta' => (int) $linha['id_pergunta'],
+                'codigo' => $linha['codigo'],
+                'enunciado' => $linha['enunciado'],
+                'ajuda' => $linha['ajuda'],
+                'tipo_resposta' => $linha['tipo_resposta'],
+                'obrigatoria' => (bool) $linha['obrigatoria'],
+                'ordem' => (int) $linha['ordem'],
+                'opcoes' => [],
+            ];
+        }
+        if ($linha['id_opcao'] !== null) {
+            $porId[$idPergunta]['opcoes'][] = [
+                'id_opcao' => (int) $linha['id_opcao'],
+                'codigo' => $linha['codigo_opcao'],
+                'rotulo' => $linha['rotulo_opcao'],
+                'ordem' => (int) $linha['ordem_opcao'],
+            ];
+        }
+    }
+
+    return [
+        'id_questionario' => (int) $questionario['id_questionario'],
+        'titulo' => $questionario['titulo'],
+        'versao' => (int) $questionario['versao'],
+        'codigo_servico' => $questionario['codigo_servico'],
+        'perguntas' => array_values($porId),
+    ];
+}
+
+// Converte as respostas recebidas em um mapa validado pergunta => opção.
+// O servidor aceita apenas perguntas e opções existentes no questionário do serviço escolhido.
+function normalizarRespostasTriagem(mixed $entrada, array $questionario): array
+{
+    if (is_string($entrada)) {
+        try {
+            $entrada = json_decode($entrada, true, 32, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            throw new ErroAgendamento('As respostas da triagem estão em formato inválido.', 422);
+        }
+    }
+    if (!is_array($entrada)) {
+        throw new ErroAgendamento('Responda às perguntas da triagem antes de continuar.', 422);
+    }
+
+    if (!isset($questionario['perguntas']) || !is_array($questionario['perguntas']) || !$questionario['perguntas']) {
+        throw new ErroAgendamento('A triagem deste serviço não está configurada corretamente.', 503);
+    }
+    $perguntas = $questionario['perguntas'];
+    if (count($perguntas) < 4 || count($perguntas) > 6) {
+        throw new ErroAgendamento('A triagem deste serviço não está configurada corretamente.', 503);
+    }
+    $codigosPermitidos = [];
+    foreach ($perguntas as $pergunta) {
+        if ($pergunta['tipo_resposta'] !== 'OPCAO_UNICA' || !$pergunta['opcoes']) {
+            throw new ErroAgendamento('A triagem deste serviço não está disponível.', 503);
+        }
+        $codigosPermitidos[$pergunta['codigo']] = true;
+    }
+    foreach ($entrada as $codigoPergunta => $codigoOpcao) {
+        if (!is_string($codigoPergunta) || !isset($codigosPermitidos[$codigoPergunta]) || !is_string($codigoOpcao)) {
+            throw new ErroAgendamento('A triagem contém uma pergunta ou opção inválida.', 422);
+        }
+    }
+
+    $normalizadas = [];
+    foreach ($perguntas as $pergunta) {
+        $codigoOpcao = $entrada[$pergunta['codigo']] ?? null;
+        if (!$pergunta['obrigatoria'] && $codigoOpcao === null) {
+            continue;
+        }
+        $opcaoValida = false;
+        foreach ($pergunta['opcoes'] as $opcao) {
+            if ($opcao['codigo'] === $codigoOpcao) {
+                $opcaoValida = true;
+                break;
+            }
+        }
+        if (!$opcaoValida) {
+            throw new ErroAgendamento('Responda a pergunta: ' . $pergunta['enunciado'], 422);
+        }
+        $normalizadas[$pergunta['codigo']] = $codigoOpcao;
+    }
+    if (count($normalizadas) !== count($entrada)) {
+        throw new ErroAgendamento('A triagem contém respostas incompletas ou duplicadas.', 422);
+    }
+    return $normalizadas;
+}
+
+function obterRespostasSalvasAgendamento(mysqli $db, int $idSolicitacao): array
+{
+    $linhas = consultarAgendamento($db,
+        'SELECT p.codigo AS pergunta, o.codigo AS opcao
+         FROM triagem t
+         JOIN resposta_triagem r ON r.id_triagem = t.id_triagem
+         JOIN pergunta_triagem p ON p.id_pergunta = r.id_pergunta
+         JOIN resposta_opcao ro ON ro.id_resposta = r.id_resposta
+         JOIN opcao_pergunta o ON o.id_opcao = ro.id_opcao
+         WHERE t.id_solicitacao = ? ORDER BY p.ordem, p.id_pergunta',
+        [$idSolicitacao]
+    )->get_result()->fetch_all(MYSQLI_ASSOC);
+    $respostas = [];
+    foreach ($linhas as $linha) {
+        $respostas[$linha['pergunta']] = $linha['opcao'];
+    }
+    return $respostas;
+}
+
+// Grava a triagem e cada resposta dentro da mesma transação do agendamento.
+function salvarTriagemAgendamento(mysqli $db, int $idSolicitacao, int $idRespondente, string $codigoServico, array $respostas): void
+{
+    $questionario = obterQuestionarioAgendamento($db, $codigoServico);
+    if (!$questionario) {
+        throw new ErroAgendamento('A triagem deste serviço não está publicada. Execute banco/triagem_mvp.sql.', 503);
+    }
+    $respostas = normalizarRespostasTriagem($respostas, $questionario);
+    consultarAgendamento($db,
+        "INSERT INTO triagem (id_solicitacao, id_questionario, id_respondente, status, enviada_em)
+         VALUES (?, ?, ?, 'ENVIADA', NOW())",
+        [$idSolicitacao, $questionario['id_questionario'], $idRespondente]
+    );
+    $idTriagem = $db->insert_id;
+
+    foreach ($questionario['perguntas'] as $pergunta) {
+        $codigoOpcao = $respostas[$pergunta['codigo']] ?? null;
+        if ($codigoOpcao === null) {
+            continue;
+        }
+        $opcao = null;
+        foreach ($pergunta['opcoes'] as $item) {
+            if ($item['codigo'] === $codigoOpcao) {
+                $opcao = $item;
+                break;
+            }
+        }
+        if (!$opcao) {
+            throw new ErroAgendamento('Uma das respostas da triagem não pertence ao serviço selecionado.', 422);
+        }
+        consultarAgendamento($db,
+            'INSERT INTO resposta_triagem (id_triagem, id_pergunta, valor_texto)
+             VALUES (?, ?, ?)',
+            [$idTriagem, $pergunta['id_pergunta'], $opcao['rotulo']]
+        );
+        consultarAgendamento($db,
+            'INSERT INTO resposta_opcao (id_resposta, id_opcao) VALUES (?, ?)',
+            [$db->insert_id, $opcao['id_opcao']]
+        );
+    }
+}
+
 function validarDadosAgendamento(array $entrada): array
 {
     $dados = [];
@@ -190,8 +369,12 @@ function resultadoAgendamento(string $protocolo, bool $repetido): array
 // A transação é separada da rota HTTP para permitir testes isolados.
 function executarAgendamento(mysqli $conexao, array $usuario, array $dados, array $anexos = []): array
 {
+    $respostasTriagem = $dados['respostas_triagem'] ?? null;
     $dados = validarDadosAgendamento($dados);
-    configurarFusoAgendamento($conexao);
+    if (!is_array($respostasTriagem)) {
+        throw new ErroAgendamento('Responda à triagem deste serviço antes de enviar o pedido.', 422);
+    }
+    $dados['respostas_triagem'] = $respostasTriagem;
     $conexao->begin_transaction();
     $arquivosFisicosNovos = [];
     try {
@@ -220,6 +403,10 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados, arra
                 if ($dados[$campo] !== (string) $existente[$coluna]) {
                     throw new ErroAgendamento('Este pedido já foi enviado com outros dados. Consulte Meus Pedidos.', 409);
                 }
+            }
+            $respostasSalvas = obterRespostasSalvasAgendamento($conexao, (int) $existente['id_solicitacao']);
+            if ($dados['respostas_triagem'] !== $respostasSalvas) {
+                throw new ErroAgendamento('Este pedido já foi enviado com outras respostas de triagem. Consulte Meus Pedidos.', 409);
             }
             $conexao->commit();
             return resultadoAgendamento($dados['protocolo'], true);
@@ -274,6 +461,7 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados, arra
             'INSERT INTO endereco_atendimento (id_solicitacao, endereco_informado) VALUES (?, ?)',
             [$idSolicitacao, $dados['endereco']]
         );
+        salvarTriagemAgendamento($conexao, $idSolicitacao, (int) $idCliente, $dados['tipo_servico'], $dados['respostas_triagem']);
         $arquivosFisicosNovos = salvarAnexosAgendamento($conexao, $idSolicitacao, $idCliente, $anexos);
         consultarAgendamento($conexao,
             'INSERT INTO agendamento (id_solicitacao, id_disponibilidade, status) VALUES (?, ?, ?)',
@@ -363,6 +551,26 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
             $servicos = consultarAgendamento($conexao,
                 'SELECT codigo, nome FROM tipo_servico WHERE ativo = 1 ORDER BY ordem, nome'
             )->get_result()->fetch_all(MYSQLI_ASSOC);
+            $questionarios = [];
+            foreach ($servicos as $servicoDisponivel) {
+                $questionario = obterQuestionarioAgendamento($conexao, $servicoDisponivel['codigo']);
+                if (!$questionario) {
+                    continue;
+                }
+                $questionarios[$servicoDisponivel['codigo']] = [
+                    'titulo' => $questionario['titulo'],
+                    'perguntas' => array_map(static fn(array $pergunta): array => [
+                        'codigo' => $pergunta['codigo'],
+                        'enunciado' => $pergunta['enunciado'],
+                        'ajuda' => $pergunta['ajuda'],
+                        'obrigatoria' => $pergunta['obrigatoria'],
+                        'opcoes' => array_map(static fn(array $opcao): array => [
+                            'codigo' => $opcao['codigo'],
+                            'rotulo' => $opcao['rotulo'],
+                        ], $pergunta['opcoes']),
+                    ], $questionario['perguntas']),
+                ];
+            }
             $horarios = consultarAgendamento($conexao,
                 "SELECT d.id_disponibilidade AS id, d.inicio_previsto AS inicio, d.fim_previsto AS fim
                  FROM disponibilidade d WHERE d.situacao = 'LIVRE'
@@ -380,7 +588,8 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
             unset($horario);
             responderAgendamento(200, ['sucesso' => true, 'csrf' => $csrf, 'protocolo' => $protocolo,
                 'hoje' => date('Y-m-d'), 'usuario' => ['id' => (string) $id, 'nome' => $usuario['nome'], 'telefone' => $usuario['telefone'], 'endereco' => $usuario['endereco'] ?? ''],
-                'servicos' => $servicos, 'horarios' => $horarios, 'confirmacao_automatica' => CONFIRMACAO_AUTOMATICA]);
+                'servicos' => $servicos, 'questionarios' => $questionarios, 'horarios' => $horarios,
+                'confirmacao_automatica' => CONFIRMACAO_AUTOMATICA]);
         }
 
         if (!is_string($_POST['csrf'] ?? null) || !hash_equals($_SESSION['csrf_agendamento'], $_POST['csrf'])) {
@@ -388,6 +597,11 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
         }
         $anexos = validarAnexosAgendamento($_FILES);
         $dados = validarDadosAgendamento($_POST);
+        $questionario = obterQuestionarioAgendamento($conexao, $dados['tipo_servico']);
+        if (!$questionario) {
+            throw new ErroAgendamento('A triagem deste serviço não está publicada. Execute banco/triagem_mvp.sql.', 503);
+        }
+        $dados['respostas_triagem'] = normalizarRespostasTriagem($_POST['respostas_triagem'] ?? null, $questionario);
         $rascunho = $rascunhos[$dados['protocolo']] ?? null;
         if (!$rascunho || (int) $rascunho['usuario'] !== $id) {
             throw new ErroAgendamento('Este envio expirou ou não pertence à sua sessão. Consulte Meus Pedidos antes de iniciar outro.', 403);

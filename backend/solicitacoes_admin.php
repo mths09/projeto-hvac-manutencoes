@@ -224,6 +224,30 @@ try {
                 'total_documentos' => (int) $linha['total_documentos']
             ];
         }
+        $linhasTriagem = consultarSolicitacoesAdmin(
+            $conexao,
+            "SELECT tr.id_solicitacao, p.enunciado,
+                    COALESCE(r.valor_texto, o.rotulo) AS resposta
+             FROM triagem tr
+             INNER JOIN resposta_triagem r ON r.id_triagem = tr.id_triagem
+             INNER JOIN pergunta_triagem p ON p.id_pergunta = r.id_pergunta
+             LEFT JOIN resposta_opcao ro ON ro.id_resposta = r.id_resposta
+             LEFT JOIN opcao_pergunta o ON o.id_opcao = ro.id_opcao
+             INNER JOIN solicitacao s ON s.id_solicitacao = tr.id_solicitacao
+             WHERE s.arquivada_em IS NULL AND tr.status = 'ENVIADA'
+             ORDER BY tr.id_solicitacao, p.ordem, p.id_pergunta"
+        )->get_result()->fetch_all(MYSQLI_ASSOC);
+        $triagemPorSolicitacao = [];
+        foreach ($linhasTriagem as $linhaTriagem) {
+            $triagemPorSolicitacao[(string) $linhaTriagem['id_solicitacao']][] = [
+                'pergunta' => (string) $linhaTriagem['enunciado'],
+                'resposta' => (string) ($linhaTriagem['resposta'] ?? ''),
+            ];
+        }
+        foreach ($pedidos as &$pedido) {
+            $pedido['triagem'] = $triagemPorSolicitacao[$pedido['id']] ?? [];
+        }
+        unset($pedido);
         $tecnicos = consultarSolicitacoesAdmin(
             $conexao,
             'SELECT id_tecnico AS id, nome FROM tecnico WHERE ativo = 1 ORDER BY nome, id_tecnico'

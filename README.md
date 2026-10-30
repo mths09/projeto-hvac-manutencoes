@@ -1,6 +1,6 @@
 # HVAC Manutenções Sorocaba
 
-> Site de autoatendimento para triagem, solicitação e agendamento de manutenções de refrigeração e climatização.
+> Site de autoatendimento com triagem guiada por serviço, solicitação e agendamento de manutenções de refrigeração e climatização.
 
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 ![HTML](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
@@ -26,7 +26,7 @@ modernização do processo de atendimento, principalmente para organização da 
 ## ✨ Funcionalidades
 
 - [x] Página inicial com serviços e portfólio
-- [x] Triagem por tipo de equipamento
+- [x] Triagem guiada com 4 a 6 perguntas por tipo de serviço, salva junto ao pedido
 - [x] Agendamento de atendimento
 - [x] Área do cliente (login e cadastro)
 - [x] Painel administrativo
@@ -65,10 +65,13 @@ projeto-hvac-manutencoes/
 git clone https://github.com/mths09/projeto-hvac-manutencoes.git
 cd projeto-hvac-manutencoes
 
-# 2. Criar o banco de dados
-# execute o script da pasta banco/ no MySQL
+# 2. Criar as tabelas e os dados básicos
+# importe banco/hvac_db.sql no MySQL
 
-# 3. Configurar variáveis de ambiente
+# 3. Publicar os questionários da triagem
+# importe banco/triagem_mvp.sql depois do script anterior
+
+# 4. Configurar variáveis de ambiente
 cd backend
 cp .env.example .env   # preencha com os seus dados
 ```
