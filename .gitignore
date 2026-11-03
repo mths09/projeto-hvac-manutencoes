@@ -1,5 +1,6 @@
 .vscode/
-banco/
+banco/*
+!banco/triagem_mvp.sql
 hvac_db.sql
 backend/email_config.local.php
 
