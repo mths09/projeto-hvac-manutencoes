@@ -88,8 +88,10 @@ function inserirNotificacaoAgendamentoCliente(
     string $tituloCliente,
     string $mensagemCliente,
     string $tituloEquipe,
-    string $mensagemEquipe
-): void {
+    string $mensagemEquipe,
+    string $emailCliente,
+    string $assuntoCliente
+): ?array {
     consultarAgendamentoCliente(
         $db,
         "INSERT INTO notificacao
@@ -97,6 +99,23 @@ function inserirNotificacaoAgendamentoCliente(
          VALUES (?, ?, ?, ?, ?, ?, 'SITE', 'ENVIADO', NOW())",
         [$idCliente, $idSolicitacao, $idAgendamento, $tipoEvento, $tituloCliente, $mensagemCliente]
     );
+
+    $emailPendente = null;
+    if (filter_var($emailCliente, FILTER_VALIDATE_EMAIL)) {
+        consultarAgendamentoCliente(
+            $db,
+            "INSERT INTO notificacao
+                (id_destinatario, id_solicitacao, id_agendamento, tipo_evento, titulo, mensagem, canal, status_envio)
+             VALUES (?, ?, ?, ?, ?, ?, 'EMAIL', 'PENDENTE')",
+            [$idCliente, $idSolicitacao, $idAgendamento, $tipoEvento, $tituloCliente, $mensagemCliente]
+        );
+        $emailPendente = [
+            'id' => (int) $db->insert_id,
+            'destinatario' => $emailCliente,
+            'assunto' => $assuntoCliente,
+            'mensagem' => $mensagemCliente,
+        ];
+    }
 
     $administradores = consultarAgendamentoCliente(
         $db,
@@ -114,8 +133,46 @@ function inserirNotificacaoAgendamentoCliente(
             [(int) $administrador['id_usuario'], $idSolicitacao, $idAgendamento, $tipoEvento, $tituloEquipe, $mensagemEquipe]
         );
     }
+
+    return $emailPendente;
 }
 
+function enviarEmailAgendamentoCliente(mysqli $db, ?array $emailPendente): bool
+{
+    if ($emailPendente === null) {
+        return false;
+    }
+
+    try {
+        require_once __DIR__ . '/email_notificacao.php';
+        $resultado = enviarEmailHvac(
+            (string) $emailPendente['destinatario'],
+            (string) $emailPendente['assunto'],
+            (string) $emailPendente['mensagem']
+        );
+    } catch (Throwable $erro) {
+        error_log('Falha ao enviar aviso de agendamento ao cliente: ' . get_class($erro) . ', código ' . $erro->getCode());
+        $resultado = ['enviado' => false, 'erro' => 'Falha inesperada no envio do e-mail.'];
+    }
+
+    $enviado = !empty($resultado['enviado']);
+    try {
+        consultarAgendamentoCliente(
+            $db,
+            'UPDATE notificacao SET status_envio = ?, enviada_em = ?, erro_envio = ? WHERE id_notificacao = ?',
+            [
+                $enviado ? 'ENVIADO' : 'FALHA',
+                $enviado ? date('Y-m-d H:i:s') : null,
+                $enviado ? null : (string) ($resultado['erro'] ?? 'Falha no envio do e-mail.'),
+                (int) $emailPendente['id'],
+            ]
+        );
+    } catch (Throwable $erro) {
+        error_log('Falha ao atualizar status do aviso de agendamento: ' . get_class($erro) . ', código ' . $erro->getCode());
+    }
+
+    return $enviado;
+}
 function registrarHistoricoAgendamentoCliente(
     mysqli $db,
     int $idSolicitacao,
@@ -131,6 +188,10 @@ function registrarHistoricoAgendamentoCliente(
          VALUES (?, ?, ?, ?, ?)',
         [$idSolicitacao, $statusAnterior, $statusNovo, $idCliente, $observacao]
     );
+}
+
+if (defined('HVAC_AGENDAMENTO_CLIENTE_TESTE')) {
+    return;
 }
 
 $metodo = $_SERVER['REQUEST_METHOD'] ?? '';
@@ -188,7 +249,7 @@ try {
 
     $usuario = consultarAgendamentoCliente(
         $conexao,
-        "SELECT id_usuario, nome, perfil, ativo FROM usuario WHERE id_usuario = ? LIMIT 1",
+        "SELECT id_usuario, nome, email, perfil, ativo FROM usuario WHERE id_usuario = ? LIMIT 1",
         [$idCliente]
     )->get_result()->fetch_assoc();
 
@@ -280,15 +341,18 @@ try {
     $idAgendamento = $agendamento === null ? null : (int) $agendamento['id_agendamento'];
 
     if ($acao === 'cancelar') {
+        // Regra: o cancelamento do cliente retira a reserva da capacidade; bloqueios manuais definidos pela equipe permanecem intactos.
         if ($agendamento !== null) {
-            consultarAgendamentoCliente(
+            $stmtCancelamento = consultarAgendamentoCliente(
                 $conexao,
                 "UPDATE agendamento
                  SET status = 'CANCELADO', motivo_cancelamento = 'Cancelado pelo cliente'
                  WHERE id_agendamento = ? AND status IN ('PENDENTE', 'CONFIRMADO')",
                 [$idAgendamento]
             );
-            if ($conexao->affected_rows !== 1) {
+            $linhasCanceladas = $stmtCancelamento->affected_rows;
+            $stmtCancelamento->close();
+            if ($linhasCanceladas !== 1) {
                 throw new ErroAgendamentoCliente('O status do agendamento mudou. Atualize o painel e tente novamente.', 409);
             }
         }
@@ -323,7 +387,7 @@ try {
 
         $mensagemCliente = 'Você cancelou o pedido ' . $protocolo . '.';
         $mensagemEquipe = 'O cliente ' . $pedido['nome_contato'] . ' cancelou o pedido ' . $protocolo . '.';
-        inserirNotificacaoAgendamentoCliente(
+        $emailPendente = inserirNotificacaoAgendamentoCliente(
             $conexao,
             (int) $idCliente,
             (int) $pedido['id_solicitacao'],
@@ -332,13 +396,20 @@ try {
             'Pedido cancelado',
             $mensagemCliente,
             'Pedido cancelado pelo cliente',
-            $mensagemEquipe
+            $mensagemEquipe,
+            (string) $usuario['email'],
+            'Pedido cancelado - HVAC Lex Company'
         );
 
         $conexao->commit();
         $transacaoAberta = false;
+        $emailEnviado = enviarEmailAgendamentoCliente($conexao, $emailPendente);
         $conexao->close();
-        responderAgendamentoCliente(200, ['sucesso' => true, 'mensagem' => 'Pedido cancelado. O horário foi liberado.']);
+        $mensagemResposta = 'Pedido cancelado. A vaga foi liberada.';
+        if (!$emailEnviado) {
+            $mensagemResposta .= ' O aviso continua disponível no painel, mas não foi enviado por e-mail.';
+        }
+        responderAgendamentoCliente(200, ['sucesso' => true, 'mensagem' => $mensagemResposta]);
     }
 
     if ($agendamento === null || !is_string($entrada['disponibilidade'] ?? null)) {
@@ -397,13 +468,15 @@ try {
         throw new ErroAgendamentoCliente('Esse horário acabou de ser reservado. Escolha outro.', 409);
     }
 
-    consultarAgendamentoCliente(
+    $stmtReagendamento = consultarAgendamentoCliente(
         $conexao,
         "UPDATE agendamento SET status = 'REAGENDADO'
          WHERE id_agendamento = ? AND status IN ('PENDENTE', 'CONFIRMADO')",
         [$agendamento['id_agendamento']]
     );
-    if ($conexao->affected_rows !== 1) {
+    $linhasReagendadas = $stmtReagendamento->affected_rows;
+    $stmtReagendamento->close();
+    if ($linhasReagendadas !== 1) {
         throw new ErroAgendamentoCliente('O status do agendamento mudou. Atualize o painel e tente novamente.', 409);
     }
 
@@ -458,7 +531,7 @@ try {
     )->get_result()->fetch_assoc()['inicio_previsto'];
     $mensagemCliente = 'O pedido ' . $protocolo . ' foi reagendado para ' . $inicioNovoHorario . '; o novo horário aguarda confirmação da equipe.';
     $mensagemEquipe = 'O cliente ' . $pedido['nome_contato'] . ' solicitou reagendamento do pedido ' . $protocolo . ' para ' . $inicioNovoHorario . '.';
-    inserirNotificacaoAgendamentoCliente(
+    $emailPendente = inserirNotificacaoAgendamentoCliente(
         $conexao,
         (int) $idCliente,
         (int) $pedido['id_solicitacao'],
@@ -467,16 +540,20 @@ try {
         'Reagendamento solicitado',
         $mensagemCliente,
         'Reagendamento solicitado pelo cliente',
-        $mensagemEquipe
+        $mensagemEquipe,
+        (string) $usuario['email'],
+        'Reagendamento solicitado - HVAC Lex Company'
     );
 
     $conexao->commit();
     $transacaoAberta = false;
+    $emailEnviado = enviarEmailAgendamentoCliente($conexao, $emailPendente);
     $conexao->close();
-    responderAgendamentoCliente(200, [
-        'sucesso' => true,
-        'mensagem' => 'Reagendamento solicitado. O novo horário ficará pendente de confirmação da equipe.'
-    ]);
+    $mensagemResposta = 'Reagendamento solicitado. O novo horário ficará pendente de confirmação da equipe.';
+    if (!$emailEnviado) {
+        $mensagemResposta .= ' O aviso continua disponível no painel, mas não foi enviado por e-mail.';
+    }
+    responderAgendamentoCliente(200, ['sucesso' => true, 'mensagem' => $mensagemResposta]);
 } catch (Throwable $erro) {
     if ($transacaoAberta && $conexao instanceof mysqli) {
         try {
