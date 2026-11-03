@@ -61,6 +61,7 @@ function normalizarPedido(pedido) {
     equipment: String(pedido.servico || "Serviço"),
     technician: String(pedido.tecnico || ""),
     technicianId: String(pedido.tecnico_id || ""),
+    appointmentDate: inicio ? inicio.slice(0, 10) : "",
     date: inicio ? inicio.slice(0, 10) : criado.slice(0, 10),
     time: inicio ? inicio.slice(11, 16) : "—",
     status:
@@ -151,7 +152,12 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
 async function enviarAcaoAdmin(pedido, acao, valores, controle) {
   if (!adminCsrf) return;
   const valorAnterior = controle.value;
+  const estavaDesabilitado = controle.disabled;
+  const card = controle.closest(".sr-card");
+  const feedbackCard = card?.querySelector("[data-sr-saving]");
   controle.disabled = true;
+  if (card) card.setAttribute("aria-busy", "true");
+  if (feedbackCard) feedbackCard.hidden = false;
   adminMessage = "";
   adminMessageError = false;
   try {
@@ -188,11 +194,14 @@ async function enviarAcaoAdmin(pedido, acao, valores, controle) {
     await carregarSolicitacoesAdmin(false);
     if (adminError) adminMessageError = true;
   } catch (erro) {
-    controle.disabled = false;
+    controle.disabled = estavaDesabilitado;
     controle.value = valorAnterior;
     adminMessage = erro.message || "Não foi possível atualizar o pedido.";
     adminMessageError = true;
     console.error(erro);
+  } finally {
+    if (card) card.removeAttribute("aria-busy");
+    if (feedbackCard) feedbackCard.hidden = true;
   }
   render();
 }
@@ -509,144 +518,120 @@ function renderRequests(history = false) {
   }
 
   function renderCard(order) {
-    const currentTechnician = order.technician || "Não atribuído";
-
     const phone = order.phone || "";
     const documentCount = Number(order.totalDocuments) || 0;
     const statusOptions = [
-      ...new Set([order.statusCode, ...order.statusOptions]),
+      ...new Set([
+        order.statusCode,
+        ...order.statusOptions.filter((codigo) => codigo !== "CANCELADO"),
+      ]),
     ];
+    const podeAlterarStatus = statusOptions.some((codigo) => codigo !== order.statusCode);
+    const pedidoEncerrado = ["CONCLUIDO", "CANCELADO"].includes(order.statusCode);
+    const podeAtribuirTecnico = technicians.length > 0 && !pedidoEncerrado;
+    const temAgendamento = Boolean(order.appointmentDate && order.time && order.time !== "—");
+    const aguardandoConfirmacao = order.statusCode === "SOLICITADO" && temAgendamento;
+    const tituloAgendamento = aguardandoConfirmacao ? "Novo horário solicitado" : "Agendamento";
+    const valorAgendamento = temAgendamento
+      ? dateBR(order.appointmentDate) + " às " + order.time
+      : "Aguardando agendamento";
+    const telefoneMarkup = phone
+      ? '<a class="sr-phone" href="tel:' + escapeHTML(phone.replace(/[^\d+]/g, "")) + '">' + escapeHTML(phone) + '</a>'
+      : '<span class="sr-description">Telefone não informado</span>';
+    const tecnicoOptions = technicians.map((tecnico) =>
+      '<option value="' + escapeHTML(tecnico.id) + '" ' +
+      (tecnico.id === order.technicianId ? "selected" : "") + ">" +
+      escapeHTML(tecnico.name) + "</option>",
+    ).join("");
+    const statusMarkup = statusOptions.map((codigo) =>
+      '<option value="' + escapeHTML(codigo) + '" ' +
+      (order.statusCode === codigo ? "selected" : "") + ">" +
+      escapeHTML(STATUS_LABELS[codigo] || codigo) + "</option>",
+    ).join("");
+    const arquivosMarkup = documentCount
+      ? '<span class="sr-files" aria-label="' + documentCount + " " +
+        (documentCount === 1 ? "documento anexado" : "documentos anexados") +
+        '">📎 ' + documentCount + " " +
+        (documentCount === 1 ? "documento" : "documentos") + "</span>"
+      : "";
+    const cancelarMarkup = order.statusOptions.includes("CANCELADO")
+      ? '<button type="button" class="sr-delete" data-sr-delete="' +
+        escapeHTML(order.id) + '" aria-label="Cancelar pedido ' +
+        escapeHTML(order.id) + '">Cancelar pedido</button>'
+      : "";
+    const confirmacaoMarkup = aguardandoConfirmacao
+      ? '<div class="sr-description">Aguardando confirmação da equipe</div>'
+      : "";
 
-    return `
-      <article class="sr-card ${order.urgent ? "urgent-card" : ""}">
-        <header class="sr-header">
-          <div class="sr-tags">
-            <strong class="sr-id">${escapeHTML(order.id)}</strong>
-
-            ${
-              order.urgent
-                ? `
-              <span class="sr-badge sr-urgent">⚡ Urgente</span>
-            `
-                : ""
-            }
-
-            ${statusBadge(order.status)}
-          </div>
-
-          <span class="sr-created">
-            Criado:
-            ${order.createdAt ? escapeHTML(dateBR(order.createdAt)) : "—"}
-          </span>
-        </header>
-
-        <div class="sr-columns">
-          <div>
-            <div class="sr-label">Cliente</div>
-            <div class="sr-value">${escapeHTML(order.client)}</div>
-
-            ${
-              phone
-                ? `
-              <a
-                class="sr-phone"
-                href="tel:${escapeHTML(phone.replace(/[^\d+]/g, ""))}"
-              >${escapeHTML(phone)}</a>
-            `
-                : `
-              <span class="sr-description">Telefone não informado</span>
-            `
-            }
-          </div>
-
-          <div>
-            <div class="sr-label">Serviço</div>
-            <div class="sr-value">${escapeHTML(order.equipment)}</div>
-            <div class="sr-description">
-              ${escapeHTML(order.description || "Sem descrição")}
-            </div>
-          </div>
-
-          <div>
-            <div class="sr-label">Agendado</div>
-            <div class="sr-value">${escapeHTML(dateBR(order.date))}</div>
-            <div class="sr-description">
-              ${escapeHTML(order.time)} —
-              ${escapeHTML(order.address || "Endereço não informado")}
-            </div>
-          </div>
-        </div>
-
-        <footer class="sr-footer">
-          <label class="sr-field">
-            Status:
-
-            <select
-              data-sr-status="${escapeHTML(order.id)}"
-              aria-label="Status de ${escapeHTML(order.id)}"
-            >
-              ${statusOptions
-                .map(
-                  (codigo) => `
-                <option
-                  value="${escapeHTML(codigo)}"
-                  ${order.statusCode === codigo ? "selected" : ""}
-                >${escapeHTML(STATUS_LABELS[codigo])}</option>
-              `,
-                )
-                .join("")}
-            </select>
-          </label>
-
-          <label class="sr-field">
-            Técnico:
-
-            <select
-              data-sr-technician="${escapeHTML(order.id)}"
-              aria-label="Técnico de ${escapeHTML(order.id)}"
-            >
-              <option value="" ${order.technicianId === "" ? "selected" : ""}>Não atribuído</option>
-              ${technicians
-                .map(
-                  (tecnico) => `
-                <option
-                  value="${escapeHTML(tecnico.id)}"
-                  ${tecnico.id === order.technicianId ? "selected" : ""}
-                >${escapeHTML(tecnico.name)}</option>
-              `,
-                )
-                .join("")}
-            </select>
-          </label>
-
-          <div class="sr-actions">
-            ${
-              documentCount
-                ? `
-              <span class="sr-files">
-                📎 ${documentCount}
-                ${documentCount === 1 ? "documento" : "documentos"}
-              </span>
-            `
-                : ""
-            }
-
-            <button
-              class="sr-details"
-              data-sr-details="${escapeHTML(order.id)}"
-            >Ver detalhes →</button>
-
-            ${
-              order.statusOptions.includes("CANCELADO")
-                ? `<button class="sr-delete" data-sr-delete="${escapeHTML(order.id)}">Cancelar</button>`
-                : ""
-            }
-          </div>
-        </footer>
-      </article>
-    `;
+    return [
+      '<article class="sr-card ' + (order.urgent ? "urgent-card" : "") + '">',
+      '  <header class="sr-header">',
+      '    <div class="sr-tags">',
+      '      <strong class="sr-id">' + escapeHTML(order.id) + '</strong>',
+      order.urgent ? '      <span class="sr-badge sr-urgent">⚡ Urgente</span>' : "",
+      statusBadge(order.status),
+      '    </div>',
+      '    <span class="sr-created">Criado em ' +
+        (order.createdAt ? escapeHTML(dateBR(order.createdAt)) : "—") + '</span>',
+      '  </header>',
+      '  <div class="sr-columns">',
+      '    <section class="sr-info">',
+      '      <div class="sr-label">Cliente</div>',
+      '      <div class="sr-value">' + escapeHTML(order.client) + '</div>',
+      '      ' + telefoneMarkup,
+      '    </section>',
+      '    <section class="sr-info">',
+      '      <div class="sr-label">Serviço</div>',
+      '      <div class="sr-value">' + escapeHTML(order.equipment) + '</div>',
+      '      <div class="sr-description">' + escapeHTML(order.description || "Sem descrição") + '</div>',
+      '    </section>',
+      '    <section class="sr-info sr-info-appointment">',
+      '      <div class="sr-appointment-summary">',
+      '        <div>',
+      '          <div class="sr-label">' + tituloAgendamento + '</div>',
+      '          <div class="sr-appointment-value">' + escapeHTML(valorAgendamento) + '</div>',
+      '          ' + confirmacaoMarkup,
+      '        </div>',
+      '        <div class="sr-appointment-address">',
+      '          <div class="sr-label">Endereço do atendimento</div>',
+      '          <div class="sr-description">' + escapeHTML(order.address || "Endereço não informado") + '</div>',
+      '        </div>',
+      '      </div>',
+      '    </section>',
+      '  </div>',
+      '  <footer class="sr-footer">',
+      '    <div class="sr-controls">',
+      '      <label class="sr-field">',
+      '        <span>Status do pedido</span>',
+      '        <select data-sr-status="' + escapeHTML(order.id) +
+        '" aria-label="Alterar status de ' + escapeHTML(order.id) + '"' +
+        (podeAlterarStatus ? "" : " disabled") + '>',
+      statusMarkup,
+      '        </select>',
+      '      </label>',
+      '      <label class="sr-field">',
+      '        <span>Técnico responsável</span>',
+      '        <select data-sr-technician="' + escapeHTML(order.id) +
+        '" aria-label="Alterar técnico de ' + escapeHTML(order.id) + '"' +
+        (podeAtribuirTecnico ? "" : " disabled") + '>',
+      '          <option value="" ' + (order.technicianId === "" ? "selected" : "") +
+        '>Não atribuído</option>',
+      tecnicoOptions,
+      '        </select>',
+      '      </label>',
+      '    </div>',
+      '    <div class="sr-actions">',
+      '      <span class="sr-save-status" data-sr-saving role="status" hidden>Salvando…</span>',
+      arquivosMarkup,
+      '      <button type="button" class="sr-details" data-sr-details="' +
+        escapeHTML(order.id) + '" aria-label="Ver detalhes do pedido ' +
+        escapeHTML(order.id) + '">Ver detalhes <span aria-hidden="true">→</span></button>',
+      cancelarMarkup,
+      '    </div>',
+      '  </footer>',
+      '</article>',
+    ].join("");
   }
-
   content.innerHTML = `
     <section aria-label="Solicitações">
       <div class="sr-toolbar">
@@ -671,7 +656,7 @@ function renderRequests(history = false) {
         <div class="sr-search">
           <input
             id="sr-search"
-            placeholder="Buscar cliente, ID..."
+            placeholder="Buscar protocolo, cliente, telefone, endereço..."
             aria-label="Buscar solicitações"
             value="${escapeHTML(search)}"
           >
@@ -698,6 +683,8 @@ function renderRequests(history = false) {
         order.phone || "",
         order.equipment,
         order.technician || "",
+        order.description || "",
+        order.address || "",
       ]
         .join(" ")
         .toLocaleLowerCase("pt-BR")
@@ -709,7 +696,11 @@ function renderRequests(history = false) {
     list.innerHTML =
       visible.map(renderCard).join("") ||
       `
-      <div class="sr-empty">Nenhuma solicitação encontrada.</div>
+      <div class="sr-empty">
+        <strong>Nenhum pedido encontrado</strong>
+        <p>Tente outro termo ou limpe os filtros ativos.</p>
+        <button type="button" class="sr-reset" data-sr-clear-filters>Limpar busca e filtros</button>
+      </div>
     `;
   }
 
@@ -740,7 +731,7 @@ function renderRequests(history = false) {
     if (!order) return;
 
     if (statusId) {
-      if (!order.statusOptions.includes(event.target.value)) return;
+      if (event.target.value === "CANCELADO" || !order.statusOptions.includes(event.target.value)) return;
       void enviarAcaoAdmin(
         order,
         "status",
@@ -758,6 +749,14 @@ function renderRequests(history = false) {
   });
 
   list.addEventListener("click", (event) => {
+    const clearFiltersButton = event.target.closest("[data-sr-clear-filters]");
+    if (clearFiltersButton) {
+      search = "";
+      filter = "Todos";
+      render();
+      return;
+    }
+
     const deleteButton = event.target.closest("[data-sr-delete]");
     const detailsButton = event.target.closest("[data-sr-details]");
 
@@ -847,7 +846,7 @@ function renderRequests(history = false) {
       ["Telefone", order.phone || "Não informado"],
       ["Serviço", order.equipment],
       ["Técnico", order.technician || "Não atribuído"],
-      ["Agendamento", `${dateBR(order.date)} às ${order.time}`],
+      ["Agendamento", order.appointmentDate ? dateBR(order.appointmentDate) + " às " + order.time : "Aguardando agendamento"],
       ["Endereço", order.address || "Não informado"],
       ["Descrição", order.description || "Sem descrição"],
       [

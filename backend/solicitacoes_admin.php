@@ -27,8 +27,8 @@ function transicoesStatusAdmin(): array
 {
     return [
         'SOLICITADO' => ['AGENDADO', 'CANCELADO'],
-        'AGENDADO' => ['CANCELADO'],
-        'EM_ANDAMENTO' => ['CANCELADO'],
+        'AGENDADO' => ['EM_ANDAMENTO', 'CANCELADO'],
+        'EM_ANDAMENTO' => ['CONCLUIDO', 'CANCELADO'],
         'CONCLUIDO' => [],
         'CANCELADO' => []
     ];
@@ -536,6 +536,38 @@ try {
                     "UPDATE agendamento SET status = 'CONFIRMADO' WHERE id_agendamento = ? AND status = 'PENDENTE'",
                     [$agendamento['id_agendamento']]
                 );
+            } elseif ($novoCodigo === 'EM_ANDAMENTO') {
+                if (!$agendamento || $agendamento['status'] !== 'CONFIRMADO') {
+                    throw new DomainException('Só é possível iniciar um pedido com horário confirmado.');
+                }
+                $stmtInicio = consultarSolicitacoesAdmin(
+                    $conexao,
+                    "UPDATE agendamento
+                     SET status = 'EM_ANDAMENTO', inicio_real = COALESCE(inicio_real, NOW())
+                     WHERE id_agendamento = ? AND status = 'CONFIRMADO'",
+                    [(int) $agendamento['id_agendamento']]
+                );
+                $linhasIniciadas = $stmtInicio->affected_rows;
+                $stmtInicio->close();
+                if ($linhasIniciadas !== 1) {
+                    throw new DomainException('O horário mudou enquanto o pedido era atualizado. Atualize o painel e tente novamente.');
+                }
+            } elseif ($novoCodigo === 'CONCLUIDO') {
+                if (!$agendamento || $agendamento['status'] !== 'EM_ANDAMENTO') {
+                    throw new DomainException('Só é possível concluir um atendimento que esteja em andamento.');
+                }
+                $stmtConclusao = consultarSolicitacoesAdmin(
+                    $conexao,
+                    "UPDATE agendamento
+                     SET status = 'CONCLUIDO', fim_real = NOW()
+                     WHERE id_agendamento = ? AND status = 'EM_ANDAMENTO'",
+                    [(int) $agendamento['id_agendamento']]
+                );
+                $linhasConcluidas = $stmtConclusao->affected_rows;
+                $stmtConclusao->close();
+                if ($linhasConcluidas !== 1) {
+                    throw new DomainException('O horário mudou enquanto o pedido era atualizado. Atualize o painel e tente novamente.');
+                }
             } elseif ($novoCodigo === 'CANCELADO' && $agendamento && !in_array($agendamento['status'], ['CANCELADO', 'REAGENDADO'], true)) {
                 consultarSolicitacoesAdmin(
                     $conexao,
