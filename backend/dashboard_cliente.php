@@ -114,6 +114,17 @@ try {
             ss.nome AS status_nome,
             ea.endereco_informado AS endereco,
             d.inicio_previsto,
+            a.id_agendamento,
+            a.status AS status_agendamento,
+            CASE WHEN ss.codigo IN ('SOLICITADO', 'AGENDADO')
+                  AND (a.id_agendamento IS NULL
+                       OR (a.status IN ('PENDENTE', 'CONFIRMADO') AND d.inicio_previsto > NOW()))
+                 THEN 1 ELSE 0 END AS pode_cancelar,
+            CASE WHEN ss.codigo IN ('SOLICITADO', 'AGENDADO')
+                  AND a.id_agendamento IS NOT NULL
+                  AND a.status IN ('PENDENTE', 'CONFIRMADO')
+                  AND d.inicio_previsto > NOW()
+                 THEN 1 ELSE 0 END AS pode_reagendar,
             t.nome AS tecnico,
             t.telefone AS telefone_tecnico
          FROM solicitacao AS s
@@ -163,6 +174,9 @@ try {
             'criado_em' => (string) $linha['criado_em'],
             'endereco' => (string) ($linha['endereco'] ?? ''),
             'inicio_previsto' => (string) ($linha['inicio_previsto'] ?? ''),
+            'status_agendamento' => (string) ($linha['status_agendamento'] ?? ''),
+            'pode_cancelar' => (int) ($linha['pode_cancelar'] ?? 0) === 1,
+            'pode_reagendar' => (int) ($linha['pode_reagendar'] ?? 0) === 1,
             'tecnico' => (string) ($linha['tecnico'] ?? ''),
             'telefone_tecnico' => (string) ($linha['telefone_tecnico'] ?? '')
         ];

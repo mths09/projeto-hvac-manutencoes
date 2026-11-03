@@ -583,6 +583,46 @@
       </div>
     </dialog>
 
+    <dialog
+      class="dialog-detalhes dialog-editar"
+      id="dialog-reagendamento"
+      aria-labelledby="titulo-dialog-reagendamento"
+    >
+      <div class="dialog-conteudo">
+        <div class="dialog-cabecalho">
+          <div>
+            <span class="etiqueta-secao">Meus pedidos</span>
+            <h2 id="titulo-dialog-reagendamento">Escolher novo horário</h2>
+          </div>
+          <button
+            type="button"
+            class="botao-fechar-dialog"
+            id="fechar-dialog-reagendamento"
+            aria-label="Fechar seleção de horário"
+          >
+            ×
+          </button>
+        </div>
+
+        <form class="form-perfil" id="form-reagendamento">
+          <label class="campo-form" for="horario-reagendamento">
+            <span>Novo horário de atendimento</span>
+            <select id="horario-reagendamento" name="disponibilidade" required>
+              <option value="" selected disabled>Carregando horários…</option>
+            </select>
+          </label>
+          <p class="form-erro" id="erro-reagendamento" role="alert" hidden></p>
+          <div class="acoes-form">
+            <button type="button" class="botao-secundario" id="cancelar-reagendamento">
+              Voltar
+            </button>
+            <button type="submit" class="botao-principal" id="salvar-reagendamento" disabled>
+              Solicitar reagendamento
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
     <!-- Script do dashboard -->
     <script src="../js/dashboard.js" defer></script>
   </body>

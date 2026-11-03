@@ -957,6 +957,54 @@ p {
   margin-top: 18px;
 }
 
+.botao-acao-servico {
+  padding: 9px 13px;
+  border: 1px solid rgb(0 229 255 / 25%);
+  border-radius: 8px;
+  background: var(--superficie-ciano);
+  color: var(--ciano);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background var(--transicao-padrao), border-color var(--transicao-padrao), opacity var(--transicao-padrao);
+}
+
+.botao-acao-servico:hover {
+  border-color: var(--ciano);
+  background: rgb(0 229 255 / 12%);
+}
+
+.botao-acao-servico:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.botao-acao-servico.botao-cancelar-servico {
+  border-color: rgb(255 82 82 / 35%);
+  background: rgb(255 82 82 / 7%);
+  color: var(--perigo);
+}
+
+.botao-acao-servico.botao-cancelar-servico:hover {
+  border-color: var(--perigo);
+  background: rgb(255 82 82 / 14%);
+}
+
+.campo-form select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--fundo-pagina);
+  color: var(--texto-principal);
+  font-size: 14px;
+}
+
+.campo-form select:focus {
+  border-color: var(--ciano);
+  outline: none;
+}
 .botao-detalhes {
   padding: 9px 13px;
   border: 1px solid rgb(0 229 255 / 25%);

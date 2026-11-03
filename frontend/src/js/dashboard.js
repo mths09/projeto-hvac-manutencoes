@@ -3,6 +3,7 @@
 
   const API = "../../../backend/dashboard_cliente.php";
   const API_ATUALIZAR_PERFIL = "../../../backend/atualizar_perfil.php";
+  const API_AGENDAMENTO_CLIENTE = "../../../backend/agendamento_cliente.php";
 
   // Página que mostra os detalhes de um serviço (recebe ?id=...).
   // Troque pelo nome real do arquivo, se for diferente.
@@ -35,6 +36,11 @@
   const formEditar = elemento("#form-editar-perfil");
   const erroEditar = elemento("#erro-editar-perfil");
   const botaoSalvarPerfil = elemento("#salvar-perfil");
+  const dialogoReagendamento = elemento("#dialog-reagendamento");
+  const formReagendamento = elemento("#form-reagendamento");
+  const selectHorarioReagendamento = elemento("#horario-reagendamento");
+  const erroReagendamento = elemento("#erro-reagendamento");
+  const botaoSalvarReagendamento = elemento("#salvar-reagendamento");
 
   const linksMenu = elementos(".menu-sidebar .link-menu[data-view]");
   const views = elementos(".dashboard-view[data-view-content]");
@@ -303,6 +309,145 @@
   // CRIAÇÃO DOS CARDS DE SERVIÇO
   // =========================================
 
+  function mostrarMensagemAcaoAgendamento(mensagem, erro = false) {
+    const paragrafo = statusDashboard
+      ? elemento(".status-conteudo p", statusDashboard)
+      : null;
+    if (paragrafo) paragrafo.textContent = mensagem;
+    statusDashboard?.classList.toggle("erro", erro);
+  }
+
+  async function chamarApiAgendamentoCliente(opcoes = {}) {
+    const metodo = opcoes.method || "GET";
+    const url = metodo === "GET"
+      ? API_AGENDAMENTO_CLIENTE + "?protocolo=" + encodeURIComponent(opcoes.protocolo || "")
+      : API_AGENDAMENTO_CLIENTE;
+    const resposta = await fetch(url, {
+      method: metodo,
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: metodo === "GET"
+        ? { Accept: "application/json" }
+        : { Accept: "application/json", "Content-Type": "application/json" },
+      body: metodo === "GET" ? undefined : JSON.stringify(opcoes.body || {}),
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401) {
+      window.location.replace("./login.html");
+      throw new Error("Entre novamente para continuar.");
+    }
+    if (!resposta.ok || dados?.sucesso !== true) {
+      throw new Error(dados?.mensagem || "Não foi possível atualizar o agendamento.");
+    }
+    return dados;
+  }
+
+  async function cancelarPedidoCliente(servico, botao) {
+    if (!csrf) {
+      mostrarMensagemAcaoAgendamento("Token de segurança indisponível. Atualize o painel.", true);
+      return;
+    }
+    const protocolo = String(servico.protocolo || "");
+    if (!window.confirm("Cancelar o pedido " + protocolo + "? Isso encerra o pedido e libera o horário, se houver. Essa ação não pode ser desfeita.")) {
+      return;
+    }
+    botao.disabled = true;
+    try {
+      const resultado = await chamarApiAgendamentoCliente({
+        method: "POST",
+        body: { acao: "cancelar", protocolo, csrf },
+      });
+      await carregarDashboard();
+      mostrarMensagemAcaoAgendamento(resultado.mensagem || "Pedido cancelado.");
+    } catch (erro) {
+      mostrarMensagemAcaoAgendamento(erro.message || "Não foi possível cancelar o pedido.", true);
+      botao.disabled = false;
+    }
+  }
+
+  function exibirErroReagendamento(mensagem) {
+    if (!erroReagendamento) return;
+    erroReagendamento.textContent = mensagem || "";
+    erroReagendamento.hidden = !mensagem;
+  }
+
+  async function abrirDialogReagendamento(servico, botao) {
+    if (!dialogoReagendamento || !formReagendamento || !selectHorarioReagendamento) {
+      mostrarMensagemAcaoAgendamento("Não foi possível abrir a seleção de horário.", true);
+      return;
+    }
+    formReagendamento.reset();
+    selectHorarioReagendamento.replaceChildren();
+    const opcaoInicial = document.createElement("option");
+    opcaoInicial.value = "";
+    opcaoInicial.textContent = "Selecione um novo horário";
+    opcaoInicial.disabled = true;
+    opcaoInicial.selected = true;
+    selectHorarioReagendamento.append(opcaoInicial);
+    selectHorarioReagendamento.disabled = true;
+    if (botaoSalvarReagendamento) botaoSalvarReagendamento.disabled = true;
+    exibirErroReagendamento("Carregando horários disponíveis…");
+    dialogoReagendamento.dataset.protocolo = String(servico.protocolo || "");
+    if (!dialogoReagendamento.open) dialogoReagendamento.showModal();
+    if (botao) botao.disabled = true;
+
+    try {
+      const dados = await chamarApiAgendamentoCliente({
+        method: "GET",
+        protocolo: servico.protocolo,
+      });
+      const horarios = Array.isArray(dados.horarios) ? dados.horarios : [];
+      for (const horario of horarios) {
+        const opcao = document.createElement("option");
+        opcao.value = String(horario.id);
+        const fim = String(horario.fim || "").slice(11, 16);
+        opcao.textContent = formatarDataHora(horario.inicio) + (fim ? " – " + fim : "");
+        selectHorarioReagendamento.append(opcao);
+      }
+      selectHorarioReagendamento.disabled = horarios.length === 0;
+      if (botaoSalvarReagendamento) botaoSalvarReagendamento.disabled = horarios.length === 0;
+      exibirErroReagendamento(
+        horarios.length
+          ? ""
+          : "Não há outros horários disponíveis nos próximos 30 dias. Fale com a equipe para combinar uma nova data.",
+      );
+      if (horarios.length) selectHorarioReagendamento.focus();
+    } catch (erro) {
+      exibirErroReagendamento(erro.message || "Não foi possível carregar os horários.");
+    } finally {
+      if (botao) botao.disabled = false;
+    }
+  }
+
+  async function salvarReagendamento(evento) {
+    evento.preventDefault();
+    if (!csrf || !selectHorarioReagendamento?.value || !dialogoReagendamento?.dataset.protocolo) {
+      exibirErroReagendamento("Selecione um novo horário disponível.");
+      return;
+    }
+    if (botaoSalvarReagendamento) botaoSalvarReagendamento.disabled = true;
+    exibirErroReagendamento("");
+    try {
+      const resultado = await chamarApiAgendamentoCliente({
+        method: "POST",
+        body: {
+          acao: "reagendar",
+          protocolo: dialogoReagendamento.dataset.protocolo,
+          disponibilidade: selectHorarioReagendamento.value,
+          csrf,
+        },
+      });
+      dialogoReagendamento.close();
+      await carregarDashboard();
+      mostrarMensagemAcaoAgendamento(resultado.mensagem || "Reagendamento solicitado.");
+    } catch (erro) {
+      exibirErroReagendamento(erro.message || "Não foi possível reagendar o pedido.");
+    } finally {
+      if (botaoSalvarReagendamento) {
+        botaoSalvarReagendamento.disabled = !selectHorarioReagendamento?.value;
+      }
+    }
+  }
   function criarServico(servico) {
     const cartao = criar("article", "cartao-servico");
     cartao.dataset.servicoId = String(servico.id ?? "");
@@ -369,6 +514,24 @@
     );
     linkDetalhes.href = `${PAGINA_DETALHES}?id=${encodeURIComponent(servico.id ?? "")}`;
     acoes.append(linkDetalhes);
+
+    if (servico.pode_reagendar) {
+      const botaoReagendar = criar("button", "botao-acao-servico", "Reagendar");
+      botaoReagendar.type = "button";
+      botaoReagendar.addEventListener("click", () => {
+        void abrirDialogReagendamento(servico, botaoReagendar);
+      });
+      acoes.append(botaoReagendar);
+    }
+
+    if (servico.pode_cancelar) {
+      const botaoCancelar = criar("button", "botao-acao-servico botao-cancelar-servico", "Cancelar pedido");
+      botaoCancelar.type = "button";
+      botaoCancelar.addEventListener("click", () => {
+        void cancelarPedidoCliente(servico, botaoCancelar);
+      });
+      acoes.append(botaoCancelar);
+    }
 
     // Link opcional para o WhatsApp do técnico.
     const telefoneInformado = String(servico.telefone_tecnico || "").replace(
@@ -988,6 +1151,19 @@
   // EVENTOS DA EDIÇÃO DE PERFIL
   // =========================================
 
+  elemento("#fechar-dialog-reagendamento")?.addEventListener("click", () =>
+    dialogoReagendamento?.close(),
+  );
+
+  elemento("#cancelar-reagendamento")?.addEventListener("click", () =>
+    dialogoReagendamento?.close(),
+  );
+
+  dialogoReagendamento?.addEventListener("click", (evento) => {
+    if (evento.target === dialogoReagendamento) dialogoReagendamento.close();
+  });
+
+  formReagendamento?.addEventListener("submit", salvarReagendamento);
   elemento("#editar-perfil")?.addEventListener("click", abrirEdicaoPerfil);
 
   elemento("#fechar-editar-perfil")?.addEventListener("click", () =>
