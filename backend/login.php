@@ -20,20 +20,34 @@ function responderLogin(int $status, array $dados): never
     exit;
 }
 
-function contarTentativasLogin(mysqli $conexao, string $coluna, string $hash): int
-{
-    // O nome da coluna é escolhido internamente, nunca vem da requisição.
-    if (!in_array($coluna, ['email_hash', 'ip_hash'], true)) {
-        throw new InvalidArgumentException('Identificador de limite inválido.');
-    }
-
+function contarTentativasPorPar(
+    mysqli $conexao,
+    string $emailHash,
+    string $ipHash
+): int {
     $stmt = $conexao->prepare(
-        "SELECT COUNT(*) AS total
-         FROM tentativa_login
-         WHERE {$coluna} = ?
-           AND tentada_em >= DATE_SUB(NOW(), INTERVAL " . JANELA_TENTATIVAS_LOGIN_MINUTOS . " MINUTE)"
+        'SELECT COUNT(*) AS total
+        FROM tentativa_login
+        WHERE email_hash = ?
+            AND ip_hash = ?
+            AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
     );
-    $stmt->bind_param('s', $hash);
+    $stmt->bind_param('ss', $emailHash, $ipHash);
+    $stmt->execute();
+    $linha = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    return (int) ($linha['total'] ?? 0);
+}
+
+function contarTentativasPorIp(mysqli $conexao, string $ipHash): int {
+    $stmt = $conexao->prepare(
+        'SELECT COUNT(*) AS total
+        FROM tentativa_login
+        WHERE ip_hash = ?
+            AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
+    );
+    $stmt->bind_param('s', $ipHash);
     $stmt->execute();
     $linha = $stmt->get_result()->fetch_assoc();
     $stmt->close();
@@ -55,10 +69,10 @@ function negarLogin(mysqli $conexao, string $emailHash, string $ipHash): never
 {
     registrarFalhaLogin($conexao, $emailHash, $ipHash);
 
-    $porEmail = contarTentativasLogin($conexao, 'email_hash', $emailHash);
-    $porIp = contarTentativasLogin($conexao, 'ip_hash', $ipHash);
-    $bloqueado = $porEmail >= LIMITE_TENTATIVAS_EMAIL_LOGIN
-        || $porIp >= LIMITE_TENTATIVAS_IP_LOGIN;
+    $porPar = contarTentativasPorPar($conexao, $emailHash, $ipHash);
+    $porIp = contarTentativasPorIp($conexao, $ipHash);
+
+    $bloqueado = $porPar >= 5 || $porIp >= 30;
 
     $conexao->close();
 
@@ -142,8 +156,8 @@ try {
          LIMIT 500'
     );
 
-    $porEmail = contarTentativasLogin($conexao, 'email_hash', $emailHash);
-    $porIp = contarTentativasLogin($conexao, 'ip_hash', $ipHash);
+    $porEmail = contarTentativasPorPar($conexao, 'email_hash', $emailHash);
+    $porIp = contarTentativasPorIp($conexao, $ipHash);
 
     if (
         $porEmail >= LIMITE_TENTATIVAS_EMAIL_LOGIN
