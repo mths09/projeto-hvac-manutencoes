@@ -12,8 +12,8 @@
 Projeto de TCC do curso Técnico em Desenvolvimento de Sistemas da Etec Fernando Prestes.
 A partir da entrevista realizada com o profissional da área de eletromecânica e refrigeração, identificamos a alta demanda
 e o grande público-alvo que a empresa alcança. Percebemos também que todo contato com clientes era realizado via telefone e os
-agendamentos eram feitos de forma  manual, por ordem de chegada das mensagens. Dessa forma, nossa equipe percebeu a necessidade de
-modernização do processo de atendimento, principalmente para organização da demanda e realizar divulgação dos serviços prestados. 
+agendamentos eram feitos de forma manual, por ordem de chegada das mensagens. Dessa forma, nossa equipe percebeu a necessidade de
+modernização do processo de atendimento, principalmente para organização da demanda e realizar divulgação dos serviços prestados.
 
 ## 🖼️ Demonstração
 
@@ -30,16 +30,31 @@ modernização do processo de atendimento, principalmente para organização da 
 - [x] Agendamento de atendimento
 - [x] Área do cliente (login e cadastro)
 - [x] Painel administrativo
-- [x] Confirmação por WhatsApp
+
+| Funcionalidade            | Situação     | Observação                                  |
+| ------------------------- | ------------ | ------------------------------------------- |
+| Cadastro, login e perfis  | Implementado | Cliente, administrador e técnico            |
+| Recuperação de senha      | Implementado | Token de uso único, expira em 30 minutos    |
+| Triagem                   | Implementado | Questionário e respostas persistidos        |
+| Agendamento               | Implementado | Reserva com validação de capacidade         |
+| Anexos do pedido          | Implementado | Upload e leitura autorizada                 |
+| Início/fim do atendimento | Implementado | Técnico grava `inicio_real` e `fim_real`    |
+| Reagendamento             | Modelado     | Há campos, mas não há fluxo de criação      |
+| Orçamentos                | Modelado     | Tabela sem API ou tela                      |
+| Documentos                | Modelado     | Listagem sem emissão ou download            |
+| Estoque                   | Modelado     | Tabelas sem API ou tela                     |
+| Avaliação                 | Modelado     | Tabela sem fluxo                            |
+| Técnicos                  | Parcial      | Atribuição existe; CRUD administrativo não  |
+| WhatsApp                  | Manual       | Link `wa.me`; não há confirmação automática |
 
 ## 🛠️ Tecnologias
 
-| Camada   | Tecnologias                    |
-| -------- | ------------------------------ |
-| Frontend | HTML, CSS e JavaScript         |
-| Backend  | PHP + Laravel                  |
-| Banco    | MySQL                          |
-| Design   | Figma                          |
+| Camada         | Tecnologias               |
+| -------------- | ------------------------- |
+| Frontend       | HTML, CSS e JavaScript    |
+| Backend        | PHP procedural com mysqli |
+| Banco de dados | MariaDB 10.4+             |
+| Design         | Figma                     |
 
 ## 📁 Estrutura de pastas
 
@@ -54,9 +69,18 @@ projeto-hvac-manutencoes/
 ## 🚀 Como rodar o projeto
 
 ### Pré-requisitos
-- [PHP 8+]
-- [MySQL 8+]
+
+- PHP 8.1 ou superior
+- MariaDB 10.4 ou superior
 - Git
+- Extensões PHP: `mysqli`, `mbstring` e `fileinfo`
+- Apache/XAMPP, para execução local
+
+## Configuração de e-mail
+
+Copie `backend/email_config.example.php` para
+`backend/email_config.local.php`, preencha os dados SMTP e mantenha o
+arquivo local fora do Git.
 
 ### Passo a passo
 
@@ -70,10 +94,6 @@ cd projeto-hvac-manutencoes
 
 # 3. Publicar os questionários da triagem
 # importe banco/triagem_mvp.sql depois do script anterior
-
-# 4. Configurar variáveis de ambiente
-cd backend
-cp .env.example .env   # preencha com os seus dados
 ```
 
 Acesse em `http://localhost:[porta]`.
@@ -94,12 +114,11 @@ Acesse em `http://localhost:[porta]`.
 
 ## 👥 Autores
 
-| Nome | GitHub |
-| ---- | ------ |
-| [Matheus] | [@mths09](https://github.com/mths09) |
-| [Lucas] | [@lukkas-dev](https://github.com/lukkas-dev) |
+| Nome        | GitHub                                                     |
+| ----------- | ---------------------------------------------------------- |
+| [Matheus]   | [@mths09](https://github.com/mths09)                       |
+| [Lucas]     | [@lukkas-dev](https://github.com/lukkas-dev)               |
 | [Guilherme] | [@Guilherme-Dev1908](https://github.com/Guilherme-Dev1908) |
-
 
 ## 📄 Licença
 

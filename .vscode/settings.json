@@ -1,5 +1,0 @@
-{
-  "js/ts.suggest.paths": false,
-  "editor.suggest.snippetsPreventQuickSuggestions": true,
-  "emmet.useInlineCompletions": false
-}
