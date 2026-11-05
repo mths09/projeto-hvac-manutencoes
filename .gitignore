@@ -1,7 +1,5 @@
 .vscode/
-banco/*
 !banco/triagem_mvp.sql
-hvac_db.sql
 backend/email_config.local.php
 
 /backend/teste_smtp.php
