@@ -64,7 +64,7 @@ function normalizarNovoPedidoAdmin(mixed $entrada): array
             return null;
         }
         if (!is_int($valor) && !is_string($valor)) {
-            throw new DomainException('Selecione um serviço, horário e técnico válidos.');
+            throw new DomainException('Selecione um serviço e horário válidos.');
         }
         $validado = filter_var((string) $valor, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         if ($validado === false) {
@@ -91,7 +91,6 @@ function normalizarNovoPedidoAdmin(mixed $entrada): array
         'descricao' => $descricao,
         'id_tipo_servico' => $id('id_tipo_servico'),
         'id_disponibilidade' => $id('id_disponibilidade'),
-        'id_tecnico' => $id('id_tecnico', true),
         'id_cliente' => $id('id_cliente', true),
         'urgente' => $entrada['prioridade'] === 'urgente',
     ];
@@ -202,7 +201,6 @@ try {
                     COALESCE(NULLIF(s.telefone_contato, ''), u.telefone, '') AS telefone,
                     ea.endereco_informado AS endereco,
                     d.inicio_previsto,
-                    t.id_tecnico, t.nome AS tecnico,
                     (SELECT COUNT(*) FROM documento doc WHERE doc.id_solicitacao = s.id_solicitacao) AS total_documentos
              FROM solicitacao s
              INNER JOIN status_solicitacao ss ON ss.id_status = s.id_status_atual
@@ -220,14 +218,6 @@ try {
                 LIMIT 1
              )
              LEFT JOIN disponibilidade d ON d.id_disponibilidade = a.id_disponibilidade
-             LEFT JOIN atribuicao_tecnica at ON at.id_atribuicao = (
-                SELECT at2.id_atribuicao
-                FROM atribuicao_tecnica at2
-                WHERE at2.id_solicitacao = s.id_solicitacao AND at2.fim_em IS NULL
-                ORDER BY at2.inicio_em DESC, at2.id_atribuicao DESC
-                LIMIT 1
-             )
-             LEFT JOIN tecnico t ON t.id_tecnico = at.id_tecnico AND t.ativo = 1
              WHERE s.arquivada_em IS NULL
              ORDER BY s.criada_em DESC, s.id_solicitacao DESC"
         );
@@ -250,8 +240,6 @@ try {
                 'status_nome' => (string) $linha['status_nome'],
                 'status_permitidos' => $transicoes[$codigoStatus] ?? [],
                 'urgente' => (bool) $linha['urgente'],
-                'tecnico_id' => $linha['id_tecnico'] === null ? '' : (string) $linha['id_tecnico'],
-                'tecnico' => (string) ($linha['tecnico'] ?? ''),
                 'total_documentos' => (int) $linha['total_documentos']
             ];
         }
@@ -306,14 +294,6 @@ try {
             $pedido['triagem'] = $triagemPorSolicitacao[$pedido['id']] ?? [];
         }
         unset($pedido);
-        $tecnicos = consultarSolicitacoesAdmin(
-            $conexao,
-            'SELECT id_tecnico AS id, nome FROM tecnico WHERE ativo = 1 ORDER BY nome, id_tecnico'
-        )->get_result()->fetch_all(MYSQLI_ASSOC);
-        foreach ($tecnicos as &$tecnico) {
-            $tecnico['id'] = (string) $tecnico['id'];
-        }
-        unset($tecnico);
         $servicos = consultarSolicitacoesAdmin(
             $conexao,
             'SELECT id_tipo_servico AS id, nome FROM tipo_servico WHERE ativo = 1 ORDER BY ordem, nome'
@@ -327,13 +307,12 @@ try {
             'sucesso' => true,
             'csrf' => $csrfSessao,
             'pedidos' => $pedidos,
-            'tecnicos' => $tecnicos,
             'servicos' => $servicos
         ]);
     }
 
     $acao = $entrada['acao'] ?? null;
-    if (!is_string($acao) || !in_array($acao, ['criar', 'status', 'tecnico'], true)) {
+    if (!is_string($acao) || !in_array($acao, ['criar', 'status'], true)) {
         responderSolicitacoesAdmin(422, ['sucesso' => false, 'mensagem' => 'Ação inválida.']);
     }
 
@@ -401,18 +380,6 @@ try {
                 throw new RuntimeException('O status Agendado não está configurado no banco.');
             }
 
-            $idAtribuicao = null;
-            if ($novoPedido['id_tecnico'] !== null) {
-                $tecnico = consultarSolicitacoesAdmin(
-                    $conexao,
-                    'SELECT id_tecnico FROM tecnico WHERE id_tecnico = ? AND ativo = 1 LIMIT 1 FOR UPDATE',
-                    [$novoPedido['id_tecnico']]
-                )->get_result()->fetch_assoc();
-                if (!$tecnico) {
-                    throw new DomainException('O técnico selecionado está indisponível.');
-                }
-            }
-
             $protocoloNovo = 'SRV-' . bin2hex(random_bytes(12));
             consultarSolicitacoesAdmin(
                 $conexao,
@@ -432,21 +399,11 @@ try {
                 [$idSolicitacaoNova, $novoPedido['endereco']]
             );
 
-            if ($novoPedido['id_tecnico'] !== null) {
-                consultarSolicitacoesAdmin(
-                    $conexao,
-                    'INSERT INTO atribuicao_tecnica (id_solicitacao, id_tecnico, id_responsavel, inicio_em)
-                     VALUES (?, ?, ?, NOW())',
-                    [$idSolicitacaoNova, $novoPedido['id_tecnico'], $idAdministrador]
-                );
-                $idAtribuicao = (int) $conexao->insert_id;
-            }
-
             consultarSolicitacoesAdmin(
                 $conexao,
-                "INSERT INTO agendamento (id_solicitacao, id_disponibilidade, id_atribuicao, status)
-                 VALUES (?, ?, ?, 'CONFIRMADO')",
-                [$idSolicitacaoNova, $novoPedido['id_disponibilidade'], $idAtribuicao]
+                "INSERT INTO agendamento (id_solicitacao, id_disponibilidade, status)
+                 VALUES (?, ?, 'CONFIRMADO')",
+                [$idSolicitacaoNova, $novoPedido['id_disponibilidade']]
             );
             consultarSolicitacoesAdmin(
                 $conexao,
@@ -623,82 +580,6 @@ try {
                 ];
             }
             $mensagem = 'Status atualizado para ' . $statusDestino['nome'] . '.';
-        } else {
-            $idTecnico = $entrada['tecnico_id'] ?? null;
-            if (!is_string($idTecnico) || ($idTecnico !== '' && !ctype_digit($idTecnico))) {
-                throw new DomainException('Selecione um técnico válido.');
-            }
-            if (in_array($pedido['status_codigo'], ['CONCLUIDO', 'CANCELADO'], true)) {
-                throw new DomainException('Não é possível alterar o técnico de um pedido encerrado.');
-            }
-            $idTecnicoNovo = $idTecnico === '' ? null : (int) $idTecnico;
-            $atribuicao = consultarSolicitacoesAdmin(
-                $conexao,
-                'SELECT id_atribuicao, id_tecnico FROM atribuicao_tecnica
-                 WHERE id_solicitacao = ? AND fim_em IS NULL
-                 ORDER BY inicio_em DESC, id_atribuicao DESC LIMIT 1 FOR UPDATE',
-                [$pedido['id_solicitacao']]
-            )->get_result()->fetch_assoc();
-            $idTecnicoAtual = $atribuicao ? (int) $atribuicao['id_tecnico'] : null;
-
-            if ($idTecnicoNovo !== $idTecnicoAtual) {
-                $nomeTecnico = '';
-                if ($idTecnicoNovo !== null) {
-                    $tecnico = consultarSolicitacoesAdmin(
-                        $conexao,
-                        'SELECT nome FROM tecnico WHERE id_tecnico = ? AND ativo = 1 LIMIT 1 FOR UPDATE',
-                        [$idTecnicoNovo]
-                    )->get_result()->fetch_assoc();
-                    if (!$tecnico) {
-                        throw new DomainException('O técnico selecionado não está disponível.');
-                    }
-                    $nomeTecnico = (string) $tecnico['nome'];
-                }
-                if ($atribuicao) {
-                    consultarSolicitacoesAdmin(
-                        $conexao,
-                        "UPDATE atribuicao_tecnica SET fim_em = NOW(), motivo = 'Atribuição alterada pelo painel administrativo'
-                         WHERE id_atribuicao = ? AND fim_em IS NULL",
-                        [$atribuicao['id_atribuicao']]
-                    );
-                }
-                $idNovaAtribuicao = null;
-                if ($idTecnicoNovo !== null) {
-                    consultarSolicitacoesAdmin(
-                        $conexao,
-                        'INSERT INTO atribuicao_tecnica (id_solicitacao, id_tecnico, id_responsavel, inicio_em)
-                         VALUES (?, ?, ?, NOW())',
-                        [$pedido['id_solicitacao'], $idTecnicoNovo, $idAdministrador]
-                    );
-                    $idNovaAtribuicao = $conexao->insert_id;
-                }
-                consultarSolicitacoesAdmin(
-                    $conexao,
-                    'UPDATE agendamento SET id_atribuicao = ?
-                     WHERE id_agendamento = (
-                       SELECT atual.id_agendamento FROM (
-                         SELECT a.id_agendamento FROM agendamento a
-                         WHERE a.id_solicitacao = ?
-                           AND NOT EXISTS (SELECT 1 FROM agendamento seguinte WHERE seguinte.id_anterior = a.id_agendamento)
-                         ORDER BY a.id_agendamento DESC LIMIT 1
-                       ) atual
-                     )',
-                    [$idNovaAtribuicao, $pedido['id_solicitacao']]
-                );
-                if ($pedido['id_cliente'] !== null) {
-                    $mensagemTecnico = $idTecnicoNovo === null
-                        ? 'A equipe removeu a atribuição de técnico do pedido ' . $protocolo . '.'
-                        : 'O técnico ' . $nomeTecnico . ' foi atribuído ao pedido ' . $protocolo . '.';
-                    consultarSolicitacoesAdmin(
-                        $conexao,
-                        "INSERT INTO notificacao (id_destinatario, id_solicitacao, tipo_evento,
-                         titulo, mensagem, canal, status_envio, enviada_em)
-                         VALUES (?, ?, 'TECNICO_ATRIBUIDO', 'Equipe do pedido atualizada', ?, 'SITE', 'ENVIADO', NOW())",
-                        [$pedido['id_cliente'], $pedido['id_solicitacao'], $mensagemTecnico]
-                    );
-                }
-            }
-            $mensagem = $idTecnicoNovo === null ? 'Técnico removido do pedido.' : 'Técnico atribuído com sucesso.';
         }
 
         $conexao->commit();

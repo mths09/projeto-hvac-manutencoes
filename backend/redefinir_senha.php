@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
+require_once __DIR__ . '/validar_redefinicao_senha.php';
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -31,10 +32,10 @@ if (!is_array($dados)) {
 
 $token = $dados['token'] ?? null;
 $senha = $dados['senha'] ?? null;
-if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/D', $token)) {
+if (!tokenRedefinicaoValido($token)) {
     responderRedefinicao(422, ['sucesso' => false, 'mensagem' => 'Este link é inválido ou expirou. Solicite outro.']);
 }
-if (!is_string($senha) || strlen($senha) < 8 || strlen($senha) > 72 || str_contains($senha, "\0")) {
+if (!senhaRedefinicaoValida($senha)) {
     responderRedefinicao(422, ['sucesso' => false, 'mensagem' => 'A senha precisa ter entre 8 e 72 caracteres.']);
 }
 

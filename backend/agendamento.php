@@ -348,7 +348,7 @@ function validarDadosAgendamento(array $entrada): array
         throw new ErroAgendamento('Informe uma opção de urgência válida.', 422);
     }
     if (isset($entrada['tecnico']) && (!is_string($entrada['tecnico']) || trim($entrada['tecnico']) !== '')) {
-        throw new ErroAgendamento('O técnico será atribuído pela equipe após analisar o pedido.', 422);
+        throw new ErroAgendamento('A atribuição de técnico não está disponível neste sistema.', 422);
     }
     return $dados;
 }

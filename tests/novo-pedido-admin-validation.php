@@ -35,21 +35,19 @@ $pedido = [
     'descricao' => 'Ar condicionado não está gelando.',
     'id_tipo_servico' => '1',
     'id_disponibilidade' => '22',
-    'id_tecnico' => '3',
     'prioridade' => 'urgente',
 ];
 
 $normalizado = normalizarNovoPedidoAdmin($pedido);
 verificar($normalizado['nome'] === 'Ana Silva', 'remove espaços extras do nome');
 verificar($normalizado['id_tipo_servico'] === 1 && $normalizado['id_disponibilidade'] === 22, 'converte serviço e horário em IDs inteiros');
-verificar($normalizado['id_tecnico'] === 3 && $normalizado['urgente'] === true, 'aceita técnico opcional e prioridade urgente');
+verificar(!array_key_exists('id_tecnico', $normalizado) && $normalizado['urgente'] === true, 'não inclui atribuição de técnico e mantém prioridade urgente');
 
-$semTecnico = $pedido;
-$semTecnico['id_tecnico'] = '';
-$semTecnico['prioridade'] = 'normal';
-$semTecnico['telefone'] = '';
-$normalizadoSemTecnico = normalizarNovoPedidoAdmin($semTecnico);
-verificar($normalizadoSemTecnico['id_tecnico'] === null && $normalizadoSemTecnico['urgente'] === false, 'aceita pedido sem técnico e prioridade normal');
+$prioridadeNormal = $pedido;
+$prioridadeNormal['prioridade'] = 'normal';
+$prioridadeNormal['telefone'] = '';
+$normalizadoSemTecnico = normalizarNovoPedidoAdmin($prioridadeNormal);
+verificar(!array_key_exists('id_tecnico', $normalizadoSemTecnico) && $normalizadoSemTecnico['urgente'] === false, 'mantém pedido manual sem técnico e prioridade normal');
 
 $invalido = $pedido;
 $invalido['nome'] = '   ';

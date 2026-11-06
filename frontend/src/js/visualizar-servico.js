@@ -121,7 +121,7 @@
           ? formatarDataHora(servico.inicio_previsto)
           : "",
       ],
-      ["Em andamento", servico.tecnico ? `Técnico: ${servico.tecnico}` : ""],
+      ["Em andamento", ""],
       ["Concluído", ""],
     ];
 

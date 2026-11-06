@@ -1,7 +1,6 @@
 const API = "../../../backend/solicitacoes_admin.php";
 const AGENDA_API = "../../../backend/agenda_admin.php";
 const PORTFOLIO_API = "../../../backend/portfolio_admin.php";
-const TECH_API = "../../../backend/tecnicos_admin.php";
 const ADMIN_NOTIFICATIONS_API = "../../../backend/notificacoes_admin.php";
 const STATUS_LABELS = {
   SOLICITADO: "Solicitado",
@@ -13,7 +12,6 @@ const STATUS_LABELS = {
 const statuses = Object.values(STATUS_LABELS);
 const TODAY = localDate();
 let orders = [];
-let technicians = [];
 let serviceTypes = [];
 let page = "overview";
 let search = "";
@@ -31,11 +29,6 @@ let portfolioLoading = false;
 let portfolioError = "";
 let adminNotifications = [];
 let notificationsCsrf = "";
-let techniciansAdmin = [];
-let technicianCsrf = "";
-let techniciansLoading = false;
-let techniciansError = "";
-let techniciansLoaded = false;
 
 const content = document.querySelector("#content");
 const dialog = document.querySelector("#order-dialog");
@@ -59,8 +52,6 @@ function normalizarPedido(pedido) {
     client: String(pedido.cliente || "Cliente"),
     phone: String(pedido.telefone || ""),
     equipment: String(pedido.servico || "Serviço"),
-    technician: String(pedido.tecnico || ""),
-    technicianId: String(pedido.tecnico_id || ""),
     appointmentDate: inicio ? inicio.slice(0, 10) : "",
     date: inicio ? inicio.slice(0, 10) : criado.slice(0, 10),
     time: inicio ? inicio.slice(11, 16) : "—",
@@ -112,7 +103,6 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
       !resposta.ok ||
       dados?.sucesso !== true ||
       !Array.isArray(dados.pedidos) ||
-      !Array.isArray(dados.tecnicos) ||
       !Array.isArray(dados.servicos)
     ) {
       throw new Error(
@@ -125,12 +115,6 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
       );
     }
     orders = dados.pedidos.map(normalizarPedido);
-    technicians = dados.tecnicos.map((tecnico) => ({
-      id: String(tecnico.id),
-      name: String(tecnico.nome),
-      initials: iniciais(tecnico.nome),
-      specialty: "Equipe técnica",
-    }));
     serviceTypes = dados.servicos.map((servico) => ({
       id: String(servico.id),
       name: String(servico.nome),
@@ -270,7 +254,6 @@ function scheduleRow(order) {
           <strong>${escapeHTML(order.client)}</strong>
           <span class="muted">· ${escapeHTML(order.equipment)}</span>
           <div class="right">
-            <span class="muted">${escapeHTML(order.technician || "Não atribuído")}</span>
             ${badge(order.status)}
           </div>
         </div>`;
@@ -341,7 +324,7 @@ function table(list, editable) {
             <thead>
               <tr>
                 <th>Pedido</th><th>Cliente</th><th>Equipamento</th>
-                <th>Técnico</th><th>Agendamento</th><th>Status</th>
+                <th>Agendamento</th><th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -354,7 +337,6 @@ function table(list, editable) {
                   </td>
                   <td>${escapeHTML(order.client)}</td>
                   <td>${escapeHTML(order.equipment)}</td>
-                  <td>${escapeHTML(order.technician)}</td>
                   <td>${dateBR(order.date)} ${escapeHTML(order.time)}</td>
                   <td>${
                     editable
@@ -387,7 +369,6 @@ function filteredOrders(history) {
   return orders.filter((order) => {
     const statusHistorico = content.querySelector("#history-status")?.value || "Todos";
     const servicoHistorico = content.querySelector("#history-service")?.value || "Todos";
-    const tecnicoHistorico = content.querySelector("#history-technician")?.value || "Todos";
     const dataInicial = content.querySelector("#history-date-from")?.value || "";
     const dataFinal = content.querySelector("#history-date-to")?.value || "";
     const textoBusca = history
@@ -400,14 +381,12 @@ function filteredOrders(history) {
       order.id,
       order.client,
       order.equipment,
-      order.technician,
     ]
       .join(" ")
       .toLocaleLowerCase("pt-BR")
       .includes(textoBusca.toLocaleLowerCase("pt-BR"));
     const matchesStatus = !history || statusHistorico === "Todos" || order.statusCode === statusHistorico;
     const matchesService = !history || servicoHistorico === "Todos" || order.equipment === servicoHistorico;
-    const matchesTechnician = !history || tecnicoHistorico === "Todos" || (order.technician || "Não atribuído") === tecnicoHistorico;
     const matchesStart = !history || !dataInicial || order.date >= dataInicial;
     const matchesEnd = !history || !dataFinal || order.date <= dataFinal;
     return (
@@ -415,7 +394,6 @@ function filteredOrders(history) {
       matchesSearch &&
       matchesStatus &&
       matchesService &&
-      matchesTechnician &&
       matchesStart &&
       matchesEnd &&
       (filter === "Todos" || order.status === filter)
@@ -433,7 +411,7 @@ function renderRequests(history = false) {
 
       <section class="panel history-filters" aria-label="Filtros do histórico">
         <label>Buscar
-          <input id="history-search" placeholder="Cliente, protocolo, serviço ou técnico..." aria-label="Buscar no histórico">
+          <input id="history-search" placeholder="Cliente, protocolo ou serviço..." aria-label="Buscar no histórico">
         </label>
         <label>Status
           <select id="history-status">
@@ -446,12 +424,6 @@ function renderRequests(history = false) {
           <select id="history-service">
             <option value="Todos">Todos</option>
             ${[...new Set(orders.map((order) => order.equipment))].sort((a,b) => a.localeCompare(b, "pt-BR")).map((nome) => `<option value="${escapeHTML(nome)}">${escapeHTML(nome)}</option>`).join("")}
-          </select>
-        </label>
-        <label>Técnico
-          <select id="history-technician">
-            <option value="Todos">Todos</option>
-            ${[...new Set(orders.map((order) => order.technician || "Não atribuído"))].sort((a,b) => a.localeCompare(b, "pt-BR")).map((nome) => `<option value="${escapeHTML(nome)}">${escapeHTML(nome)}</option>`).join("")}
           </select>
         </label>
         <label>De
@@ -474,10 +446,10 @@ function renderRequests(history = false) {
           false,
         );
     };
-    content.querySelectorAll("#history-search, #history-status, #history-service, #history-technician, #history-date-from, #history-date-to")
+    content.querySelectorAll("#history-search, #history-status, #history-service, #history-date-from, #history-date-to")
       .forEach((campo) => campo.addEventListener(campo.tagName === "INPUT" && campo.type === "text" ? "input" : "change", atualizarHistorico));
     content.querySelector("#history-clear").addEventListener("click", () => {
-      content.querySelectorAll("#history-search, #history-status, #history-service, #history-technician, #history-date-from, #history-date-to")
+      content.querySelectorAll("#history-search, #history-status, #history-service, #history-date-from, #history-date-to")
         .forEach((campo) => { campo.value = campo.tagName === "SELECT" ? "Todos" : ""; });
       atualizarHistorico();
     });
@@ -528,7 +500,6 @@ function renderRequests(history = false) {
     ];
     const podeAlterarStatus = statusOptions.some((codigo) => codigo !== order.statusCode);
     const pedidoEncerrado = ["CONCLUIDO", "CANCELADO"].includes(order.statusCode);
-    const podeAtribuirTecnico = technicians.length > 0 && !pedidoEncerrado;
     const temAgendamento = Boolean(order.appointmentDate && order.time && order.time !== "—");
     const aguardandoConfirmacao = order.statusCode === "SOLICITADO" && temAgendamento;
     const tituloAgendamento = aguardandoConfirmacao ? "Novo horário solicitado" : "Agendamento";
@@ -538,11 +509,6 @@ function renderRequests(history = false) {
     const telefoneMarkup = phone
       ? '<a class="sr-phone" href="tel:' + escapeHTML(phone.replace(/[^\d+]/g, "")) + '">' + escapeHTML(phone) + '</a>'
       : '<span class="sr-description">Telefone não informado</span>';
-    const tecnicoOptions = technicians.map((tecnico) =>
-      '<option value="' + escapeHTML(tecnico.id) + '" ' +
-      (tecnico.id === order.technicianId ? "selected" : "") + ">" +
-      escapeHTML(tecnico.name) + "</option>",
-    ).join("");
     const statusMarkup = statusOptions.map((codigo) =>
       '<option value="' + escapeHTML(codigo) + '" ' +
       (order.statusCode === codigo ? "selected" : "") + ">" +
@@ -609,16 +575,6 @@ function renderRequests(history = false) {
       statusMarkup,
       '        </select>',
       '      </label>',
-      '      <label class="sr-field">',
-      '        <span>Técnico responsável</span>',
-      '        <select data-sr-technician="' + escapeHTML(order.id) +
-        '" aria-label="Alterar técnico de ' + escapeHTML(order.id) + '"' +
-        (podeAtribuirTecnico ? "" : " disabled") + '>',
-      '          <option value="" ' + (order.technicianId === "" ? "selected" : "") +
-        '>Não atribuído</option>',
-      tecnicoOptions,
-      '        </select>',
-      '      </label>',
       '    </div>',
       '    <div class="sr-actions">',
       '      <span class="sr-save-status" data-sr-saving role="status" hidden>Salvando…</span>',
@@ -682,7 +638,6 @@ function renderRequests(history = false) {
         order.client,
         order.phone || "",
         order.equipment,
-        order.technician || "",
         order.description || "",
         order.address || "",
       ]
@@ -722,12 +677,9 @@ function renderRequests(history = false) {
 
   list.addEventListener("change", (event) => {
     const statusId = event.target.dataset.srStatus;
-    const technicianId = event.target.dataset.srTechnician;
-    const id = statusId || technicianId;
+    if (!statusId) return;
 
-    if (!id) return;
-
-    const order = orders.find((item) => item.id === id);
+    const order = orders.find((item) => item.id === statusId);
     if (!order) return;
 
     if (statusId) {
@@ -736,13 +688,6 @@ function renderRequests(history = false) {
         order,
         "status",
         { status: event.target.value },
-        event.target,
-      );
-    } else {
-      void enviarAcaoAdmin(
-        order,
-        "tecnico",
-        { tecnico_id: event.target.value },
         event.target,
       );
     }
@@ -845,7 +790,6 @@ function renderRequests(history = false) {
       ["Cliente", order.client],
       ["Telefone", order.phone || "Não informado"],
       ["Serviço", order.equipment],
-      ["Técnico", order.technician || "Não atribuído"],
       ["Agendamento", order.appointmentDate ? dateBR(order.appointmentDate) + " às " + order.time : "Aguardando agendamento"],
       ["Endereço", order.address || "Não informado"],
       ["Descrição", order.description || "Sem descrição"],
@@ -1865,103 +1809,6 @@ function abrirPortfolioModal(item = null) {
   modal.showModal();
 }
 
-async function carregarTecnicosAdmin(mostrarCarregamento = true) {
-  if (mostrarCarregamento) {
-    techniciansLoading = true;
-    techniciansError = "";
-    render();
-  }
-  try {
-    const resposta = await fetch(TECH_API, {
-      credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
-    });
-    const dados = await resposta.json();
-    if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
-      return;
-    }
-    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.tecnicos)) {
-      throw new Error(dados?.mensagem || "Não foi possível carregar os técnicos.");
-    }
-    techniciansAdmin = dados.tecnicos;
-    technicianCsrf = String(dados.csrf || "");
-    techniciansLoaded = true;
-    techniciansError = "";
-  } catch (erro) {
-    techniciansError = erro.message || "Falha ao carregar técnicos.";
-  } finally {
-    techniciansLoading = false;
-    if (page === "technicians") render();
-  }
-}
-
-function renderTechnicians() {
-  if (techniciansLoading) {
-    content.innerHTML = '<section class="panel"><div class="empty">Carregando técnicos…</div></section>';
-    return;
-  }
-  if (techniciansError) {
-    content.innerHTML = `<section class="panel"><div class="empty">${escapeHTML(techniciansError)}</div><button class="primary" id="retry-technicians">Tentar novamente</button></section>`;
-    content.querySelector("#retry-technicians").addEventListener("click", () => void carregarTecnicosAdmin());
-    return;
-  }
-  const ativos = techniciansAdmin.filter((t) => t.ativo).length;
-  content.innerHTML = `
-    <div class="toolbar technicians-toolbar">
-      <div><h1>Técnicos</h1><p>${ativos} ativos · ${techniciansAdmin.length} cadastrados</p></div>
-      <button type="button" class="primary" id="add-technician">+ Novo Técnico</button>
-    </div>
-    <section class="technician-admin-list">
-      ${techniciansAdmin.map((tecnico) => `
-        <article class="panel technician-admin-card">
-          <div class="technician-admin-identity"><div class="avatar">${escapeHTML(iniciais(tecnico.nome))}</div><div><strong>${escapeHTML(tecnico.nome)}</strong><small>${escapeHTML(tecnico.email || "Sem conta de acesso")}</small><small>${escapeHTML(tecnico.telefone)}</small></div></div>
-          <span class="sr-badge ${tecnico.ativo ? "sr-done" : "sr-cancelled"}">${tecnico.ativo ? "Ativo" : "Inativo"}</span>
-          <div class="technician-admin-actions"><button type="button" class="secondary" data-edit-technician="${escapeHTML(tecnico.id)}">Editar</button><button type="button" class="secondary" data-toggle-technician="${escapeHTML(tecnico.id)}" data-active="${tecnico.ativo ? "1" : "0"}">${tecnico.ativo ? "Desativar" : "Ativar"}</button></div>
-        </article>`).join("") || '<div class="panel empty">Nenhum técnico cadastrado.</div>'}
-    </section>`;
-  content.querySelector("#add-technician").addEventListener("click", () => abrirDialogTecnico());
-  content.querySelectorAll("[data-edit-technician]").forEach((botao) => botao.addEventListener("click", () => {
-    const tecnico = techniciansAdmin.find((item) => item.id === botao.dataset.editTechnician);
-    if (tecnico) abrirDialogTecnico(tecnico);
-  }));
-  content.querySelectorAll("[data-toggle-technician]").forEach((botao) => botao.addEventListener("click", () => void alternarAtivoTecnico(botao.dataset.toggleTechnician, botao.dataset.active !== "1")));
-}
-
-function abrirDialogTecnico(tecnico = null) {
-  const formTecnico = document.querySelector("#technician-form");
-  formTecnico.reset();
-  formTecnico.elements.technician_id.value = tecnico?.id || "";
-  formTecnico.elements.name.value = tecnico?.nome || "";
-  formTecnico.elements.email.value = tecnico?.email || "";
-  formTecnico.elements.phone.value = tecnico?.telefone || "";
-  formTecnico.elements.password.required = !tecnico;
-  document.querySelector("#technician-dialog-title").textContent = tecnico ? "Editar técnico" : "Novo técnico";
-  document.querySelector("#save-technician").textContent = tecnico ? "Salvar alterações" : "Criar acesso";
-  document.querySelector("#technician-feedback").hidden = true;
-  document.querySelector("#technician-dialog").showModal();
-}
-
-async function alternarAtivoTecnico(id, ativo) {
-  if (!technicianCsrf) return;
-  if (!ativo && !window.confirm("Desativar este técnico? Ele não poderá mais entrar no sistema.")) return;
-  try {
-    const resposta = await fetch(TECH_API, {
-      method: "POST", credentials: "same-origin", cache: "no-store",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ acao: "ativo", id, ativo, csrf: technicianCsrf }),
-    });
-    const dados = await resposta.json();
-    if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível atualizar o técnico.");
-    adminMessage = dados.mensagem;
-    adminMessageError = false;
-    await carregarTecnicosAdmin(false);
-  } catch (erro) {
-    adminMessage = erro.message || "Falha ao atualizar técnico.";
-    adminMessageError = true;
-    render();
-  }
-}
-
 function renderPortfolio() {
   if (!portfolioLoaded && !portfolioLoading && !portfolioError)
     void carregarPortfolioAdmin();
@@ -2157,7 +2004,6 @@ function render() {
   if (page === "history") renderRequests(true);
   if (page === "schedule") renderSchedule();
   if (page === "portfolio") renderPortfolio();
-  if (page === "technicians") renderTechnicians();
 
   if (adminMessage) {
     content.insertAdjacentHTML(
@@ -2172,7 +2018,6 @@ function navigate(nextPage) {
   search = "";
   filter = "Todos";
   render();
-  if (nextPage === "technicians" && !techniciansLoaded) void carregarTecnicosAdmin();
 }
 
 document.querySelectorAll(".tab").forEach((tab) => {
@@ -2200,50 +2045,6 @@ document.querySelector("#admin-notification-list").addEventListener("click", asy
     search = protocolo;
     filter = "Todos";
     render();
-  }
-});
-
-document.querySelector("#close-technician")?.addEventListener("click", () => document.querySelector("#technician-dialog").close());
-document.querySelector("#cancel-technician")?.addEventListener("click", () => document.querySelector("#technician-dialog").close());
-document.querySelector("#technician-form")?.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const formTecnico = event.currentTarget;
-  if (!formTecnico.reportValidity()) return;
-  const botao = document.querySelector("#save-technician");
-  const feedback = document.querySelector("#technician-feedback");
-  botao.disabled = true;
-  feedback.hidden = true;
-  const id = String(formTecnico.elements.technician_id.value || "");
-  try {
-    const resposta = await fetch(TECH_API, {
-      method: "POST", credentials: "same-origin", cache: "no-store",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        acao: id ? "atualizar" : "criar", id,
-        nome: String(formTecnico.elements.name.value || "").trim(),
-        email: String(formTecnico.elements.email.value || "").trim(),
-        telefone: String(formTecnico.elements.phone.value || "").trim(),
-        senha: String(formTecnico.elements.password.value || ""),
-        csrf: technicianCsrf,
-      }),
-    });
-    const dados = await resposta.json();
-    if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
-      return;
-    }
-    if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível salvar o técnico.");
-    document.querySelector("#technician-dialog").close();
-    formTecnico.reset();
-    adminMessage = dados.mensagem;
-    adminMessageError = false;
-    techniciansLoaded = false;
-    await carregarTecnicosAdmin(false);
-  } catch (erro) {
-    feedback.textContent = erro.message || "Falha ao salvar técnico.";
-    feedback.hidden = false;
-  } finally {
-    botao.disabled = false;
   }
 });
 
@@ -2275,13 +2076,6 @@ function preencherOpcoesPedido() {
     ...serviceTypes.map(
       (servico) =>
         `<option value="${escapeHTML(servico.id)}">${escapeHTML(servico.name)}</option>`,
-    ),
-  ].join("");
-  form.elements.technician.innerHTML = [
-    '<option value="">Não atribuído</option>',
-    ...technicians.map(
-      (tecnico) =>
-        `<option value="${escapeHTML(tecnico.id)}">${escapeHTML(tecnico.name)}</option>`,
     ),
   ].join("");
 }
@@ -2505,7 +2299,6 @@ form.addEventListener("submit", async (event) => {
     id_disponibilidade: String(dadosFormulario.get("time") || ""),
     endereco: String(dadosFormulario.get("address") || "").trim(),
     descricao: String(dadosFormulario.get("description") || "").trim(),
-    id_tecnico: String(dadosFormulario.get("technician") || ""),
     prioridade: String(dadosFormulario.get("priority") || "normal"),
   };
   try {
