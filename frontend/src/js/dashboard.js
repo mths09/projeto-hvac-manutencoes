@@ -492,17 +492,6 @@
       informacoes.append(campo);
     });
 
-    if (servico.tecnico) {
-      const campo = criar("div", "detalhe-servico");
-
-      campo.append(
-        criar("span", "", "Técnico responsável"),
-        criar("strong", "", servico.tecnico),
-      );
-
-      informacoes.append(campo);
-    }
-
     cartao.append(informacoes);
 
     const acoes = criar("div", "acoes-servico");
@@ -531,24 +520,6 @@
         void cancelarPedidoCliente(servico, botaoCancelar);
       });
       acoes.append(botaoCancelar);
-    }
-
-    // Link opcional para o WhatsApp do técnico.
-    const telefoneInformado = String(servico.telefone_tecnico || "").replace(
-      /\D/g,
-      "",
-    );
-
-    if (telefoneInformado) {
-      const telefone = telefoneInformado.startsWith("55")
-        ? telefoneInformado
-        : `55${telefoneInformado}`;
-
-      const link = criar("a", "botao-detalhes", "WhatsApp do técnico");
-      link.href = `https://wa.me/${telefone}`;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      acoes.append(link);
     }
 
     cartao.append(acoes);
