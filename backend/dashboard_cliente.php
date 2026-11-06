@@ -9,31 +9,17 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-function responderDashboard(int $status, array $dados): never
-{
-    http_response_code($status);
-    echo json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-    exit;
-}
+require_once __DIR__ . '/bootstrap.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
     header('Allow: GET');
-    responderDashboard(405, ['sucesso' => false, 'mensagem' => 'Método não permitido.']);
+    responderJson(405, ['sucesso' => false, 'mensagem' => 'Método não permitido.']);
 }
 
 try {
     $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 
-    if (!session_start([
-        'use_strict_mode' => true,
-        'use_only_cookies' => true,
-        'cookie_httponly' => true,
-        'cookie_secure' => $https,
-        'cookie_samesite' => 'Lax',
-        'cookie_path' => '/'
-    ])) {
-        throw new RuntimeException('Falha ao iniciar sessão.');
-    }
+    iniciarSessaoSegura();
 
     $idUsuario = filter_var(
         $_SESSION['usuario_id'] ?? null,
@@ -42,7 +28,7 @@ try {
     );
 
     if ($idUsuario === false || $idUsuario === null) {
-        responderDashboard(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta para continuar.']);
+        responderJson(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta para continuar.']);
     }
 
     $_SESSION['csrf_dashboard'] ??= bin2hex(random_bytes(32));
@@ -65,7 +51,7 @@ try {
 
     if (!$usuario || (int) $usuario['ativo'] !== 1 || strtolower((string) $usuario['perfil']) !== 'cliente') {
         $conexao->close();
-        responderDashboard(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta de cliente para continuar.']);
+        responderJson(401, ['sucesso' => false, 'mensagem' => 'Entre na sua conta de cliente para continuar.']);
     }
 
     // -----------------------------------------
@@ -259,7 +245,7 @@ try {
     $stmt->close();
     $conexao->close();
 
-    responderDashboard(200, [
+    responderJson(200, [
         'sucesso' => true,
         'csrf' => $csrf,
         'usuario' => [
@@ -278,5 +264,5 @@ try {
     if (isset($conexao) && $conexao instanceof mysqli) $conexao->close();
 
     error_log('Falha ao carregar dashboard do cliente: ' . get_class($erro) . ', código ' . $erro->getCode());
-    responderDashboard(500, ['sucesso' => false, 'mensagem' => 'Não foi possível carregar o painel agora. Tente novamente.']);
+    responderJson(500, ['sucesso' => false, 'mensagem' => 'Não foi possível carregar o painel agora. Tente novamente.']);
 }
