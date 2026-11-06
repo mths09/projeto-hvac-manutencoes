@@ -7,9 +7,9 @@
   const tipos = {
     "Ar Condicionado": "AR_CONDICIONADO",
     "Frigorífico / Geladeira": "REFRIGERACAO",
-    "Iluminação": "ILUMINACAO",
+    Iluminação: "ILUMINACAO",
     "Manutenção Preventiva": "MANUTENCAO_PREVENTIVA",
-    "Eletromecânica": "ELETROMECANICA"
+    Eletromecânica: "ELETROMECANICA",
   };
   let dados = null;
   let servico = "AR_CONDICIONADO";
@@ -28,7 +28,8 @@
   aviso.setAttribute("role", "status");
   aviso.tabIndex = -1;
   aviso.hidden = true;
-  aviso.style.cssText = "padding:14px;margin:16px 0;border:1px solid;border-radius:10px;line-height:1.6";
+  aviso.style.cssText =
+    "padding:14px;margin:16px 0;border:1px solid;border-radius:10px;line-height:1.6";
   document.querySelector(".titulo-area").append(aviso);
   const tentar = document.createElement("button");
   tentar.type = "button";
@@ -56,21 +57,26 @@
       elemento(`etapa-${i}`).classList.toggle("ativa", i === numero);
       elemento(`etapa-${i}`).classList.toggle("concluida", i < numero);
     }
-    window.lucide?.createIcons();
   }
 
   function nomeServico() {
-    return dados?.servicos.find((item) => item.codigo === servico)?.nome || "Ar Condicionado";
+    return (
+      dados?.servicos.find((item) => item.codigo === servico)?.nome ||
+      "Ar Condicionado"
+    );
   }
 
   function questionarioDisponivel(codigoServico) {
     const perguntas = dados?.questionarios?.[codigoServico]?.perguntas;
-    return Array.isArray(perguntas) && perguntas.length >= 4 && perguntas.length <= 6;
+    return (
+      Array.isArray(perguntas) && perguntas.length >= 4 && perguntas.length <= 6
+    );
   }
 
   function atualizarServico() {
     for (const card of cards) {
-      const marcado = tipos[card.dataset.servico] === servico ||
+      const marcado =
+        tipos[card.dataset.servico] === servico ||
         (!tipos[card.dataset.servico] && urgente);
       card.classList.toggle("selecionado", marcado);
       card.setAttribute("aria-pressed", String(marcado));
@@ -92,7 +98,10 @@
     area.replaceChildren();
     const questionario = dados?.questionarios?.[servico];
     if (!questionario) {
-      mensagem("A triagem deste serviço ainda não está publicada. Avise a equipe responsável pelo sistema.", true);
+      mensagem(
+        "A triagem deste serviço ainda não está publicada. Avise a equipe responsável pelo sistema.",
+        true,
+      );
       return false;
     }
     for (const pergunta of questionario.perguntas) {
@@ -126,7 +135,9 @@
       grupo.append(opcoes);
       area.append(grupo);
     }
-    return questionario.perguntas.length >= 4 && questionario.perguntas.length <= 6;
+    return (
+      questionario.perguntas.length >= 4 && questionario.perguntas.length <= 6
+    );
   }
 
   function coletarRespostasTriagem() {
@@ -134,9 +145,11 @@
     if (!questionario) return null;
     const respostas = {};
     for (const pergunta of questionario.perguntas) {
-      const selecionada = document.querySelector(`input[name="triagem_${pergunta.codigo}"]:checked`);
+      const selecionada = document.querySelector(
+        `input[name="triagem_${pergunta.codigo}"]:checked`,
+      );
       if (pergunta.obrigatoria && !selecionada) {
-        return {erro: `Responda a pergunta: ${pergunta.enunciado}`};
+        return { erro: `Responda a pergunta: ${pergunta.enunciado}` };
       }
       if (selecionada) respostas[pergunta.codigo] = selecionada.value;
     }
@@ -159,7 +172,8 @@
   for (const card of cards) {
     if (!tipos[card.dataset.servico]) {
       card.querySelector("h3").textContent = "Prioridade urgente";
-      card.querySelector("p").textContent = "Marque junto com o tipo de serviço. A equipe avaliará a urgência.";
+      card.querySelector("p").textContent =
+        "Marque junto com o tipo de serviço. A equipe avaliará a urgência.";
     }
     card.addEventListener("click", () => {
       if (tipos[card.dataset.servico]) {
@@ -217,7 +231,9 @@
     campoArquivo.value = ""; // permite re-selecionar o mesmo arquivo depois de remover
     for (const arquivo of selecionados) {
       if (anexos.length >= ANEXO_MAX_ARQUIVOS) {
-        return renderizarAnexos(`Você pode anexar no máximo ${ANEXO_MAX_ARQUIVOS} arquivos.`);
+        return renderizarAnexos(
+          `Você pode anexar no máximo ${ANEXO_MAX_ARQUIVOS} arquivos.`,
+        );
       }
       if (!ANEXO_TIPOS_ACEITOS.includes(arquivo.type)) {
         return renderizarAnexos(`"${arquivo.name}" não é JPG, PNG ou MP4.`);
@@ -238,15 +254,23 @@
   });
 
   const navegacao = document.createElement("div");
-  navegacao.style.cssText = "display:flex;justify-content:space-between;margin-bottom:12px";
-  for (const [rotulo, deslocamento] of [["← Mês anterior", -1], ["Próximo mês →", 1]]) {
+  navegacao.style.cssText =
+    "display:flex;justify-content:space-between;margin-bottom:12px";
+  for (const [rotulo, deslocamento] of [
+    ["← Mês anterior", -1],
+    ["Próximo mês →", 1],
+  ]) {
     const botao = document.createElement("button");
     botao.type = "button";
     botao.className = "alterar-servico";
     botao.textContent = rotulo;
     botao.addEventListener("click", () => {
       if (!dados) return;
-      const proximo = new Date(mes.getFullYear(), mes.getMonth() + deslocamento, 1);
+      const proximo = new Date(
+        mes.getFullYear(),
+        mes.getMonth() + deslocamento,
+        1,
+      );
       const [ano, numeroMes] = dados.hoje.split("-").map(Number);
       const minimo = new Date(ano, numeroMes - 1, 1);
       const maximo = new Date(ano, numeroMes + 1, 1);
@@ -263,12 +287,18 @@
     if (!dados) return;
     const area = elemento("calendario");
     area.replaceChildren();
-    elemento("tituloMes").textContent = mes.toLocaleDateString("pt-BR", {month: "long", year: "numeric"});
-    for (let i = 0; i < mes.getDay(); i++) area.append(document.createElement("span"));
+    elemento("tituloMes").textContent = mes.toLocaleDateString("pt-BR", {
+      month: "long",
+      year: "numeric",
+    });
+    for (let i = 0; i < mes.getDay(); i++)
+      area.append(document.createElement("span"));
     const ultimo = new Date(mes.getFullYear(), mes.getMonth() + 1, 0).getDate();
     for (let numero = 1; numero <= ultimo; numero++) {
       const data = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, "0")}-${String(numero).padStart(2, "0")}`;
-      const livre = dados.horarios.some((item) => item.inicio.slice(0, 10) === data);
+      const livre = dados.horarios.some(
+        (item) => item.inicio.slice(0, 10) === data,
+      );
       const botao = document.createElement("button");
       botao.type = "button";
       botao.className = "dia";
@@ -293,7 +323,9 @@
     elemento("tituloHorarios").textContent = dia
       ? `Horários para ${dia.split("-").reverse().join("/")}`
       : "Selecione um dia primeiro";
-    for (const item of dados.horarios.filter((item) => item.inicio.slice(0, 10) === dia)) {
+    for (const item of dados.horarios.filter(
+      (item) => item.inicio.slice(0, 10) === dia,
+    )) {
       const botao = document.createElement("button");
       botao.type = "button";
       botao.className = "horario";
@@ -312,12 +344,17 @@
     const limite = setTimeout(() => controle.abort(), 20000);
     try {
       const resposta = await fetch(API, {
-        credentials: "same-origin", cache: "no-store", ...opcoes,
-        headers: {Accept: "application/json"}, signal: controle.signal
+        credentials: "same-origin",
+        cache: "no-store",
+        ...opcoes,
+        headers: { Accept: "application/json" },
+        signal: controle.signal,
       });
       const json = await resposta.json();
       if (!resposta.ok || json.sucesso !== true) {
-        const erro = new Error(json.mensagem || "Não foi possível concluir a solicitação.");
+        const erro = new Error(
+          json.mensagem || "Não foi possível concluir a solicitação.",
+        );
         erro.status = resposta.status;
         erro.codigo = json.codigo;
         throw erro;
@@ -335,34 +372,59 @@
     tentar.hidden = true;
     try {
       dados = await requisicao();
-      if (!Array.isArray(dados.horarios) || !Array.isArray(dados.servicos) || !dados.usuario?.id) {
+      if (
+        !Array.isArray(dados.horarios) ||
+        !Array.isArray(dados.servicos) ||
+        !dados.usuario?.id
+      ) {
         throw new Error("O servidor retornou dados incompletos.");
       }
       const [ano, numeroMes] = dados.hoje.split("-").map(Number);
       mes ||= new Date(ano, numeroMes - 1, 1);
-      elemento("hojeTexto").textContent = dados.hoje.split("-").reverse().join("/");
-      if (!elemento("nomeCompleto").value) elemento("nomeCompleto").value = dados.usuario.nome;
-      if (!elemento("telefone").value) elemento("telefone").value = dados.usuario.telefone || "";
-      if (!elemento("endereco").value) elemento("endereco").value = dados.usuario.endereco || "";
+      elemento("hojeTexto").textContent = dados.hoje
+        .split("-")
+        .reverse()
+        .join("/");
+      if (!elemento("nomeCompleto").value)
+        elemento("nomeCompleto").value = dados.usuario.nome;
+      if (!elemento("telefone").value)
+        elemento("telefone").value = dados.usuario.telefone || "";
+      if (!elemento("endereco").value)
+        elemento("endereco").value = dados.usuario.endereco || "";
       for (const card of cards) {
         if (tipos[card.dataset.servico]) {
           const codigo = tipos[card.dataset.servico];
-          card.disabled = !dados.servicos.some((tipo) => tipo.codigo === codigo) || !questionarioDisponivel(codigo);
+          card.disabled =
+            !dados.servicos.some((tipo) => tipo.codigo === codigo) ||
+            !questionarioDisponivel(codigo);
         }
       }
-      const primeiroServicoDisponivel = dados.servicos.find((tipo) => questionarioDisponivel(tipo.codigo));
-      if (!dados.servicos.some((tipo) => tipo.codigo === servico && questionarioDisponivel(tipo.codigo))) {
+      const primeiroServicoDisponivel = dados.servicos.find((tipo) =>
+        questionarioDisponivel(tipo.codigo),
+      );
+      if (
+        !dados.servicos.some(
+          (tipo) =>
+            tipo.codigo === servico && questionarioDisponivel(tipo.codigo),
+        )
+      ) {
         servico = primeiroServicoDisponivel?.codigo || "";
       }
       atualizarServico();
       if (!servico || !renderizarTriagem()) {
-        throw new Error("Não há questionários publicados com 4 a 6 perguntas. Confira o script banco/triagem_mvp.sql.");
+        throw new Error(
+          "Não há questionários publicados com 4 a 6 perguntas. Confira o script banco/triagem_mvp.sql.",
+        );
       }
       calendario();
       horarios();
-      mensagem(dados.horarios.length
-        ? "Selecione um horário. O pedido ficará aguardando aprovação da equipe."
-        : "Não há horários disponíveis nos próximos 30 dias. Entre em contato com a equipe.", false, false);
+      mensagem(
+        dados.horarios.length
+          ? "Selecione um horário. O pedido ficará aguardando aprovação da equipe."
+          : "Não há horários disponíveis nos próximos 30 dias. Entre em contato com a equipe.",
+        false,
+        false,
+      );
       elemento("botaoContinuar").disabled = !servico;
       return true;
     } catch (erro) {
@@ -386,16 +448,20 @@
     const valores = {
       resumoNomeCompleto: pedido.campos.nome,
       resumoTelefone: pedido.campos.telefone,
-      resumoServico: pedido.nomeServico + (pedido.campos.urgente === "1" ? " · Urgente" : ""),
+      resumoServico:
+        pedido.nomeServico +
+        (pedido.campos.urgente === "1" ? " · Urgente" : ""),
       resumoData: pedido.inicio.slice(0, 10).split("-").reverse().join("/"),
       resumoHorario: pedido.inicio.slice(11, 16),
       resumoEndereco: pedido.campos.endereco,
-      resumoDescricao: pedido.campos.descricao
+      resumoDescricao: pedido.campos.descricao,
     };
-    for (const [id, valor] of Object.entries(valores)) elemento(id).textContent = valor;
+    for (const [id, valor] of Object.entries(valores))
+      elemento(id).textContent = valor;
     adicionarResumoTriagem(respostasTriagem);
     elemento("resumoAnexosLinha").hidden = anexos.length === 0;
-    elemento("resumoAnexos").textContent = `${anexos.length} ${anexos.length === 1 ? "arquivo" : "arquivos"}`;
+    elemento("resumoAnexos").textContent =
+      `${anexos.length} ${anexos.length === 1 ? "arquivo" : "arquivos"}`;
     elemento("confirmarAgendamento").textContent = "Enviar pedido ✓";
     elemento("voltarDetalhes").disabled = incerto;
     etapa(4);
@@ -407,7 +473,11 @@
   elemento("voltarTipoServico").addEventListener("click", () => etapa(1));
   elemento("continuarTriagem").addEventListener("click", () => {
     const respostas = coletarRespostasTriagem();
-    if (!respostas || respostas.erro) return mensagem(respostas?.erro || "Responda à triagem antes de continuar.", true);
+    if (!respostas || respostas.erro)
+      return mensagem(
+        respostas?.erro || "Responda à triagem antes de continuar.",
+        true,
+      );
     mensagem("");
     etapa(3);
   });
@@ -425,11 +495,16 @@
     const descricao = elemento("descricao").value.trim();
     const respostasTriagem = coletarRespostasTriagem();
     let erro = "";
-    if (!respostasTriagem || respostasTriagem.erro) erro = respostasTriagem?.erro || "Responda à triagem antes de continuar.";
-    else if (nome.split(" ").length < 2 || [...nome].length > 150) erro = "Informe nome e sobrenome, com até 150 caracteres.";
-    else if (!/^\d{10,11}$/.test(telefone)) erro = "Informe o telefone com DDD, com 10 ou 11 números.";
-    else if ([...endereco].length < 10 || [...endereco].length > 500) erro = "Informe o endereço completo, entre 10 e 500 caracteres.";
-    else if ([...descricao].length < 10 || [...descricao].length > 2000) erro = "Descreva o problema usando entre 10 e 2.000 caracteres.";
+    if (!respostasTriagem || respostasTriagem.erro)
+      erro = respostasTriagem?.erro || "Responda à triagem antes de continuar.";
+    else if (nome.split(" ").length < 2 || [...nome].length > 150)
+      erro = "Informe nome e sobrenome, com até 150 caracteres.";
+    else if (!/^\d{10,11}$/.test(telefone))
+      erro = "Informe o telefone com DDD, com 10 ou 11 números.";
+    else if ([...endereco].length < 10 || [...endereco].length > 500)
+      erro = "Informe o endereço completo, entre 10 e 500 caracteres.";
+    else if ([...descricao].length < 10 || [...descricao].length > 2000)
+      erro = "Descreva o problema usando entre 10 e 2.000 caracteres.";
     else if (!horario) erro = "Selecione a data e o horário.";
     if (erro) return mensagem(erro, true);
     elemento("botaoRevisar").disabled = true;
@@ -439,14 +514,31 @@
     const vaga = dados.horarios.find((item) => item.id === horario);
     if (!vaga) {
       horario = "";
-      return mensagem("Esse horário não está mais disponível. Escolha outro.", true);
+      return mensagem(
+        "Esse horário não está mais disponível. Escolha outro.",
+        true,
+      );
     }
     pedido = {
-      protocolo: dados.protocolo, inicio: vaga.inicio, nomeServico: nomeServico(),
-      campos: {tipo_servico: servico, disponibilidade: horario, nome, telefone, endereco, descricao,
-        urgente: urgente ? "1" : "0", respostas_triagem: respostasTriagem}
+      protocolo: dados.protocolo,
+      inicio: vaga.inicio,
+      nomeServico: nomeServico(),
+      campos: {
+        tipo_servico: servico,
+        disponibilidade: horario,
+        nome,
+        telefone,
+        endereco,
+        descricao,
+        urgente: urgente ? "1" : "0",
+        respostas_triagem: respostasTriagem,
+      },
     };
-    mensagem("Confira os dados. O horário ficará pendente de aprovação.", false, false);
+    mensagem(
+      "Confira os dados. O horário ficará pendente de aprovação.",
+      false,
+      false,
+    );
     linkPedidos.hidden = true;
     resumo();
   });
@@ -457,7 +549,10 @@
     try {
       guardarPendente(pedido);
     } catch {
-      return mensagem("Permita o armazenamento deste site no navegador para enviar o pedido com segurança contra duplicação.", true);
+      return mensagem(
+        "Permita o armazenamento deste site no navegador para enviar o pedido com segurança contra duplicação.",
+        true,
+      );
     }
     enviando = true;
     incerto = true;
@@ -467,30 +562,54 @@
     mensagem("Enviando seu pedido…", false, false);
     const formulario = new FormData();
     for (const [chave, valor] of Object.entries(pedido.campos)) {
-      formulario.append(chave, chave === "respostas_triagem" ? JSON.stringify(valor) : valor);
+      formulario.append(
+        chave,
+        chave === "respostas_triagem" ? JSON.stringify(valor) : valor,
+      );
     }
     formulario.append("protocolo", pedido.protocolo);
     formulario.append("csrf", dados.csrf);
-    for (const arquivo of anexos) formulario.append("anexos[]", arquivo, arquivo.name);
+    for (const arquivo of anexos)
+      formulario.append("anexos[]", arquivo, arquivo.name);
     try {
-      const retorno = await requisicao({method: "POST", body: formulario});
+      const retorno = await requisicao({ method: "POST", body: formulario });
       concluido = true;
       incerto = false;
-      try { guardarPendente(null); } catch { /* A confirmação continua válida. */ }
+      try {
+        guardarPendente(null);
+      } catch {
+        /* A confirmação continua válida. */
+      }
       mensagem(`${retorno.mensagem} Protocolo: ${retorno.protocolo}`);
       elemento("confirmarAgendamento").textContent = "Ver meus pedidos →";
       elemento("voltarDetalhes").hidden = true;
     } catch (erro) {
       if (erro.status === 401) return window.location.replace("./login.html");
-      if ([400, 422].includes(erro.status) || erro.codigo === "HORARIO_INDISPONIVEL") {
+      if (
+        [400, 422].includes(erro.status) ||
+        erro.codigo === "HORARIO_INDISPONIVEL"
+      ) {
         incerto = false;
-        try { guardarPendente(null); } catch { /* Pode tentar novamente. */ }
+        try {
+          guardarPendente(null);
+        } catch {
+          /* Pode tentar novamente. */
+        }
         elemento("voltarDetalhes").disabled = false;
-        mensagem(erro.message + " Clique em Alterar para corrigir e revisar novamente.", true);
+        mensagem(
+          erro.message +
+            " Clique em Alterar para corrigir e revisar novamente.",
+          true,
+        );
       } else {
         linkPedidos.hidden = false;
-        mensagem((erro.status === 403 ? erro.message : "Não foi possível confirmar a resposta do servidor.") +
-          " Consulte Meus Pedidos no dashboard ou tente reenviar este mesmo pedido. Não crie outro antes de conferir.", true);
+        mensagem(
+          (erro.status === 403
+            ? erro.message
+            : "Não foi possível confirmar a resposta do servidor.") +
+            " Consulte Meus Pedidos no dashboard ou tente reenviar este mesmo pedido. Não crie outro antes de conferir.",
+          true,
+        );
       }
       elemento("confirmarAgendamento").textContent = "Tentar enviar novamente";
     } finally {
@@ -503,17 +622,30 @@
   async function iniciar() {
     if (!(await carregar())) return;
     try {
-      const salvo = sessionStorage.getItem(`hvac.agendamento.pendente.${dados.usuario.id}`);
+      const salvo = sessionStorage.getItem(
+        `hvac.agendamento.pendente.${dados.usuario.id}`,
+      );
       if (!salvo) return;
       const anterior = JSON.parse(salvo);
-      if (!/^SRV-[a-f0-9]{24}$/.test(anterior.protocolo) || !anterior.campos || typeof anterior.inicio !== "string") return;
+      if (
+        !/^SRV-[a-f0-9]{24}$/.test(anterior.protocolo) ||
+        !anterior.campos ||
+        typeof anterior.inicio !== "string"
+      )
+        return;
       if (!anterior.campos.respostas_triagem) {
-        mensagem("Há um envio antigo sem respostas de triagem. Confira Meus Pedidos antes de criar outro pedido.", true);
+        mensagem(
+          "Há um envio antigo sem respostas de triagem. Confira Meus Pedidos antes de criar outro pedido.",
+          true,
+        );
         linkPedidos.hidden = false;
         return;
       }
       if (!questionarioDisponivel(anterior.campos.tipo_servico)) {
-        mensagem("A triagem deste envio não está mais disponível. Confira Meus Pedidos antes de criar outro pedido.", true);
+        mensagem(
+          "A triagem deste envio não está mais disponível. Confira Meus Pedidos antes de criar outro pedido.",
+          true,
+        );
         linkPedidos.hidden = false;
         return;
       }
@@ -524,10 +656,16 @@
       incerto = true;
       linkPedidos.hidden = false;
       resumo();
-      elemento("confirmarAgendamento").textContent = "Verificar / reenviar pedido";
-      mensagem("Há um envio sem confirmação neste navegador. Verifique ou reenvie o mesmo pedido para evitar duplicação.");
+      elemento("confirmarAgendamento").textContent =
+        "Verificar / reenviar pedido";
+      mensagem(
+        "Há um envio sem confirmação neste navegador. Verifique ou reenvie o mesmo pedido para evitar duplicação.",
+      );
     } catch {
-      mensagem("Não foi possível recuperar o último envio. Confira Meus Pedidos antes de enviar novamente.", true);
+      mensagem(
+        "Não foi possível recuperar o último envio. Confira Meus Pedidos antes de enviar novamente.",
+        true,
+      );
     }
   }
   iniciar();
