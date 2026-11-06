@@ -14,19 +14,19 @@
     <link rel="stylesheet" href="../css/tela-cadastro.css" />
     <script type="module" src="../js/cadastro.js"></script>
   </head>
-   <header class="topo">
-      <div class="header-interno">
-        <a href="../../../index.html" class="logo-container">
-          <img
-            src="../../assets/logoSite.png"
-            alt="HVAC Lex Company"
-            class="logo-img"
-          />
-        </a>
+  <header class="topo">
+    <div class="header-interno">
+      <a href="../../../index.html" class="logo-container">
+        <img
+          src="../../assets/logoSite.png"
+          alt="HVAC Lex Company"
+          class="logo-img"
+        />
+      </a>
 
-        <a href="../../../index.html" class="voltar-site"> ← Voltar ao site </a>
-      </div>
-    </header>
+      <a href="../../../index.html" class="voltar-site"> ← Voltar ao site </a>
+    </div>
+  </header>
 
   <body class="pagina-cadastro">
     <!-- Ondas decorativas à direita -->
@@ -142,7 +142,6 @@
     </div>
 
     <main class="conteudo-central">
-
       <div class="card">
         <img src="../../assets/logoHVAC.png" alt="Logo HVAC Manutenções" />
 
@@ -414,6 +413,20 @@
               </div>
             </div>
           </fieldset>
+
+          <!-- Termos de Política de Privacidade-->
+          <label>
+            <input
+              type="checkbox"
+              name="aceite_privacidade"
+              value="1"
+              required
+            />
+            Li e aceito a
+            <a href="./privacidade.html" target="_blank"
+              >Política de Privacidade</a
+            >.
+          </label>
 
           <p id="mensagem-cadastro" role="status" aria-live="polite" hidden></p>
           <button type="submit" class="btn-entrar">Criar minha conta →</button>

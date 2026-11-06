@@ -152,6 +152,20 @@ try {
     $stmt->execute();
     $stmt->close();
 
+    // termos de politica e privacidade
+    $ipHash = hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido'));
+    $userAgentHash = hash('sha256', (string) ($_SERVER['HTTP_USER_AGENT'] ?? 'desconhecido'));
+    $versaoPolitica = '1.0';
+
+    $stmt = $conexao->prepare(
+        'INSERT INTO aceite_politica
+            (id_usuario, versao, ip_hash, user_agent_hash)
+        VALUES (?, ?, ?, ?)'
+    );
+    $stmt->bind_param('isss', $usuarioId, $versaoPolitica, $ipHash, $userAgentHash);
+    $stmt->execute();
+    $stmt->close();
+
     $conexao->commit();
 
 } catch (Throwable $erroInterno) {
