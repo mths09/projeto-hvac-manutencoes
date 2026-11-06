@@ -124,9 +124,7 @@ try {
                   AND a.id_agendamento IS NOT NULL
                   AND a.status IN ('PENDENTE', 'CONFIRMADO')
                   AND d.inicio_previsto > NOW()
-                 THEN 1 ELSE 0 END AS pode_reagendar,
-            t.nome AS tecnico,
-            t.telefone AS telefone_tecnico
+                  THEN 1 ELSE 0 END AS pode_reagendar
          FROM solicitacao AS s
          INNER JOIN tipo_servico AS ts ON ts.id_tipo_servico = s.id_tipo_servico
          INNER JOIN status_solicitacao AS ss ON ss.id_status = s.id_status_atual
@@ -142,14 +140,6 @@ try {
             LIMIT 1
          )
          LEFT JOIN disponibilidade AS d ON d.id_disponibilidade = a.id_disponibilidade
-         LEFT JOIN atribuicao_tecnica AS at ON at.id_atribuicao = (
-            SELECT at2.id_atribuicao
-            FROM atribuicao_tecnica AS at2
-            WHERE at2.id_solicitacao = s.id_solicitacao AND at2.fim_em IS NULL
-            ORDER BY at2.inicio_em DESC, at2.id_atribuicao DESC
-            LIMIT 1
-         )
-         LEFT JOIN tecnico AS t ON t.id_tecnico = at.id_tecnico AND t.ativo = 1
          WHERE s.id_cliente = ?
          ORDER BY s.criada_em DESC, s.id_solicitacao DESC"
     );
@@ -177,8 +167,6 @@ try {
             'status_agendamento' => (string) ($linha['status_agendamento'] ?? ''),
             'pode_cancelar' => (int) ($linha['pode_cancelar'] ?? 0) === 1,
             'pode_reagendar' => (int) ($linha['pode_reagendar'] ?? 0) === 1,
-            'tecnico' => (string) ($linha['tecnico'] ?? ''),
-            'telefone_tecnico' => (string) ($linha['telefone_tecnico'] ?? '')
         ];
 
         $resumo['total']++;
