@@ -1,16 +1,8 @@
 --
--- Banco de dados: `hvac_db`
---
-CREATE DATABASE IF NOT EXISTS `hvac_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `hvac_db`;
-
--- --------------------------------------------------------
-
---
 -- Estrutura para tabela `agendamento`
 --
 
-DROP TABLE IF EXISTS `agendamento`;
+
 CREATE TABLE `agendamento` (
   `id_agendamento` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -31,7 +23,7 @@ CREATE TABLE `agendamento` (
 -- Estrutura para tabela `anexo_solicitacao`
 --
 
-DROP TABLE IF EXISTS `anexo_solicitacao`;
+
 CREATE TABLE `anexo_solicitacao` (
   `id_anexo` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -48,7 +40,7 @@ CREATE TABLE `anexo_solicitacao` (
 -- Estrutura para tabela `arquivo`
 --
 
-DROP TABLE IF EXISTS `arquivo`;
+
 CREATE TABLE `arquivo` (
   `id_arquivo` bigint(20) NOT NULL,
   `nome_original` varchar(255) NOT NULL,
@@ -66,7 +58,7 @@ CREATE TABLE `arquivo` (
 -- Estrutura para tabela `atribuicao_tecnica`
 --
 
-DROP TABLE IF EXISTS `atribuicao_tecnica`;
+
 CREATE TABLE `atribuicao_tecnica` (
   `id_atribuicao` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -83,7 +75,7 @@ CREATE TABLE `atribuicao_tecnica` (
 -- Estrutura para tabela `avaliacao_atendimento`
 --
 
-DROP TABLE IF EXISTS `avaliacao_atendimento`;
+
 CREATE TABLE `avaliacao_atendimento` (
   `id_avaliacao` bigint(20) NOT NULL,
   `id_agendamento` bigint(20) NOT NULL,
@@ -99,7 +91,7 @@ CREATE TABLE `avaliacao_atendimento` (
 -- Estrutura para tabela `categoria_portfolio`
 --
 
-DROP TABLE IF EXISTS `categoria_portfolio`;
+
 CREATE TABLE `categoria_portfolio` (
   `id_categoria` bigint(20) NOT NULL,
   `codigo` varchar(60) NOT NULL,
@@ -115,7 +107,7 @@ CREATE TABLE `categoria_portfolio` (
 -- Estrutura para tabela `condicao_pergunta`
 --
 
-DROP TABLE IF EXISTS `condicao_pergunta`;
+
 CREATE TABLE `condicao_pergunta` (
   `id_condicao` bigint(20) NOT NULL,
   `id_pergunta_destino` bigint(20) NOT NULL,
@@ -132,7 +124,7 @@ CREATE TABLE `condicao_pergunta` (
 -- Estrutura para tabela `disponibilidade`
 --
 
-DROP TABLE IF EXISTS `disponibilidade`;
+
 CREATE TABLE `disponibilidade` (
   `id_disponibilidade` bigint(20) NOT NULL,
   `inicio_previsto` datetime NOT NULL,
@@ -150,7 +142,7 @@ CREATE TABLE `disponibilidade` (
 -- Estrutura para tabela `documento`
 --
 
-DROP TABLE IF EXISTS `documento`;
+
 CREATE TABLE `documento` (
   `id_documento` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -170,7 +162,7 @@ CREATE TABLE `documento` (
 -- Estrutura para tabela `endereco_atendimento`
 --
 
-DROP TABLE IF EXISTS `endereco_atendimento`;
+
 CREATE TABLE `endereco_atendimento` (
   `id_solicitacao` bigint(20) NOT NULL,
   `endereco_informado` text NOT NULL,
@@ -189,7 +181,7 @@ CREATE TABLE `endereco_atendimento` (
 -- Estrutura para tabela `endereco_usuario`
 --
 
-DROP TABLE IF EXISTS `endereco_usuario`;
+
 CREATE TABLE `endereco_usuario` (
   `id_endereco_usuario` bigint(20) NOT NULL,
   `id_usuario` bigint(20) NOT NULL UNIQUE,
@@ -212,7 +204,7 @@ CREATE TABLE `endereco_usuario` (
 -- Estrutura para tabela `historico_status`
 --
 
-DROP TABLE IF EXISTS `historico_status`;
+
 CREATE TABLE `historico_status` (
   `id_historico` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -229,7 +221,7 @@ CREATE TABLE `historico_status` (
 -- Estrutura para tabela `item_estoque`
 --
 
-DROP TABLE IF EXISTS `item_estoque`;
+
 CREATE TABLE `item_estoque` (
   `id_item_estoque` bigint(20) NOT NULL,
   `codigo` varchar(60) NOT NULL,
@@ -246,7 +238,7 @@ CREATE TABLE `item_estoque` (
 -- Estrutura para tabela `item_portfolio`
 --
 
-DROP TABLE IF EXISTS `item_portfolio`;
+
 CREATE TABLE `item_portfolio` (
   `id_item_portfolio` bigint(20) NOT NULL,
   `id_categoria` bigint(20) NOT NULL,
@@ -267,7 +259,7 @@ CREATE TABLE `item_portfolio` (
 -- Estrutura para tabela `item_solicitacao`
 --
 
-DROP TABLE IF EXISTS `item_solicitacao`;
+
 CREATE TABLE `item_solicitacao` (
   `id_item_solicitacao` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -283,7 +275,7 @@ CREATE TABLE `item_solicitacao` (
 -- Estrutura para tabela `movimentacao_estoque`
 --
 
-DROP TABLE IF EXISTS `movimentacao_estoque`;
+
 CREATE TABLE `movimentacao_estoque` (
   `id_movimentacao` bigint(20) NOT NULL,
   `id_item_estoque` bigint(20) NOT NULL,
@@ -303,7 +295,7 @@ CREATE TABLE `movimentacao_estoque` (
 -- Estrutura para tabela `notificacao`
 --
 
-DROP TABLE IF EXISTS `notificacao`;
+
 CREATE TABLE `notificacao` (
   `id_notificacao` bigint(20) NOT NULL,
   `id_destinatario` bigint(20) NOT NULL,
@@ -327,7 +319,7 @@ CREATE TABLE `notificacao` (
 -- Estrutura para tabela `opcao_pergunta`
 --
 
-DROP TABLE IF EXISTS `opcao_pergunta`;
+
 CREATE TABLE `opcao_pergunta` (
   `id_opcao` bigint(20) NOT NULL,
   `id_pergunta` bigint(20) NOT NULL,
@@ -342,7 +334,7 @@ CREATE TABLE `opcao_pergunta` (
 -- Estrutura para tabela `orcamento`
 --
 
-DROP TABLE IF EXISTS `orcamento`;
+
 CREATE TABLE `orcamento` (
   `id_orcamento` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -367,7 +359,7 @@ CREATE TABLE `orcamento` (
 -- Estrutura para tabela `pergunta_triagem`
 --
 
-DROP TABLE IF EXISTS `pergunta_triagem`;
+
 CREATE TABLE `pergunta_triagem` (
   `id_pergunta` bigint(20) NOT NULL,
   `id_questionario` bigint(20) NOT NULL,
@@ -388,7 +380,7 @@ CREATE TABLE `pergunta_triagem` (
 -- Estrutura para tabela `questionario`
 --
 
-DROP TABLE IF EXISTS `questionario`;
+
 CREATE TABLE `questionario` (
   `id_questionario` bigint(20) NOT NULL,
   `id_tipo_servico` bigint(20) NOT NULL,
@@ -405,7 +397,7 @@ CREATE TABLE `questionario` (
 -- Estrutura para tabela `resposta_opcao`
 --
 
-DROP TABLE IF EXISTS `resposta_opcao`;
+
 CREATE TABLE `resposta_opcao` (
   `id_resposta` bigint(20) NOT NULL,
   `id_opcao` bigint(20) NOT NULL
@@ -417,7 +409,7 @@ CREATE TABLE `resposta_opcao` (
 -- Estrutura para tabela `resposta_triagem`
 --
 
-DROP TABLE IF EXISTS `resposta_triagem`;
+
 CREATE TABLE `resposta_triagem` (
   `id_resposta` bigint(20) NOT NULL,
   `id_triagem` bigint(20) NOT NULL,
@@ -435,7 +427,7 @@ CREATE TABLE `resposta_triagem` (
 -- Estrutura para tabela `solicitacao`
 --
 
-DROP TABLE IF EXISTS `solicitacao`;
+
 CREATE TABLE `solicitacao` (
   `id_solicitacao` bigint(20) NOT NULL,
   `protocolo` varchar(30) NOT NULL,
@@ -461,7 +453,7 @@ CREATE TABLE `solicitacao` (
 -- Estrutura para tabela `status_solicitacao`
 --
 
-DROP TABLE IF EXISTS `status_solicitacao`;
+
 CREATE TABLE `status_solicitacao` (
   `id_status` bigint(20) NOT NULL,
   `codigo` varchar(30) NOT NULL,
@@ -471,16 +463,6 @@ CREATE TABLE `status_solicitacao` (
   `ativo` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Despejando dados para a tabela `status_solicitacao`
---
-
-INSERT INTO `status_solicitacao` (`id_status`, `codigo`, `nome`, `ordem`, `terminal`, `ativo`) VALUES
-(1, 'SOLICITADO', 'Solicitado', 1, 0, 1),
-(2, 'AGENDADO', 'Agendado', 2, 0, 1),
-(3, 'EM_ANDAMENTO', 'Em andamento', 3, 0, 1),
-(4, 'CONCLUIDO', 'Concluído', 4, 1, 1),
-(5, 'CANCELADO', 'Cancelado', 5, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -488,7 +470,7 @@ INSERT INTO `status_solicitacao` (`id_status`, `codigo`, `nome`, `ordem`, `termi
 -- Estrutura para tabela `tecnico`
 --
 
-DROP TABLE IF EXISTS `tecnico`;
+
 CREATE TABLE `tecnico` (
   `id_tecnico` bigint(20) NOT NULL,
   `id_usuario` bigint(20) DEFAULT NULL,
@@ -503,7 +485,7 @@ CREATE TABLE `tecnico` (
 -- Estrutura para tabela `tecnico_especialidade`
 --
 
-DROP TABLE IF EXISTS `tecnico_especialidade`;
+
 CREATE TABLE `tecnico_especialidade` (
   `id_tecnico` bigint(20) NOT NULL,
   `id_tipo_servico` bigint(20) NOT NULL
@@ -515,7 +497,7 @@ CREATE TABLE `tecnico_especialidade` (
 -- Estrutura para tabela `tipo_servico`
 --
 
-DROP TABLE IF EXISTS `tipo_servico`;
+
 CREATE TABLE `tipo_servico` (
   `id_tipo_servico` bigint(20) NOT NULL,
   `codigo` varchar(60) NOT NULL,
@@ -526,24 +508,12 @@ CREATE TABLE `tipo_servico` (
   `ativo` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Despejando dados para a tabela `tipo_servico`
---
-
-INSERT INTO `tipo_servico` (`id_tipo_servico`, `codigo`, `nome`, `descricao`, `icone`, `ordem`, `ativo`) VALUES
-(1, 'AR_CONDICIONADO', 'Ar Condicionado', 'Instalação, manutenção e higienização de splits, cassetes e VRF', 'ar-condicionado.svg', 1, 1),
-(2, 'REFRIGERACAO', 'Frigorífico / Geladeira', 'Conserto e manutenção de câmaras frias e refrigeradores comerciais', 'frigorifico.svg', 2, 1),
-(3, 'ILUMINACAO', 'Iluminação', 'Instalação de LED, luminárias industriais e sistemas de emergência', 'iluminacao.svg', 3, 1),
-(4, 'MANUTENCAO_PREVENTIVA', 'Manutenção Preventiva', 'Planos periódicos para equipamentos industriais e comerciais', 'manutencao.svg', 4, 1),
-(5, 'ELETROMECANICA', 'Eletromecânica', 'Motores, bombas, quadros elétricos e automação industrial', 'raio.svg', 5, 1);
-
--- --------------------------------------------------------
 
 --
 -- Estrutura para tabela `triagem`
 --
 
-DROP TABLE IF EXISTS `triagem`;
+
 CREATE TABLE `triagem` (
   `id_triagem` bigint(20) NOT NULL,
   `id_solicitacao` bigint(20) NOT NULL,
@@ -560,7 +530,7 @@ CREATE TABLE `triagem` (
 -- Estrutura para tabela `usuario`
 --
 
-DROP TABLE IF EXISTS `usuario`;
+
 CREATE TABLE `usuario` (
   `id_usuario` bigint(20) NOT NULL,
   `nome` varchar(150) NOT NULL,
