@@ -31,21 +31,21 @@ modernização do processo de atendimento, principalmente para organização da 
 - [x] Área do cliente (login e cadastro)
 - [x] Painel administrativo
 
-| Funcionalidade            | Situação     | Observação                                  |
-| ------------------------- | ------------ | ------------------------------------------- |
-| Cadastro, login e perfis  | Implementado | Cliente, administrador e técnico            |
-| Recuperação de senha      | Implementado | Token de uso único, expira em 30 minutos    |
-| Triagem                   | Implementado | Questionário e respostas persistidos        |
-| Agendamento               | Implementado | Reserva com validação de capacidade         |
-| Anexos do pedido          | Implementado | Upload e leitura autorizada                 |
-| Início/fim do atendimento | Implementado | Técnico grava `inicio_real` e `fim_real`    |
-| Reagendamento             | Modelado     | Há campos, mas não há fluxo de criação      |
-| Orçamentos                | Modelado     | Tabela sem API ou tela                      |
-| Documentos                | Modelado     | Listagem sem emissão ou download            |
-| Estoque                   | Modelado     | Tabelas sem API ou tela                     |
-| Avaliação                 | Modelado     | Tabela sem fluxo                            |
-| Técnicos                  | Parcial      | Atribuição existe; CRUD administrativo não  |
-| WhatsApp                  | Manual       | Link `wa.me`; não há confirmação automática |
+| Funcionalidade            | Situação     | Observação                                       |
+| ------------------------- | ------------ | ------------------------------------------------ |
+| Cadastro, login e perfis  | Implementado | Cliente, e administrador                         |
+| Recuperação de senha      | Implementado | Token de uso único, expira em 30 minutos         |
+| Triagem                   | Implementado | Questionário e respostas persistidos             |
+| Agendamento               | Implementado | Reserva com validação de capacidade              |
+| Anexos do pedido          | Implementado | Upload e leitura autorizada                      |
+| Início/fim do atendimento | Implementado | Registrado pelo administrador (confirma na tela) |
+| Reagendamento             | Implementado | Há campos, mas não há fluxo de criação           |
+| Orçamentos                | Modelado     | Tabela sem API ou tela                           |
+| Documentos                | Modelado     | Listagem sem emissão ou download                 |
+| Estoque                   | Modelado     | Tabelas sem API ou tela                          |
+| Avaliação                 | Modelado     | Tabela sem fluxo                                 |
+| Técnicos                  | Parcial      | Trabalho futuro                                  |
+| WhatsApp                  | Manual       | Link `wa.me`; não há confirmação automática      |
 
 ## 🛠️ Tecnologias
 
@@ -76,27 +76,30 @@ projeto-hvac-manutencoes/
 - Extensões PHP: `mysqli`, `mbstring` e `fileinfo`
 - Apache/XAMPP, para execução local
 
-## Configuração de e-mail
+### Passo a passo
+
+#### 1. Configuração de e-mail
 
 Copie `backend/email_config.example.php` para
 `backend/email_config.local.php`, preencha os dados SMTP e mantenha o
 arquivo local fora do Git.
 
-### Passo a passo
-
 ```bash
-# 1. Clonar o repositório
+# 2. Clonar o repositório
 git clone https://github.com/mths09/projeto-hvac-manutencoes.git
 cd projeto-hvac-manutencoes
 
-# 2. Criar as tabelas e os dados básicos
+# 3. Criar as tabelas e os dados básicos
 # importe banco/hvac_db.sql no MySQL
 
-# 3. Publicar os questionários da triagem
+# 4. Publicar os questionários da triagem
 # importe banco/triagem_mvp.sql depois do script anterior
+
+# 5. Publicar horários
+# importe banco/demo_horarios.sql depois dos últimos scripts
 ```
 
-Acesse em `http://localhost:[porta]`.
+Acesse em `http://localhost/projeto-hvac-manutencoes/index.html`.
 
 ## 🗄️ Banco de dados
 
@@ -104,12 +107,12 @@ Acesse em `http://localhost:[porta]`.
 
 ## 📚 Documentação do TCC
 
-- [Documento completo do TCC](docs/Projeto_TCC_HVAC.pdf)
+- [Documento completo do TCC (Em breve)](docs/Projeto_TCC_HVAC.pdf)
 - [Protótipo no Figma](https://www.figma.com/make/QtVjMRvK3UgsJOS3mn42eH/HVAC-Manuten%C3%A7%C3%B5es?t=eD4SLxn2nSGH2H4u-1)
 
 ## 🗺️ Próximos passos
 
-- [ ] Ideia Futura: adicionar Chatbot com IA para esclarecer dúvidas
+- [ ] Adicionar Chatbot com IA para responder dúvidas rapidamente
 - [ ] Hospedar o site
 
 ## 👥 Autores
