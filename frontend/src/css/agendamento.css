@@ -1043,6 +1043,13 @@ body {
   outline-offset: 3px;
 }
 
+.servico-escolhido-icone img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+}
+
 @media (max-width: 480px) {
   .whatsapp-flutuante {
     right: max(1rem, env(safe-area-inset-right));

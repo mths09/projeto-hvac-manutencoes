@@ -11,6 +11,13 @@
     "Manutenção Preventiva": "MANUTENCAO_PREVENTIVA",
     Eletromecânica: "ELETROMECANICA",
   };
+  const iconesServico = {
+    AR_CONDICIONADO: "ar-condicionado.svg",
+    REFRIGERACAO: "frigorifico.svg",
+    ILUMINACAO: "iluminacao.svg",
+    MANUTENCAO_PREVENTIVA: "manutencao.svg",
+    ELETROMECANICA: "raio.svg",
+  };
   let dados = null;
   let servico = "AR_CONDICIONADO";
   let urgente = false;
@@ -73,6 +80,18 @@
     );
   }
 
+  function atualizarIconeServico(idContenedor) {
+    const contenedor = elemento(idContenedor);
+    const arquivo = iconesServico[servico];
+
+    if (!contenedor || !arquivo) return;
+
+    const imagem = document.createElement("img");
+    imagem.src = `../../assets/icons/${arquivo}`;
+    imagem.alt = "";
+    contenedor.replaceChildren(imagem);
+  }
+
   function atualizarServico() {
     for (const card of cards) {
       const marcado =
@@ -85,6 +104,9 @@
     elemento("nomeServicoEscolhido").textContent = texto;
     elemento("nomeServicoTriagem").textContent = texto;
     elemento("botaoContinuar").textContent = `Continuar — ${texto} →`;
+
+    atualizarIconeServico("iconeServicoTriagem");
+    atualizarIconeServico("iconeServicoEscolhido");
   }
 
   function renderizarTriagem(preservarRespostas = true) {
