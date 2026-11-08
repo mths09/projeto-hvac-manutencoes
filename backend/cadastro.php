@@ -80,6 +80,15 @@ try {
     );
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    
+    $aceite = $_POST['aceite_privacidade'] ?? null;
+
+    if ($aceite !== '1') {
+        responderCadastro(
+            422,
+            'É necessário aceitar a Política de Privacidade.'
+        );
+    }
 
     require_once __DIR__ . '/conexao.php';
     $conexao->begin_transaction();
