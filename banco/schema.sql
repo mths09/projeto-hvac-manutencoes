@@ -790,3 +790,32 @@ ALTER TABLE `triagem`
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id_usuario`),
   ADD UNIQUE KEY `un_usuario_email` (`email`);
+
+-- Aplicar AUTO_INCREMENT somente depois de criar as chaves primárias.
+ALTER TABLE `agendamento` MODIFY `id_agendamento` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `anexo_solicitacao` MODIFY `id_anexo` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `arquivo` MODIFY `id_arquivo` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `atribuicao_tecnica` MODIFY `id_atribuicao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `avaliacao_atendimento` MODIFY `id_avaliacao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `categoria_portfolio` MODIFY `id_categoria` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `condicao_pergunta` MODIFY `id_condicao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `disponibilidade` MODIFY `id_disponibilidade` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `documento` MODIFY `id_documento` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `endereco_usuario` MODIFY `id_endereco_usuario` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `historico_status` MODIFY `id_historico` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `item_estoque` MODIFY `id_item_estoque` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `item_portfolio` MODIFY `id_item_portfolio` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `item_solicitacao` MODIFY `id_item_solicitacao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `movimentacao_estoque` MODIFY `id_movimentacao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `notificacao` MODIFY `id_notificacao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `opcao_pergunta` MODIFY `id_opcao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `orcamento` MODIFY `id_orcamento` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `pergunta_triagem` MODIFY `id_pergunta` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `questionario` MODIFY `id_questionario` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `resposta_triagem` MODIFY `id_resposta` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `solicitacao` MODIFY `id_solicitacao` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `status_solicitacao` MODIFY `id_status` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tecnico` MODIFY `id_tecnico` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tipo_servico` MODIFY `id_tipo_servico` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `triagem` MODIFY `id_triagem` bigint(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `usuario` MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT;
