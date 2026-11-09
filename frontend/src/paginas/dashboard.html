@@ -344,14 +344,14 @@
                 <p>Consulte seus dados pessoais e informações de contato.</p>
               </div>
 
-              <button
-                type="button"
+              <a
+                href="./editar-perfil.html"
                 class="botao-principal botao-editar-perfil"
                 id="editar-perfil"
               >
                 <span aria-hidden="true">✎</span>
                 Editar perfil
-              </button>
+              </a>
             </div>
 
             <div class="view-grid">
@@ -471,118 +471,6 @@
       <span class="whatsapp-flutuante-texto"> Fale conosco </span>
     </a>
 
-    <!-- ==============================
-         MODAL — EDITAR PERFIL
-    =============================== -->
-    <dialog class="dialog-detalhes dialog-editar" id="dialog-editar-perfil">
-      <div class="dialog-conteudo">
-        <div class="dialog-cabecalho">
-          <div>
-            <span class="etiqueta-secao"> Perfil </span>
-            <h2>Editar perfil</h2>
-          </div>
-
-          <button
-            type="button"
-            class="botao-fechar-dialog"
-            id="fechar-editar-perfil"
-            aria-label="Fechar edição"
-          >
-            ×
-          </button>
-        </div>
-
-        <form class="form-perfil" id="form-editar-perfil" novalidate>
-          <label class="campo-form">
-            <span>Nome completo</span>
-            <input
-              type="text"
-              name="nome"
-              maxlength="150"
-              autocomplete="name"
-              required
-            />
-          </label>
-
-          <label class="campo-form">
-            <span>Telefone</span>
-            <input
-              type="tel"
-              name="telefone"
-              inputmode="tel"
-              maxlength="15"
-              placeholder="(15) 99999-9999"
-              autocomplete="tel"
-              required
-            />
-          </label>
-
-          <label class="campo-form campo-cep">
-            <span>CEP</span>
-            <input
-              type="text"
-              name="cep"
-              inputmode="numeric"
-              maxlength="9"
-              placeholder="00000-000"
-              autocomplete="postal-code"
-            />
-          </label>
-
-          <label class="campo-form campo-logradouro">
-            <span>Logradouro (rua)</span>
-            <input
-              type="text"
-              name="logradouro"
-              maxlength="180"
-              autocomplete="address-line1"
-            />
-          </label>
-
-          <label class="campo-form campo-bairro">
-            <span>Bairro</span>
-            <input type="text" name="bairro" maxlength="100" />
-          </label>
-
-          <label class="campo-form campo-cidade">
-            <span>Cidade</span>
-            <input
-              type="text"
-              name="cidade"
-              maxlength="100"
-              autocomplete="address-level2"
-            />
-          </label>
-
-          <label class="campo-form campo-uf">
-            <span>UF</span>
-            <input
-              type="text"
-              name="uf"
-              maxlength="2"
-              autocomplete="address-level1"
-            />
-          </label>
-
-          <p class="form-erro" id="erro-editar-perfil" role="alert" hidden></p>
-
-          <div class="acoes-form">
-            <button
-              type="button"
-              class="botao-secundario"
-              id="cancelar-editar-perfil"
-            >
-              Cancelar
-            </button>
-
-            <button type="submit" class="botao-principal" id="salvar-perfil">
-              Salvar alterações
-            </button>
-          </div>
-        </form>
-      </div>
-    </dialog>
-
     <dialog
       class="dialog-detalhes dialog-editar"
       id="dialog-reagendamento"
@@ -613,10 +501,19 @@
           </label>
           <p class="form-erro" id="erro-reagendamento" role="alert" hidden></p>
           <div class="acoes-form">
-            <button type="button" class="botao-secundario" id="cancelar-reagendamento">
+            <button
+              type="button"
+              class="botao-secundario"
+              id="cancelar-reagendamento"
+            >
               Voltar
             </button>
-            <button type="submit" class="botao-principal" id="salvar-reagendamento" disabled>
+            <button
+              type="submit"
+              class="botao-principal"
+              id="salvar-reagendamento"
+              disabled
+            >
               Solicitar reagendamento
             </button>
           </div>

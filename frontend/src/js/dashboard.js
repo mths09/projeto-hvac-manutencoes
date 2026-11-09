@@ -31,11 +31,6 @@
   const listaHistorico = elemento("#historico-lista");
   const listaDocumentos = elemento("#documentos");
 
-  // Edição de perfil
-  const dialogoEditar = elemento("#dialog-editar-perfil");
-  const formEditar = elemento("#form-editar-perfil");
-  const erroEditar = elemento("#erro-editar-perfil");
-  const botaoSalvarPerfil = elemento("#salvar-perfil");
   const dialogoReagendamento = elemento("#dialog-reagendamento");
   const formReagendamento = elemento("#form-reagendamento");
   const selectHorarioReagendamento = elemento("#horario-reagendamento");
@@ -319,16 +314,20 @@
 
   async function chamarApiAgendamentoCliente(opcoes = {}) {
     const metodo = opcoes.method || "GET";
-    const url = metodo === "GET"
-      ? API_AGENDAMENTO_CLIENTE + "?protocolo=" + encodeURIComponent(opcoes.protocolo || "")
-      : API_AGENDAMENTO_CLIENTE;
+    const url =
+      metodo === "GET"
+        ? API_AGENDAMENTO_CLIENTE +
+          "?protocolo=" +
+          encodeURIComponent(opcoes.protocolo || "")
+        : API_AGENDAMENTO_CLIENTE;
     const resposta = await fetch(url, {
       method: metodo,
       credentials: "same-origin",
       cache: "no-store",
-      headers: metodo === "GET"
-        ? { Accept: "application/json" }
-        : { Accept: "application/json", "Content-Type": "application/json" },
+      headers:
+        metodo === "GET"
+          ? { Accept: "application/json" }
+          : { Accept: "application/json", "Content-Type": "application/json" },
       body: metodo === "GET" ? undefined : JSON.stringify(opcoes.body || {}),
     });
     const dados = await resposta.json();
@@ -337,18 +336,29 @@
       throw new Error("Entre novamente para continuar.");
     }
     if (!resposta.ok || dados?.sucesso !== true) {
-      throw new Error(dados?.mensagem || "Não foi possível atualizar o agendamento.");
+      throw new Error(
+        dados?.mensagem || "Não foi possível atualizar o agendamento.",
+      );
     }
     return dados;
   }
 
   async function cancelarPedidoCliente(servico, botao) {
     if (!csrf) {
-      mostrarMensagemAcaoAgendamento("Token de segurança indisponível. Atualize o painel.", true);
+      mostrarMensagemAcaoAgendamento(
+        "Token de segurança indisponível. Atualize o painel.",
+        true,
+      );
       return;
     }
     const protocolo = String(servico.protocolo || "");
-    if (!window.confirm("Cancelar o pedido " + protocolo + "? Isso encerra o pedido e libera o horário, se houver. Essa ação não pode ser desfeita.")) {
+    if (
+      !window.confirm(
+        "Cancelar o pedido " +
+          protocolo +
+          "? Isso encerra o pedido e libera o horário, se houver. Essa ação não pode ser desfeita.",
+      )
+    ) {
       return;
     }
     botao.disabled = true;
@@ -360,7 +370,10 @@
       await carregarDashboard();
       mostrarMensagemAcaoAgendamento(resultado.mensagem || "Pedido cancelado.");
     } catch (erro) {
-      mostrarMensagemAcaoAgendamento(erro.message || "Não foi possível cancelar o pedido.", true);
+      mostrarMensagemAcaoAgendamento(
+        erro.message || "Não foi possível cancelar o pedido.",
+        true,
+      );
       botao.disabled = false;
     }
   }
@@ -372,8 +385,15 @@
   }
 
   async function abrirDialogReagendamento(servico, botao) {
-    if (!dialogoReagendamento || !formReagendamento || !selectHorarioReagendamento) {
-      mostrarMensagemAcaoAgendamento("Não foi possível abrir a seleção de horário.", true);
+    if (
+      !dialogoReagendamento ||
+      !formReagendamento ||
+      !selectHorarioReagendamento
+    ) {
+      mostrarMensagemAcaoAgendamento(
+        "Não foi possível abrir a seleção de horário.",
+        true,
+      );
       return;
     }
     formReagendamento.reset();
@@ -401,11 +421,13 @@
         const opcao = document.createElement("option");
         opcao.value = String(horario.id);
         const fim = String(horario.fim || "").slice(11, 16);
-        opcao.textContent = formatarDataHora(horario.inicio) + (fim ? " – " + fim : "");
+        opcao.textContent =
+          formatarDataHora(horario.inicio) + (fim ? " – " + fim : "");
         selectHorarioReagendamento.append(opcao);
       }
       selectHorarioReagendamento.disabled = horarios.length === 0;
-      if (botaoSalvarReagendamento) botaoSalvarReagendamento.disabled = horarios.length === 0;
+      if (botaoSalvarReagendamento)
+        botaoSalvarReagendamento.disabled = horarios.length === 0;
       exibirErroReagendamento(
         horarios.length
           ? ""
@@ -413,7 +435,9 @@
       );
       if (horarios.length) selectHorarioReagendamento.focus();
     } catch (erro) {
-      exibirErroReagendamento(erro.message || "Não foi possível carregar os horários.");
+      exibirErroReagendamento(
+        erro.message || "Não foi possível carregar os horários.",
+      );
     } finally {
       if (botao) botao.disabled = false;
     }
@@ -421,7 +445,11 @@
 
   async function salvarReagendamento(evento) {
     evento.preventDefault();
-    if (!csrf || !selectHorarioReagendamento?.value || !dialogoReagendamento?.dataset.protocolo) {
+    if (
+      !csrf ||
+      !selectHorarioReagendamento?.value ||
+      !dialogoReagendamento?.dataset.protocolo
+    ) {
       exibirErroReagendamento("Selecione um novo horário disponível.");
       return;
     }
@@ -439,9 +467,13 @@
       });
       dialogoReagendamento.close();
       await carregarDashboard();
-      mostrarMensagemAcaoAgendamento(resultado.mensagem || "Reagendamento solicitado.");
+      mostrarMensagemAcaoAgendamento(
+        resultado.mensagem || "Reagendamento solicitado.",
+      );
     } catch (erro) {
-      exibirErroReagendamento(erro.message || "Não foi possível reagendar o pedido.");
+      exibirErroReagendamento(
+        erro.message || "Não foi possível reagendar o pedido.",
+      );
     } finally {
       if (botaoSalvarReagendamento) {
         botaoSalvarReagendamento.disabled = !selectHorarioReagendamento?.value;
@@ -514,7 +546,11 @@
     }
 
     if (servico.pode_cancelar) {
-      const botaoCancelar = criar("button", "botao-acao-servico botao-cancelar-servico", "Cancelar pedido");
+      const botaoCancelar = criar(
+        "button",
+        "botao-acao-servico botao-cancelar-servico",
+        "Cancelar pedido",
+      );
       botaoCancelar.type = "button";
       botaoCancelar.addEventListener("click", () => {
         void cancelarPedidoCliente(servico, botaoCancelar);
@@ -839,47 +875,6 @@
     erroEditar.hidden = !mensagem;
   }
 
-  function abrirEdicaoPerfil() {
-    if (!dialogoEditar || !formEditar) return;
-
-    if (!dadosAtuais) {
-      console.warn("Os dados do perfil ainda não foram carregados.");
-      return;
-    }
-
-    const usuario = dadosAtuais.usuario || {};
-
-    const endereco =
-      usuario.endereco && typeof usuario.endereco === "object"
-        ? usuario.endereco
-        : {};
-
-    const campos = formEditar.elements;
-
-    campos.nome.value = usuario.nome || "";
-    campos.telefone.value = formatarTelefone(usuario.telefone);
-    campos.cep.value = formatarCep(endereco.cep);
-    campos.logradouro.value = endereco.logradouro || "";
-    campos.bairro.value = endereco.bairro || "";
-    campos.cidade.value = endereco.cidade || "";
-    campos.uf.value = String(endereco.uf || "").toUpperCase();
-
-    mostrarErroEdicao("");
-
-    if (botaoSalvarPerfil) {
-      botaoSalvarPerfil.disabled = false;
-      botaoSalvarPerfil.textContent = "Salvar alterações";
-    }
-
-    if (typeof dialogoEditar.showModal === "function") {
-      dialogoEditar.showModal();
-    } else {
-      dialogoEditar.setAttribute("open", "");
-    }
-
-    campos.nome.focus();
-  }
-
   // Opcional: preenche rua, bairro, cidade e UF a partir do CEP (ViaCEP).
   // Se não quiser essa função, apague este bloco e o evento "blur" do CEP.
   async function buscarCep() {
@@ -903,76 +898,6 @@
     } catch (erro) {
       // Sem internet ou ViaCEP fora do ar: o usuário preenche manualmente.
       console.warn("Não foi possível consultar o CEP:", erro);
-    }
-  }
-
-  async function salvarPerfil(evento) {
-    evento.preventDefault();
-
-    if (!formEditar) return;
-
-    if (!csrf) {
-      mostrarErroEdicao(
-        "Token de segurança indisponível. Atualize o painel e tente novamente.",
-      );
-      return;
-    }
-
-    const campos = formEditar.elements;
-
-    const corpo = new URLSearchParams({
-      csrf,
-      nome: campos.nome.value.trim(),
-      telefone: campos.telefone.value.replace(/\D/g, ""),
-      cep: campos.cep.value.replace(/\D/g, ""),
-      logradouro: campos.logradouro.value.trim(),
-      bairro: campos.bairro.value.trim(),
-      cidade: campos.cidade.value.trim(),
-      uf: campos.uf.value.trim().toUpperCase(),
-    });
-
-    mostrarErroEdicao("");
-
-    if (botaoSalvarPerfil) {
-      botaoSalvarPerfil.disabled = true;
-      botaoSalvarPerfil.textContent = "Salvando…";
-    }
-
-    try {
-      const resposta = await fetch(API_ATUALIZAR_PERFIL, {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        },
-        body: corpo,
-      });
-
-      if (resposta.status === 401) {
-        window.location.replace("./login.html");
-        return;
-      }
-
-      const resultado = await resposta.json();
-
-      if (!resposta.ok || resultado?.sucesso !== true) {
-        throw new Error(
-          resultado?.mensagem || "Não foi possível salvar as alterações.",
-        );
-      }
-
-      dialogoEditar?.close();
-
-      await carregarDashboard();
-    } catch (erro) {
-      mostrarErroEdicao(erro.message || "Ocorreu um erro ao salvar.");
-    } finally {
-      if (botaoSalvarPerfil) {
-        botaoSalvarPerfil.disabled = false;
-        botaoSalvarPerfil.textContent = "Salvar alterações";
-      }
     }
   }
 
@@ -1116,58 +1041,6 @@
 
   botaoRecarregar?.addEventListener("click", () => {
     carregarDashboard(true);
-  });
-
-  // =========================================
-  // EVENTOS DA EDIÇÃO DE PERFIL
-  // =========================================
-
-  elemento("#fechar-dialog-reagendamento")?.addEventListener("click", () =>
-    dialogoReagendamento?.close(),
-  );
-
-  elemento("#cancelar-reagendamento")?.addEventListener("click", () =>
-    dialogoReagendamento?.close(),
-  );
-
-  dialogoReagendamento?.addEventListener("click", (evento) => {
-    if (evento.target === dialogoReagendamento) dialogoReagendamento.close();
-  });
-
-  formReagendamento?.addEventListener("submit", salvarReagendamento);
-  elemento("#editar-perfil")?.addEventListener("click", abrirEdicaoPerfil);
-
-  elemento("#fechar-editar-perfil")?.addEventListener("click", () =>
-    dialogoEditar?.close(),
-  );
-
-  elemento("#cancelar-editar-perfil")?.addEventListener("click", () =>
-    dialogoEditar?.close(),
-  );
-
-  dialogoEditar?.addEventListener("click", (evento) => {
-    if (evento.target === dialogoEditar) {
-      dialogoEditar.close();
-    }
-  });
-
-  formEditar?.addEventListener("submit", salvarPerfil);
-
-  // Máscaras simples enquanto o usuário digita.
-  formEditar?.elements.telefone?.addEventListener("input", (evento) => {
-    evento.target.value = formatarTelefone(evento.target.value);
-  });
-
-  formEditar?.elements.cep?.addEventListener("input", (evento) => {
-    evento.target.value = formatarCep(evento.target.value);
-  });
-
-  formEditar?.elements.cep?.addEventListener("blur", buscarCep);
-
-  formEditar?.elements.uf?.addEventListener("input", (evento) => {
-    evento.target.value = evento.target.value
-      .replace(/[^a-zA-Z]/g, "")
-      .toUpperCase();
   });
 
   // =========================================
