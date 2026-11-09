@@ -58,6 +58,8 @@ function normalizarPedido(pedido) {
     status:
       STATUS_LABELS[codigoStatus] || String(pedido.status_nome || codigoStatus),
     statusCode: codigoStatus,
+    reschedulePending: Boolean(pedido.reagendamento_pendente),
+    previousAppointment: String(pedido.inicio_anterior || ''),
     statusOptions: Array.isArray(pedido.status_permitidos)
       ? pedido.status_permitidos.filter((codigo) => STATUS_LABELS[codigo])
       : [],
@@ -502,7 +504,7 @@ function renderRequests(history = false) {
     const pedidoEncerrado = ["CONCLUIDO", "CANCELADO"].includes(order.statusCode);
     const temAgendamento = Boolean(order.appointmentDate && order.time && order.time !== "—");
     const aguardandoConfirmacao = order.statusCode === "SOLICITADO" && temAgendamento;
-    const tituloAgendamento = aguardandoConfirmacao ? "Novo horário solicitado" : "Agendamento";
+    const tituloAgendamento = order.reschedulePending ? "Reagendamento solicitado" : (aguardandoConfirmacao ? "Novo horário solicitado" : "Agendamento");
     const valorAgendamento = temAgendamento
       ? dateBR(order.appointmentDate) + " às " + order.time
       : "Aguardando agendamento";
@@ -525,9 +527,9 @@ function renderRequests(history = false) {
         escapeHTML(order.id) + '" aria-label="Cancelar pedido ' +
         escapeHTML(order.id) + '">Cancelar pedido</button>'
       : "";
-    const confirmacaoMarkup = aguardandoConfirmacao
-      ? '<div class="sr-description">Aguardando confirmação da equipe</div>'
-      : "";
+    const confirmacaoMarkup = order.reschedulePending
+      ? '<div class="sr-description sr-reschedule-times"><strong>Horário atual:</strong> ' + escapeHTML(order.previousAppointment ? dateBR(order.previousAppointment.slice(0, 10)) + ' às ' + order.previousAppointment.slice(11, 16) : '—') + '<br><strong>Aguardando aprovação do novo horário.</strong></div>'
+      : (aguardandoConfirmacao ? '<div class="sr-description">Aguardando confirmação da equipe</div>' : "");
 
     return [
       '<article class="sr-card ' + (order.urgent ? "urgent-card" : "") + '">',
@@ -567,16 +569,17 @@ function renderRequests(history = false) {
       '  </div>',
       '  <footer class="sr-footer">',
       '    <div class="sr-controls">',
-      '      <label class="sr-field">',
-      '        <span>Status do pedido</span>',
-      '        <select data-sr-status="' + escapeHTML(order.id) +
+      order.reschedulePending ? '' : '      <label class="sr-field">',
+      order.reschedulePending ? '' : '        <span>Status do pedido</span>',
+      order.reschedulePending ? '' : '        <select data-sr-status="' + escapeHTML(order.id) +
         '" aria-label="Alterar status de ' + escapeHTML(order.id) + '"' +
         (podeAlterarStatus ? "" : " disabled") + '>',
-      statusMarkup,
-      '        </select>',
-      '      </label>',
+      order.reschedulePending ? '' : statusMarkup,
+      order.reschedulePending ? '' : '        </select>',
+      order.reschedulePending ? '' : '      </label>',
       '    </div>',
       '    <div class="sr-actions">',
+      order.reschedulePending ? '<button type="button" class="sr-reschedule-approve" data-sr-reschedule="aprovar" data-sr-id="' + escapeHTML(order.id) + '">Aprovar novo horário</button><button type="button" class="sr-reschedule-reject" data-sr-reschedule="recusar" data-sr-id="' + escapeHTML(order.id) + '">Recusar</button>' : '',
       '      <span class="sr-save-status" data-sr-saving role="status" hidden>Salvando…</span>',
       arquivosMarkup,
       '      <button type="button" class="sr-details" data-sr-details="' +
@@ -702,6 +705,17 @@ function renderRequests(history = false) {
       return;
     }
 
+    const rescheduleButton = event.target.closest('[data-sr-reschedule]');
+    if (rescheduleButton) {
+      const order = orders.find((item) => item.id === rescheduleButton.dataset.srId);
+      if (!order || !order.reschedulePending) return;
+      const decisao = rescheduleButton.dataset.srReschedule;
+      const prompt = decisao === 'aprovar' ? 'Aprovar o novo horário do pedido ' + order.id + '?' : 'Recusar o reagendamento do pedido ' + order.id + ' e manter o horário atual?';
+      if (!confirm(prompt)) return;
+      void enviarAcaoAdmin(order, 'reagendamento', { decisao }, rescheduleButton);
+      return;
+    }
+
     const deleteButton = event.target.closest("[data-sr-delete]");
     const detailsButton = event.target.closest("[data-sr-details]");
 
@@ -724,7 +738,7 @@ function renderRequests(history = false) {
       }
       const controle = list.querySelector(
         `[data-sr-status="${CSS.escape(order.id)}"]`,
-      );
+      ) || deleteButton;
       if (controle) {
         void enviarAcaoAdmin(
           order,

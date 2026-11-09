@@ -201,6 +201,9 @@ try {
                     COALESCE(NULLIF(s.telefone_contato, ''), u.telefone, '') AS telefone,
                     ea.endereco_informado AS endereco,
                     d.inicio_previsto,
+                    a.status AS status_agendamento,
+                    a.id_anterior,
+                    (SELECT anterior_d.inicio_previsto FROM agendamento anterior_a INNER JOIN disponibilidade anterior_d ON anterior_d.id_disponibilidade = anterior_a.id_disponibilidade WHERE anterior_a.id_agendamento = a.id_anterior) AS inicio_anterior,
                     (SELECT COUNT(*) FROM documento doc WHERE doc.id_solicitacao = s.id_solicitacao) AS total_documentos
              FROM solicitacao s
              INNER JOIN status_solicitacao ss ON ss.id_status = s.id_status_atual
@@ -211,9 +214,7 @@ try {
                 SELECT a2.id_agendamento
                 FROM agendamento a2
                 WHERE a2.id_solicitacao = s.id_solicitacao
-                  AND NOT EXISTS (
-                    SELECT 1 FROM agendamento a3 WHERE a3.id_anterior = a2.id_agendamento
-                  )
+                  AND a2.status IN ('PENDENTE', 'CONFIRMADO', 'EM_ANDAMENTO')
                 ORDER BY a2.id_agendamento DESC
                 LIMIT 1
              )
@@ -235,6 +236,8 @@ try {
                 'descricao' => (string) ($linha['descricao_problema'] ?? ''),
                 'endereco' => (string) ($linha['endereco'] ?? ''),
                 'inicio_previsto' => (string) ($linha['inicio_previsto'] ?? ''),
+                'reagendamento_pendente' => ($linha['status_agendamento'] ?? '') === 'PENDENTE' && !empty($linha['id_anterior']),
+                'inicio_anterior' => (string) ($linha['inicio_anterior'] ?? ''),
                 'criada_em' => (string) $linha['criada_em'],
                 'status_codigo' => $codigoStatus,
                 'status_nome' => (string) $linha['status_nome'],
@@ -312,7 +315,7 @@ try {
     }
 
     $acao = $entrada['acao'] ?? null;
-    if (!is_string($acao) || !in_array($acao, ['criar', 'status'], true)) {
+    if (!is_string($acao) || !in_array($acao, ['criar', 'status', 'reagendamento'], true)) {
         responderSolicitacoesAdmin(422, ['sucesso' => false, 'mensagem' => 'Ação inválida.']);
     }
 
@@ -456,7 +459,62 @@ try {
         $idNotificacaoEmail = null;
         $dadosEmailStatus = null;
 
-        if ($acao === 'status') {
+        if ($acao === 'reagendamento') {
+            $decisao = $entrada['decisao'] ?? null;
+            if (!in_array($decisao, ['aprovar', 'recusar'], true)) throw new DomainException('Escolha aprovar ou recusar o novo horário.');
+            if ($pedido['status_codigo'] !== 'SOLICITADO') throw new DomainException('O pedido não está aguardando decisão de reagendamento.');
+            $agendamento = consultarSolicitacoesAdmin(
+                $conexao,
+                "SELECT a.id_agendamento, a.id_anterior, a.status, d.inicio_previsto, (d.inicio_previsto > NOW()) AS horario_futuro
+                 FROM agendamento a INNER JOIN disponibilidade d ON d.id_disponibilidade = a.id_disponibilidade
+                 WHERE a.id_solicitacao = ? AND a.status = 'PENDENTE' AND a.id_anterior IS NOT NULL
+                 ORDER BY a.id_agendamento DESC LIMIT 1 FOR UPDATE",
+                [$pedido['id_solicitacao']]
+            )->get_result()->fetch_assoc();
+            if (!$agendamento) throw new DomainException('Não há reagendamento pendente para decidir.');
+            $anterior = consultarSolicitacoesAdmin(
+                $conexao,
+                'SELECT id_agendamento, status FROM agendamento WHERE id_agendamento = ? AND id_solicitacao = ? LIMIT 1 FOR UPDATE',
+                [$agendamento['id_anterior'], $pedido['id_solicitacao']]
+            )->get_result()->fetch_assoc();
+            if (!$anterior || !in_array($anterior['status'], ['PENDENTE', 'CONFIRMADO', 'REAGENDADO'], true)) throw new DomainException('O horário anterior não pode ser restaurado; confira o pedido e o agendamento.');
+            if ($decisao === 'aprovar' && (int) $agendamento['horario_futuro'] !== 1) throw new DomainException('O novo horário já passou e não pode ser aprovado.');
+            if ($decisao === 'aprovar') {
+                if (in_array($anterior['status'], ['PENDENTE', 'CONFIRMADO'], true)) {
+                    consultarSolicitacoesAdmin($conexao, "UPDATE agendamento SET status = 'REAGENDADO' WHERE id_agendamento = ? AND status IN ('PENDENTE', 'CONFIRMADO')", [$anterior['id_agendamento']]);
+                }
+                consultarSolicitacoesAdmin($conexao, "UPDATE agendamento SET status = 'CONFIRMADO', observacao = 'Reagendamento aprovado pela equipe.' WHERE id_agendamento = ? AND status = 'PENDENTE'", [$agendamento['id_agendamento']]);
+                $mensagem = 'Reagendamento aprovado para ' . $agendamento['inicio_previsto'] . '.';
+            } else {
+                consultarSolicitacoesAdmin($conexao, "UPDATE agendamento SET status = 'CANCELADO', motivo_cancelamento = 'Reagendamento recusado pela equipe' WHERE id_agendamento = ? AND status = 'PENDENTE'", [$agendamento['id_agendamento']]);
+                if ($anterior['status'] === 'REAGENDADO') {
+                    consultarSolicitacoesAdmin($conexao, "UPDATE agendamento SET status = 'CONFIRMADO', motivo_cancelamento = NULL, observacao = 'Horário anterior restaurado após recusa do reagendamento.' WHERE id_agendamento = ? AND status = 'REAGENDADO'", [$anterior['id_agendamento']]);
+                }
+                $mensagem = $anterior['status'] === 'PENDENTE'
+                    ? 'Reagendamento recusado. O horário anterior foi mantido e continua aguardando confirmação da equipe.'
+                    : 'Reagendamento recusado. O horário anterior foi mantido.';
+            }
+            $codigoStatusDestino = $decisao === 'recusar' && $anterior['status'] === 'PENDENTE' ? 'SOLICITADO' : 'AGENDADO';
+            $statusAgendado = consultarSolicitacoesAdmin($conexao, 'SELECT id_status FROM status_solicitacao WHERE codigo = ? AND ativo = 1 LIMIT 1 FOR UPDATE', [$codigoStatusDestino])->get_result()->fetch_assoc();
+            if (!$statusAgendado) throw new DomainException('Status ' . $codigoStatusDestino . ' não está configurado.');
+            consultarSolicitacoesAdmin($conexao, 'UPDATE solicitacao SET id_status_atual = ?, atualizada_em = NOW() WHERE id_solicitacao = ?', [$statusAgendado['id_status'], $pedido['id_solicitacao']]);
+            consultarSolicitacoesAdmin($conexao, 'INSERT INTO historico_status (id_solicitacao, id_status_anterior, id_status_novo, id_responsavel, observacao) VALUES (?, ?, ?, ?, ?)', [$pedido['id_solicitacao'], $pedido['id_status_atual'], $statusAgendado['id_status'], $idAdministrador, $mensagem]);
+            if ($pedido['id_cliente'] !== null) {
+                consultarSolicitacoesAdmin($conexao, "INSERT INTO notificacao (id_destinatario, id_solicitacao, id_agendamento, tipo_evento, titulo, mensagem, canal, status_envio, enviada_em) VALUES (?, ?, ?, 'STATUS_ALTERADO', 'Decisão sobre reagendamento', ?, 'SITE', 'ENVIADO', NOW())", [$pedido['id_cliente'], $pedido['id_solicitacao'], $agendamento['id_agendamento'], $mensagem]);
+                $emailCliente = trim((string) ($pedido['email_cliente'] ?? ''));
+                if (filter_var($emailCliente, FILTER_VALIDATE_EMAIL)) {
+                    consultarSolicitacoesAdmin($conexao, "INSERT INTO notificacao (id_destinatario, id_solicitacao, id_agendamento, tipo_evento, titulo, mensagem, canal, status_envio) VALUES (?, ?, ?, 'STATUS_ALTERADO', 'Decisão sobre reagendamento', ?, 'EMAIL', 'PENDENTE')", [$pedido['id_cliente'], $pedido['id_solicitacao'], $agendamento['id_agendamento'], $mensagem]);
+                    $idNotificacaoEmail = (int) $conexao->insert_id;
+                    $dadosEmailStatus = ['destinatario' => $emailCliente, 'assunto' => 'Decisão sobre reagendamento do pedido ' . $protocolo . ' — HVAC Lex Company', 'mensagem' => "Olá,
+
+{$mensagem}
+
+Acesse sua conta para ver os detalhes.
+
+HVAC Lex Company"];
+                }
+            }
+        } elseif ($acao === 'status') {
             $novoCodigo = $entrada['status'] ?? null;
             if (!is_string($novoCodigo) || !in_array($novoCodigo, transicoesStatusAdmin()[$pedido['status_codigo']] ?? [], true)) {
                 throw new DomainException('Essa mudança de status não é permitida. Atualize o painel e confira o status atual.');
@@ -472,7 +530,7 @@ try {
 
             $agendamento = consultarSolicitacoesAdmin(
                 $conexao,
-                'SELECT a.id_agendamento, a.status, d.id_disponibilidade, d.inicio_previsto, (d.inicio_previsto > NOW()) AS horario_futuro
+                'SELECT a.id_agendamento, a.id_anterior, a.status, d.id_disponibilidade, d.inicio_previsto, (d.inicio_previsto > NOW()) AS horario_futuro
                  FROM agendamento a
                  INNER JOIN disponibilidade d ON d.id_disponibilidade = a.id_disponibilidade
                  WHERE a.id_solicitacao = ?
@@ -482,6 +540,7 @@ try {
             )->get_result()->fetch_assoc();
 
             if ($novoCodigo === 'AGENDADO') {
+                if ($agendamento && $agendamento['id_anterior'] !== null) throw new DomainException('Use os botões de aprovação do reagendamento para decidir este horário.');
                 if (!$agendamento || $agendamento['status'] !== 'PENDENTE') {
                     throw new DomainException('Este pedido não tem um horário pendente para confirmar.');
                 }
@@ -526,17 +585,21 @@ try {
                     throw new DomainException('O horário mudou enquanto o pedido era atualizado. Atualize o painel e tente novamente.');
                 }
             } elseif ($novoCodigo === 'CANCELADO' && $agendamento && !in_array($agendamento['status'], ['CANCELADO', 'REAGENDADO'], true)) {
+                // Cancela todos os horários ativos da cadeia do pedido e mantém a regra administrativa de bloqueio manual.
                 consultarSolicitacoesAdmin(
                     $conexao,
-                    "UPDATE agendamento SET status = 'CANCELADO', motivo_cancelamento = 'Cancelado pela equipe no painel administrativo' WHERE id_agendamento = ?",
-                    [$agendamento['id_agendamento']]
+                    "UPDATE disponibilidade d
+                     INNER JOIN agendamento a ON a.id_disponibilidade = d.id_disponibilidade
+                     SET d.situacao = 'BLOQUEADO', d.id_editor = ?, d.atualizada_em = NOW()
+                     WHERE a.id_solicitacao = ? AND a.status IN ('PENDENTE', 'CONFIRMADO', 'EM_ANDAMENTO')
+                       AND d.situacao = 'LIVRE'",
+                    [$idAdministrador, $pedido['id_solicitacao']]
                 );
-                // A disponibilidade só volta a abrir quando o administrador liberar manualmente.
                 consultarSolicitacoesAdmin(
                     $conexao,
-                    "UPDATE disponibilidade SET situacao = 'BLOQUEADO', id_editor = ?, atualizada_em = NOW()
-                     WHERE id_disponibilidade = ? AND situacao = 'LIVRE'",
-                    [$idAdministrador, $agendamento['id_disponibilidade']]
+                    "UPDATE agendamento SET status = 'CANCELADO', motivo_cancelamento = 'Cancelado pela equipe no painel administrativo'
+                     WHERE id_solicitacao = ? AND status IN ('PENDENTE', 'CONFIRMADO', 'EM_ANDAMENTO')",
+                    [$pedido['id_solicitacao']]
                 );
             }
 

@@ -1549,6 +1549,33 @@ label {
   background: #ff4c5925;
 }
 
+.sr-reschedule-approve,
+.sr-reschedule-reject {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sr-reschedule-approve {
+  border: 1px solid #27c98a66;
+  color: #70eab5;
+  background: #27c98a18;
+}
+
+.sr-reschedule-reject {
+  border: 1px solid #ff4c5940;
+  color: #ff7a84;
+  background: #ff4c5912;
+}
+
+.sr-reschedule-times {
+  margin-top: 8px;
+  line-height: 1.7;
+}
+
 .sr-save-status {
   margin-right: auto;
   color: #7ce8f4;

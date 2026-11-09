@@ -53,14 +53,12 @@ function obterPedidoAgendamentoCliente(mysqli $db, string $protocolo, int $idCli
 
 function obterAgendamentoAtualCliente(mysqli $db, int $idSolicitacao, bool $bloquear = false): ?array
 {
-    $sql = "SELECT a.id_agendamento, a.id_disponibilidade, a.status,
+    $sql = "SELECT a.id_agendamento, a.id_disponibilidade, a.id_anterior, a.status,
                    d.inicio_previsto, (d.inicio_previsto > NOW()) AS horario_futuro
             FROM agendamento a
             JOIN disponibilidade d ON d.id_disponibilidade = a.id_disponibilidade
             WHERE a.id_solicitacao = ?
-              AND NOT EXISTS (
-                SELECT 1 FROM agendamento seguinte WHERE seguinte.id_anterior = a.id_agendamento
-              )
+              AND a.status IN ('PENDENTE', 'CONFIRMADO', 'EM_ANDAMENTO')
             ORDER BY a.id_agendamento DESC
             LIMIT 1" . ($bloquear ? ' FOR UPDATE' : '');
     return consultarAgendamentoCliente($db, $sql, [$idSolicitacao])
@@ -347,12 +345,12 @@ try {
                 $conexao,
                 "UPDATE agendamento
                  SET status = 'CANCELADO', motivo_cancelamento = 'Cancelado pelo cliente'
-                 WHERE id_agendamento = ? AND status IN ('PENDENTE', 'CONFIRMADO')",
-                [$idAgendamento]
+                 WHERE id_solicitacao = ? AND status IN ('PENDENTE', 'CONFIRMADO')",
+                [$pedido['id_solicitacao']]
             );
             $linhasCanceladas = $stmtCancelamento->affected_rows;
             $stmtCancelamento->close();
-            if ($linhasCanceladas !== 1) {
+            if ($linhasCanceladas < 1) {
                 throw new ErroAgendamentoCliente('O status do agendamento mudou. Atualize o painel e tente novamente.', 409);
             }
         }
@@ -415,6 +413,10 @@ try {
     if ($agendamento === null || !is_string($entrada['disponibilidade'] ?? null)) {
         throw new ErroAgendamentoCliente('Selecione um novo horário disponível.', 422);
     }
+    if ($agendamento['status'] === 'PENDENTE' && $agendamento['id_anterior'] !== null) {
+        throw new ErroAgendamentoCliente('Já existe um reagendamento aguardando aprovação da equipe.', 409);
+    }
+
     $idDisponibilidade = filter_var(
         $entrada['disponibilidade'],
         FILTER_VALIDATE_INT,
@@ -468,18 +470,6 @@ try {
         throw new ErroAgendamentoCliente('Esse horário acabou de ser reservado. Escolha outro.', 409);
     }
 
-    $stmtReagendamento = consultarAgendamentoCliente(
-        $conexao,
-        "UPDATE agendamento SET status = 'REAGENDADO'
-         WHERE id_agendamento = ? AND status IN ('PENDENTE', 'CONFIRMADO')",
-        [$agendamento['id_agendamento']]
-    );
-    $linhasReagendadas = $stmtReagendamento->affected_rows;
-    $stmtReagendamento->close();
-    if ($linhasReagendadas !== 1) {
-        throw new ErroAgendamentoCliente('O status do agendamento mudou. Atualize o painel e tente novamente.', 409);
-    }
-
     consultarAgendamentoCliente(
         $conexao,
         "INSERT INTO agendamento (id_solicitacao, id_disponibilidade, id_anterior, status, observacao)
@@ -529,7 +519,7 @@ try {
         'SELECT inicio_previsto FROM disponibilidade WHERE id_disponibilidade = ?',
         [$idDisponibilidade]
     )->get_result()->fetch_assoc()['inicio_previsto'];
-    $mensagemCliente = 'O pedido ' . $protocolo . ' foi reagendado para ' . $inicioNovoHorario . '; o novo horário aguarda confirmação da equipe.';
+    $mensagemCliente = 'Você solicitou o reagendamento do pedido ' . $protocolo . ' para ' . $inicioNovoHorario . '; o horário só muda após a aprovação da equipe.';
     $mensagemEquipe = 'O cliente ' . $pedido['nome_contato'] . ' solicitou reagendamento do pedido ' . $protocolo . ' para ' . $inicioNovoHorario . '.';
     $emailPendente = inserirNotificacaoAgendamentoCliente(
         $conexao,

@@ -426,8 +426,7 @@
         selectHorarioReagendamento.append(opcao);
       }
       selectHorarioReagendamento.disabled = horarios.length === 0;
-      if (botaoSalvarReagendamento)
-        botaoSalvarReagendamento.disabled = horarios.length === 0;
+      if (botaoSalvarReagendamento) botaoSalvarReagendamento.disabled = true;
       exibirErroReagendamento(
         horarios.length
           ? ""
@@ -1063,6 +1062,21 @@
     }
   });
 
+  formReagendamento?.addEventListener("submit", salvarReagendamento);
+
+  selectHorarioReagendamento?.addEventListener("change", () => {
+    exibirErroReagendamento("");
+    if (botaoSalvarReagendamento) {
+      botaoSalvarReagendamento.disabled = !selectHorarioReagendamento.value;
+    }
+  });
+
+  elemento("#fechar-dialog-reagendamento")?.addEventListener("click", () => {
+    dialogoReagendamento?.close();
+  });
+  elemento("#cancelar-reagendamento")?.addEventListener("click", () => {
+    dialogoReagendamento?.close();
+  });
   // =========================================
   // INICIALIZAÇÃO E ATUALIZAÇÃO AUTOMÁTICA
   // =========================================

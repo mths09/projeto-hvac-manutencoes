@@ -101,6 +101,7 @@ try {
             ea.endereco_informado AS endereco,
             d.inicio_previsto,
             a.id_agendamento,
+            a.id_anterior,
             a.status AS status_agendamento,
             CASE WHEN ss.codigo IN ('SOLICITADO', 'AGENDADO')
                   AND (a.id_agendamento IS NULL
@@ -109,6 +110,7 @@ try {
             CASE WHEN ss.codigo IN ('SOLICITADO', 'AGENDADO')
                   AND a.id_agendamento IS NOT NULL
                   AND a.status IN ('PENDENTE', 'CONFIRMADO')
+                  AND a.id_anterior IS NULL
                   AND d.inicio_previsto > NOW()
                   THEN 1 ELSE 0 END AS pode_reagendar
          FROM solicitacao AS s
@@ -119,9 +121,7 @@ try {
             SELECT a2.id_agendamento
             FROM agendamento AS a2
             WHERE a2.id_solicitacao = s.id_solicitacao
-              AND NOT EXISTS (
-                SELECT 1 FROM agendamento AS a3 WHERE a3.id_anterior = a2.id_agendamento
-              )
+              AND a2.status IN ('PENDENTE', 'CONFIRMADO', 'EM_ANDAMENTO')
             ORDER BY a2.id_agendamento DESC
             LIMIT 1
          )
@@ -151,6 +151,7 @@ try {
             'endereco' => (string) ($linha['endereco'] ?? ''),
             'inicio_previsto' => (string) ($linha['inicio_previsto'] ?? ''),
             'status_agendamento' => (string) ($linha['status_agendamento'] ?? ''),
+            'reagendamento_pendente' => ($linha['status_agendamento'] ?? '') === 'PENDENTE' && !empty($linha['id_anterior']),
             'pode_cancelar' => (int) ($linha['pode_cancelar'] ?? 0) === 1,
             'pode_reagendar' => (int) ($linha['pode_reagendar'] ?? 0) === 1,
         ];
