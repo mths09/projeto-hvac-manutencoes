@@ -262,7 +262,13 @@ function scheduleRow(order) {
 }
 
 function renderOverview() {
-  const todayOrders = sorted(orders.filter((order) => order.date === TODAY));
+  const todayOrders = sorted(
+    orders.filter(
+      (order) =>
+        order.appointmentDate === TODAY &&
+        ["AGENDADO", "EM_ANDAMENTO", "CONCLUIDO"].includes(order.statusCode),
+    ),
+  );
   const urgentOrders = sorted(
     orders.filter(
       (order) =>
