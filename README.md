@@ -39,12 +39,13 @@ modernização do processo de atendimento, principalmente para organização da 
 | Agendamento               | Implementado | Reserva com validação de capacidade              |
 | Anexos do pedido          | Implementado | Upload e leitura autorizada                      |
 | Início/fim do atendimento | Implementado | Registrado pelo administrador (confirma na tela) |
-| Reagendamento             | Implementado | Há campos, mas não há fluxo de criação           |
+| Reagendamento             | Parcial      | Há campos, mas não há fluxo de criação           |
 | Orçamentos                | Modelado     | Tabela sem API ou tela                           |
 | Documentos                | Modelado     | Listagem sem emissão ou download                 |
 | Estoque                   | Modelado     | Tabelas sem API ou tela                          |
 | Avaliação                 | Modelado     | Tabela sem fluxo                                 |
-| Técnicos                  | Parcial      | Trabalho futuro                                  |
+| Técnicos                  | Modelado     | Trabalho futuro                                  |
+| Portfólio                 | Parcial      | Depende do material da empresa                   |
 | WhatsApp                  | Manual       | Link `wa.me`; não há confirmação automática      |
 
 ## 🛠️ Tecnologias
@@ -70,36 +71,63 @@ projeto-hvac-manutencoes/
 
 ### Pré-requisitos
 
+- Windows com XAMPP, ou ambiente equivalente com Apache e MySQL/MariaDB
 - PHP 8.1 ou superior
 - MariaDB 10.4 ou superior
 - Git
-- Extensões PHP: `mysqli`, `mbstring` e `fileinfo`
-- Apache/XAMPP, para execução local
+- Extensões PHP: `mysqli`, `mbstring`, `fileinfo` e `openssl`
 
-### Passo a passo
+### Instalação local
 
-#### 1. Configuração de e-mail
+1. Clone o repositório dentro da pasta `htdocs` do XAMPP:
 
-Copie `backend/email_config.example.php` para
-`backend/email_config.local.php`, preencha os dados SMTP e mantenha o
-arquivo local fora do Git.
+   ```bash
+   git clone https://github.com/mths09/projeto-hvac-manutencoes.git
+   ```
 
-```bash
-# 2. Clonar o repositório
-git clone https://github.com/mths09/projeto-hvac-manutencoes.git
-cd projeto-hvac-manutencoes
+2. Inicie o Apache e o MySQL pelo painel do XAMPP.
 
-# 3. Criar as tabelas e os dados básicos
-# importe banco/hvac_db.sql no MySQL
+3. No phpMyAdmin, crie um banco vazio chamado `hvac_db`, usando a collation `utf8mb4_unicode_ci`.
 
-# 4. Publicar os questionários da triagem
-# importe banco/triagem_mvp.sql depois do script anterior
+4. Selecione o banco `hvac_db` e importe os arquivos nesta ordem:
+   1. `banco/schema.sql`
+   2. `banco/seed.sql`
+   3. `banco/triagem_mvp.sql`
+   4. `banco/demo_horarios.sql`
+   5. Os arquivos da pasta `banco/migrations/`, em ordem numérica:
+      - `001_recuperacao_senha.sql`
+      - `002_aceite_politica.sql`
 
-# 5. Publicar horários
-# importe banco/demo_horarios.sql depois dos últimos scripts
-```
+5. Para habilitar o envio de e-mails, copie
+   `backend/email_config.example.php` para
+   `backend/email_config.local.php` e configure o SMTP. Nunca envie o arquivo
+   `email_config.local.php` ao Git.
 
-Acesse em `http://localhost/projeto-hvac-manutencoes/index.html`.
+6. No arquivo `C:\xampp\php\php.ini`, confira os limites para os anexos:
+
+   ```ini
+   upload_max_filesize=25M
+   post_max_size=135M
+   max_file_uploads=5
+   ```
+
+   Salve o arquivo e reinicie o Apache para aplicar as alterações.
+
+7. Acesse:
+
+   `http://localhost/projeto-hvac-manutencoes/index.html`
+
+   Se o clone ou a pasta dentro de `htdocs` tiver outro nome, ajuste o endereço.
+
+### Observações sobre o banco e a configuração local
+
+- A sequência acima foi testada em um banco novo. Não a execute sobre um banco que contenha dados que você deseja preservar.
+- `seed.sql` insere dados fixos iniciais. Execute-o apenas uma vez, depois de criar as tabelas.
+- Execute cada migration uma vez, em ordem numérica. Se a tabela daquela migration já existir, não execute o mesmo arquivo novamente.
+- `demo_horarios.sql` cria horários fictícios para demonstração. Ele pode ser executado novamente para repor horários, pois ignora os que já existem.
+- `hvac_db.sql` é um dump antigo e não faz parte desta sequência de instalação.
+- O link de recuperação de senha usa o endereço configurado em `app_url`. Com `localhost`, o link só abre o servidor local da máquina em que o navegador está sendo usado.
+- Para usar o envio de e-mail em outra máquina, configure o SMTP e o `app_url` nessa instalação. Não compartilhe senhas SMTP no Git nem em capturas de tela.
 
 ## 🗄️ Banco de dados
 
@@ -107,7 +135,7 @@ Acesse em `http://localhost/projeto-hvac-manutencoes/index.html`.
 
 ## 📚 Documentação do TCC
 
-- [Documento completo do TCC (Em breve)](docs/Projeto_TCC_HVAC.pdf)
+- Documento do TCC em elaboração.
 - [Protótipo no Figma](https://www.figma.com/make/QtVjMRvK3UgsJOS3mn42eH/HVAC-Manuten%C3%A7%C3%B5es?t=eD4SLxn2nSGH2H4u-1)
 
 ## 🗺️ Próximos passos
