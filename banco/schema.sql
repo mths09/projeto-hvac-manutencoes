@@ -785,6 +785,48 @@ ALTER TABLE `triagem`
   ADD KEY `fk_triagem_respondente` (`id_respondente`);
 
 --
+-- Restrições para tabelas `triagem`
+--
+ALTER TABLE `triagem`
+  ADD CONSTRAINT `fk_triagem_questionario` FOREIGN KEY (`id_questionario`) REFERENCES `questionario` (`id_questionario`),
+  ADD CONSTRAINT `fk_triagem_respondente` FOREIGN KEY (`id_respondente`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_triagem_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+-- Estrutura para tabela de limite de tentativas de login.
+CREATE TABLE `tentativa_login` (
+  `id_tentativa` bigint(20) NOT NULL AUTO_INCREMENT,
+  `email_hash` char(64) NOT NULL,
+  `ip_hash` char(64) NOT NULL,
+  `tentada_em` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_tentativa`),
+  KEY `idx_tentativa_login_email_data` (`email_hash`, `tentada_em`),
+  KEY `idx_tentativa_login_ip_data` (`ip_hash`, `tentada_em`),
+  KEY `idx_tentativa_login_data` (`tentada_em`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Estrutura para recuperação de senha.
+CREATE TABLE `recuperacao_senha` (
+  `id_recuperacao` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id_usuario` bigint(20) DEFAULT NULL,
+  `email_hash` char(64) NOT NULL,
+  `ip_hash` char(64) NOT NULL,
+  `token_hash` char(64) DEFAULT NULL,
+  `criada_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `expira_em` datetime DEFAULT NULL,
+  `utilizada_em` datetime DEFAULT NULL,
+  PRIMARY KEY (`id_recuperacao`),
+  UNIQUE KEY `un_recuperacao_token_hash` (`token_hash`),
+  KEY `idx_recuperacao_email_data` (`email_hash`, `criada_em`),
+  KEY `idx_recuperacao_ip_data` (`ip_hash`, `criada_em`),
+  KEY `idx_recuperacao_usuario_status` (`id_usuario`, `utilizada_em`),
+  CONSTRAINT `fk_recuperacao_usuario`
+    FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SET FOREIGN_KEY_CHECKS=1;
+COMMIT;
+
+--
 -- Índices de tabela `usuario`
 --
 ALTER TABLE `usuario`
