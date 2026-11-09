@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 $schema = file_get_contents(__DIR__ . '/../banco/hvac_db.sql');
-$migracao = file_get_contents(__DIR__ . '/../banco/migrations/2026_11_05_create_recuperacao_senha.sql');
+$migracao = file_get_contents(__DIR__ . '/../banco/migrations/001_recuperacao_senha.sql');
 if (!is_string($schema) || !is_string($migracao)) {
     throw new RuntimeException('Não foi possível ler os arquivos SQL.');
 }
