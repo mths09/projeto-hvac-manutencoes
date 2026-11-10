@@ -10,6 +10,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../css/agendamento.css" />
+    <script src="../js/retorno-sessao.js" defer></script>
   </head>
 
   <body>
@@ -20,7 +21,11 @@
     <!-- CABEÇALHO -->
     <header class="topo">
       <div class="header-interno">
-        <a href="../../../index.html" class="logo-container">
+        <a
+          href="../../../index.html"
+          class="logo-container"
+          data-retorno-sessao
+        >
           <img
             src="../../assets/logoSite.png"
             alt="HVAC Lex Company"
@@ -28,7 +33,9 @@
           />
         </a>
 
-        <a href="../../../index.html" class="voltar-site"> ← Voltar ao site </a>
+        <a href="../../../index.html" class="voltar-site" data-retorno-sessao>
+          ← Voltar
+        </a>
       </div>
     </header>
 
@@ -384,7 +391,9 @@
               class="svg-anexo-arquivos"
             />
 
-            <strong> Anexar fotos ou vídeos </strong>
+            <label for="arquivo" class="upload-label">
+              Anexar fotos ou vídeos até 25 MB
+            </label>
 
             <span> JPG, PNG, MP4 · até 5 arquivos, 25 MB por arquivo. </span>
 

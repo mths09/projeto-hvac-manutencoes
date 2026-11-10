@@ -545,6 +545,7 @@
       protocolo: dados.protocolo,
       inicio: vaga.inicio,
       nomeServico: nomeServico(),
+      anexos_pendentes: anexos.length,
       campos: {
         tipo_servico: servico,
         disponibilidade: horario,
@@ -675,6 +676,14 @@
       urgente = anterior.campos.urgente === "1";
       atualizarServico();
       pedido = anterior;
+
+      if (Number(anterior.anexos_pendentes) > 0) {
+        mensagem(
+          "Os arquivos do envio anterior não foram recuperados. Reanexe as fotos ou vídeos antes de reenviar.",
+          true,
+        );
+      }
+
       incerto = true;
       linkPedidos.hidden = false;
       resumo();

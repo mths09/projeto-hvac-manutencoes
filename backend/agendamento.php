@@ -530,7 +530,7 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
         // 32 KB para os campos de texto + espaço para até ANEXO_MAX_ARQUIVOS anexos de ANEXO_TAMANHO_MAXIMO cada.
         $limiteRequisicao = 32768 + (ANEXO_MAX_ARQUIVOS * ANEXO_TAMANHO_MAXIMO);
         if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $limiteRequisicao) {
-            throw new ErroAgendamento('Os dados enviados ultrapassam o limite permitido.', 413);
+            throw new ErroAgendamento('O envio ultrapassou o limite permitido. Reduza o tamanho ou quantidade de arquivos e tente novamente', 413);
         }
         if (!session_start(['use_strict_mode' => true, 'use_only_cookies' => true,
             'cookie_httponly' => true, 'cookie_secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
