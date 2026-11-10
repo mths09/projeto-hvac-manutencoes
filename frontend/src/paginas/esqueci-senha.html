@@ -11,19 +11,70 @@
     <script src="../js/esqueci-senha.js" defer></script>
   </head>
   <body>
+    <header class="topo">
+      <div class="header-interno">
+        <a href="../../../index.html" class="logo-container">
+          <img
+            src="../../assets/logoSite.png"
+            alt="HVAC Lex Company"
+            class="logo-img"
+          />
+        </a>
+
+        <a href="./login.html" class="voltar-site"> ← Voltar ao Login </a>
+      </div>
+    </header>
+
     <main class="conteudo-central">
       <section class="card">
         <img src="../../assets/logoHVAC.png" alt="HVAC" />
         <h1>Recuperar senha</h1>
-        <p>Informe o e-mail da sua conta. Se ela estiver ativa, enviaremos um link para criar uma nova senha.</p>
-        <form id="form-recuperacao" action="../../../backend/solicitar_redefinicao_senha.php" method="post">
+        <p>
+          Informe o e-mail da sua conta. Se ela estiver ativa, enviaremos um
+          link para criar uma nova senha.
+        </p>
+        <form
+          id="form-recuperacao"
+          action="../../../backend/solicitar_redefinicao_senha.php"
+          method="post"
+        >
           <label for="email-recuperacao">E-mail</label>
-          <input id="email-recuperacao" name="email" type="email" autocomplete="email" maxlength="254" required />
-          <p id="mensagem-recuperacao" role="status" aria-live="polite" hidden></p>
-          <button class="btn-entrar" id="btn-recuperacao" type="submit">Enviar link →</button>
+          <input
+            id="email-recuperacao"
+            name="email"
+            type="email"
+            autocomplete="email"
+            maxlength="254"
+            required
+          />
+          <p
+            id="mensagem-recuperacao"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+          <button class="btn-entrar" id="btn-recuperacao" type="submit">
+            Enviar link →
+          </button>
         </form>
         <a class="link-senha" href="./login.html">Voltar ao login</a>
       </section>
     </main>
+
+    <!-- Botão flutuante do WhatsApp -->
+    <a
+      href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="whatsapp-flutuante"
+      aria-label="Falar no WhatsApp"
+    >
+      <span class="whatsapp-flutuante-texto">Fale conosco</span>
+      <img
+        src="../../assets/icons/whatsapp.svg"
+        alt=""
+        class="whatsapp-flutuante-icone"
+      />
+    </a>
   </body>
 </html>

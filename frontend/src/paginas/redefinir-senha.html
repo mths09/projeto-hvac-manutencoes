@@ -11,21 +11,77 @@
     <script src="../js/redefinir-senha.js" defer></script>
   </head>
   <body>
+    <header class="topo">
+      <div class="header-interno">
+        <a href="../../../index.html" class="logo-container">
+          <img
+            src="../../assets/logoSite.png"
+            alt="HVAC Lex Company"
+            class="logo-img"
+          />
+        </a>
+
+        <a href="./login.html" class="voltar-site"> ← Voltar ao Login </a>
+      </div>
+    </header>
+
     <main class="conteudo-central">
       <section class="card">
         <img src="../../assets/logoHVAC.png" alt="HVAC" />
         <h1>Crie uma nova senha</h1>
-        <p>Use uma senha com pelo menos 8 caracteres. O link vale por 30 minutos e só pode ser usado uma vez.</p>
+        <p>
+          Use uma senha com pelo menos 8 caracteres. O link vale por 30 minutos
+          e só pode ser usado uma vez.
+        </p>
         <form id="form-nova-senha">
           <label for="nova-senha">Nova senha</label>
-          <input id="nova-senha" name="senha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required />
+          <input
+            id="nova-senha"
+            name="senha"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="72"
+            required
+          />
           <label for="confirmar-senha">Confirme a nova senha</label>
-          <input id="confirmar-senha" name="confirmar_senha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required />
-          <p id="mensagem-nova-senha" role="status" aria-live="polite" hidden></p>
-          <button class="btn-entrar" id="btn-nova-senha" type="submit">Salvar nova senha →</button>
+          <input
+            id="confirmar-senha"
+            name="confirmar_senha"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="72"
+            required
+          />
+          <p
+            id="mensagem-nova-senha"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+          <button class="btn-entrar" id="btn-nova-senha" type="submit">
+            Salvar nova senha →
+          </button>
         </form>
         <a class="link-senha" href="./login.html">Voltar ao login</a>
       </section>
     </main>
+
+    <!-- Botão flutuante do WhatsApp -->
+    <a
+      href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="whatsapp-flutuante"
+      aria-label="Falar no WhatsApp"
+    >
+      <span class="whatsapp-flutuante-texto">Fale conosco</span>
+      <img
+        src="../../assets/icons/whatsapp.svg"
+        alt=""
+        class="whatsapp-flutuante-icone"
+      />
+    </a>
   </body>
 </html>
