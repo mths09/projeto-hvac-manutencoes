@@ -1,8 +1,67 @@
 const formularioLogin = document.querySelector("#form-login");
 const mensagemLogin = document.querySelector("#mensagem-login");
 const botaoLogin = document.querySelector("#btn-login");
+const campoEmail = formularioLogin.elements.email;
+const campoSenha = formularioLogin.elements.senha;
+const erroEmail = document.querySelector("#erro-email");
+const erroSenha = document.querySelector("#erro-senha");
 
+let validacaoTentada = false;
 let enviandoLogin = false;
+
+function definirErroCampo(campo, elementoErro, texto) {
+  elementoErro.textContent = texto;
+  elementoErro.hidden = !texto;
+  campo.setAttribute("aria-invalid", String(Boolean(texto)));
+}
+
+function validarCamposLogin() {
+  campoEmail.value = campoEmail.value.trim();
+
+  let emailValido = true;
+  let senhaValida = true;
+
+  if (!campoEmail.value) {
+    definirErroCampo(campoEmail, erroEmail, "Informe seu e-mail.");
+    emailValido = false;
+  } else if (campoEmail.validity.typeMismatch) {
+    definirErroCampo(campoEmail, erroEmail, "Informe um e-mail válido.");
+    emailValido = false;
+  } else if (new TextEncoder().encode(campoEmail.value).length > 254) {
+    definirErroCampo(
+      campoEmail,
+      erroEmail,
+      "O e-mail excede o limite permitido.",
+    );
+    emailValido = false;
+  } else {
+    definirErroCampo(campoEmail, erroEmail, "");
+  }
+
+  const tamanhoSenhaBytes = new TextEncoder().encode(campoSenha.value).length;
+
+  if (!campoSenha.value) {
+    definirErroCampo(campoSenha, erroSenha, "Informe sua senha.");
+    senhaValida = false;
+  } else if (tamanhoSenhaBytes > 72) {
+    definirErroCampo(
+      campoSenha,
+      erroSenha,
+      "A senha excede o limite aceito. Use até 72 bytes.",
+    );
+    senhaValida = false;
+  } else {
+    definirErroCampo(campoSenha, erroSenha, "");
+  }
+
+  return emailValido && senhaValida;
+}
+
+for (const campo of [campoEmail, campoSenha]) {
+  campo.addEventListener("input", () => {
+    if (validacaoTentada) validarCamposLogin();
+  });
+}
 
 function mostrarMensagemLogin(texto, tipo) {
   mensagemLogin.textContent = texto;
@@ -17,7 +76,18 @@ document.getElementById("btn-cadastro")?.addEventListener("click", () => {
 formularioLogin.addEventListener("submit", async (evento) => {
   evento.preventDefault();
 
-  if (enviandoLogin || !formularioLogin.reportValidity()) return;
+  if (enviandoLogin) return;
+
+  campoEmail.value = campoEmail.value.trim();
+
+  if (enviandoLogin) return;
+
+  validacaoTentada = true;
+
+  if (!validarCamposLogin()) {
+    formularioLogin.querySelector('[aria-invalid="true"]')?.focus();
+    return;
+  }
 
   enviandoLogin = true;
   let redirecionando = false;

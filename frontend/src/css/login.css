@@ -576,6 +576,22 @@ body {
   outline-offset: 3px;
 }
 
+form .erro-campo {
+  margin: -4px 0 10px;
+  color: #fecdd3;
+  font-size: 12px;
+  text-align: left;
+}
+
+form input[aria-invalid="true"] {
+  border-color: #fb7185;
+  box-shadow: 0 0 0 2px rgba(251, 113, 133, 0.18);
+}
+
+form input[aria-invalid="true"]:focus {
+  border-color: #fb7185;
+}
+
 @media (max-width: 480px) {
   .whatsapp-flutuante {
     right: max(1rem, env(safe-area-inset-right));

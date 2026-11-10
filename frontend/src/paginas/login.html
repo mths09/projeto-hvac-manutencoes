@@ -148,7 +148,12 @@
         <p>Acesse sua área de cliente ou administrador</p>
 
         <!-- Envia e-mail e senha para o backend -->
-        <form id="form-login" action="../../../backend/login.php" method="POST">
+        <form
+          id="form-login"
+          action="../../../backend/login.php"
+          method="POST"
+          novalidate
+        >
           <label for="email">E-mail:</label>
 
           <input
@@ -158,7 +163,10 @@
             autocomplete="username"
             maxlength="254"
             required
+            aria-describedby="erro-email"
+            aria-invalid="false"
           />
+          <p id="erro-email" class="erro-campo" aria-live="polite" hidden></p>
 
           <label for="senha">Senha:</label>
 
@@ -168,7 +176,10 @@
             name="senha"
             autocomplete="current-password"
             required
+            aria-describedby="erro-senha"
+            aria-invalid="false"
           />
+          <p id="erro-senha" class="erro-campo" aria-live="polite" hidden></p>
 
           <a href="./esqueci-senha.html" class="forgot-link"
             >Esqueci minha senha</a
