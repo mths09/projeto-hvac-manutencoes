@@ -354,18 +354,91 @@
           </div>
 
           <!-- ENDEREÇO -->
-          <div class="campo-area">
-            <label for="endereco">Endereço de atendimento</label>
+          <div class="dados-endereco-grid">
+            <div class="campo-area">
+              <label for="cepAtendimento"> CEP do atendimento </label>
+              <input
+                type="text"
+                id="cepAtendimento"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                maxlength="9"
+                placeholder="00000-000"
+                required
+                aria-describedby="statusRegiao"
+              />
+            </div>
 
-            <input
-              type="text"
-              id="endereco"
-              autocomplete="endereco"
-              maxlength="500"
-              autocomplete="street-address"
-              required
-              placeholder="Rua, número, bairro — Sorocaba, SP"
-            />
+            <div class="campo-area">
+              <label for="ufAtendimento">UF</label>
+              <input
+                id="ufAtendimento"
+                type="text"
+                autocomplete="address-level1"
+                maxlength="2"
+                required
+              />
+            </div>
+
+            <div class="campo-area campo-endereco-largo">
+              <label for="logradouroAtendimento"> Rua ou avenida</label>
+              <input
+                id="logradouroAtendimento"
+                type="text"
+                autocomplete="address-line1"
+                maxlength="180"
+                required
+              />
+            </div>
+
+            <div class="campo-area">
+              <label for="numeroAtendimento"> Número </label>
+              <input
+                id="numeroAtendimento"
+                type="text"
+                inputmode="numeric"
+                maxlength="20"
+                required
+              />
+            </div>
+
+            <div class="campo-area">
+              <label for="complementoAtendimento">
+                Complemento (opcional)
+              </label>
+              <input id="complementoAtendimento" type="text" maxlength="120" />
+            </div>
+
+            <div class="campo-area">
+              <label for="bairroAtendimento"> Bairro </label>
+              <input
+                id="bairroAtendimento"
+                type="text"
+                autocomplete="address-level3"
+                maxlength="100"
+                required
+              />
+            </div>
+
+            <div class="campo-area">
+              <label for="cidadeAtendimento"> Cidade </label>
+              <input
+                id="cidadeAtendimento"
+                type="text"
+                autocomplete="address-level2"
+                maxlength="100"
+                required
+              />
+            </div>
+
+            <p
+              id="statusRegiao"
+              class="status-regiao"
+              role="status"
+              aria-live="polite"
+            >
+              Informe o CEP para verificar se atendemos essa região.
+            </p>
           </div>
 
           <!-- DESCRIÇÃO -->

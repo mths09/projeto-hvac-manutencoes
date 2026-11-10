@@ -18,6 +18,22 @@
     MANUTENCAO_PREVENTIVA: "manutencao.svg",
     ELETROMECANICA: "raio.svg",
   };
+  const API_REGIOES = "../../../backend/regioes_atendidas.php";
+
+  const camposEndereco = {
+    cep: elemento("cepAtendimento"),
+    logradouro: elemento("logradouroAtendimento"),
+    numero: elemento("numeroAtendimento"),
+    complemento: elemento("complementoAtendimento"),
+    bairro: elemento("bairroAtendimento"),
+    cidade: elemento("cidadeAtendimento"),
+    uf: elemento("ufAtendimento"),
+  };
+
+  let regioesAtendidas = [];
+  let regiaoValidada = false;
+  let sequenciaConsultaCep = 0;
+
   let dados = null;
   let servico = "AR_CONDICIONADO";
   let urgente = false;
@@ -269,7 +285,6 @@
   });
 
   elemento("nomeCompleto").maxLength = 150;
-  elemento("endereco").maxLength = 500;
   elemento("descricao").maxLength = 2000;
   elemento("telefone").addEventListener("input", (evento) => {
     evento.target.value = evento.target.value.replace(/[^\d()+\s-]/g, "");
@@ -387,6 +402,143 @@
     }
   }
 
+  function normalizarCidade(cidade) {
+    return String(cidade || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toUpperCase();
+  }
+
+  function validarRegiaoAtual() {
+    const cidade = camposEndereco.cidade.value.trim();
+    const uf = camposEndereco.uf.value.trim().toUpperCase();
+    const status = elemento("statusRegiao");
+    const regiaoDaCidade = regioesAtendidas.find(
+      (regiao) =>
+        normalizarCidade(regiao.cidade) === normalizarCidade(cidade),
+    );
+
+    regiaoValidada = Boolean(regiaoDaCidade && regiaoDaCidade.uf === uf);
+
+    if (!cidade) {
+      status.textContent = "Informe um CEP para verificar a região.";
+      status.dataset.estado = "";
+    } else if (!regiaoDaCidade) {
+      status.textContent = `Ainda não atendemos a cidade ${cidade}.`;
+      status.dataset.estado = "erro";
+    } else if (!uf) {
+      status.textContent =
+        `A cidade ${regiaoDaCidade.cidade} é atendida em ${regiaoDaCidade.uf}. ` +
+        "Informe a UF.";
+      status.dataset.estado = "";
+    } else if (regiaoValidada) {
+      status.textContent = `Atendemos ${regiaoDaCidade.cidade}/${regiaoDaCidade.uf}.`;
+      status.dataset.estado = "ok";
+    } else {
+      status.textContent =
+        `${regiaoDaCidade.cidade} é atendida em ${regiaoDaCidade.uf}. ` +
+        `Confira a UF informada (${uf}).`;
+      status.dataset.estado = "erro";
+    }
+
+    return regiaoValidada;
+  }
+
+  async function carregarRegioesAtendidas() {
+    if (regioesAtendidas.length) return;
+
+    const resposta = await fetch(API_REGIOES, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    const dadosRegiao = await resposta.json();
+
+    if (
+      !resposta.ok ||
+      dadosRegiao?.sucesso !== true ||
+      !Array.isArray(dadosRegiao.regioes)
+    ) {
+      throw new Error("Não foi possível verificar as regiões atendidas.");
+    }
+
+    regioesAtendidas = dadosRegiao.regioes;
+  }
+
+  async function consultarCepAtendimento() {
+    const cep = camposEndereco.cep.value.replace(/\D/g, "");
+    const sequencia = ++sequenciaConsultaCep;
+
+    regiaoValidada = false;
+
+    if (cep.length !== 8) {
+      validarRegiaoAtual();
+      return false;
+    }
+
+    elemento("statusRegiao").textContent = "Consultando CEP...";
+    elemento("statusRegiao").dataset.estado = "";
+
+    try {
+      const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+        cache: "no-store",
+      });
+      const enderecoCep = await resposta.json();
+
+      // se outro cep foi digitado, ignora resposta antiga
+      if (sequencia !== sequenciaConsultaCep) return false;
+
+      if (!resposta.ok || enderecoCep.erro) {
+        throw new Error("CEP não encontrado.");
+      }
+
+      camposEndereco.cidade.value = enderecoCep.localidade || "";
+      camposEndereco.uf.value = enderecoCep.uf || "";
+
+      if (enderecoCep.logradouro) {
+        camposEndereco.logradouro.value = enderecoCep.logradouro;
+      }
+
+      if (enderecoCep.bairro) {
+        camposEndereco.bairro.value = enderecoCep.bairro;
+      }
+
+      return validarRegiaoAtual();
+    } catch {
+      if (sequencia === sequenciaConsultaCep) {
+        regiaoValidada = false;
+        elemento("statusRegiao").textContent =
+          "Não foi possível consultar o CEP. Confira cidade e UF manualmente.";
+        elemento("statusRegiao").dataset.estado = "erro";
+      }
+
+      return false;
+    }
+  }
+
+  camposEndereco.cep.addEventListener("input", () => {
+    const digitos = camposEndereco.cep.value.replace(/\D/g, "").slice(0, 8);
+
+    camposEndereco.cep.value =
+      digitos.length > 5
+        ? `${digitos.slice(0, 5)}-${digitos.slice(5)}`
+        : digitos;
+
+    // Invalida consultas anteriores enquanto o CEP está sendo alterado.
+    sequenciaConsultaCep++;
+    regiaoValidada = false;
+
+    if (digitos.length === 8) {
+      void consultarCepAtendimento();
+    } else {
+      validarRegiaoAtual();
+    }
+  });
+
+  camposEndereco.cidade.addEventListener("input", validarRegiaoAtual);
+  camposEndereco.uf.addEventListener("input", validarRegiaoAtual);
+
   async function carregar() {
     if (carregando) return false;
     carregando = true;
@@ -394,6 +546,7 @@
     tentar.hidden = true;
     try {
       dados = await requisicao();
+      await carregarRegioesAtendidas();
       if (
         !Array.isArray(dados.horarios) ||
         !Array.isArray(dados.servicos) ||
@@ -411,8 +564,17 @@
         elemento("nomeCompleto").value = dados.usuario.nome;
       if (!elemento("telefone").value)
         elemento("telefone").value = dados.usuario.telefone || "";
-      if (!elemento("endereco").value)
-        elemento("endereco").value = dados.usuario.endereco || "";
+
+      for (const campo of Object.keys(camposEndereco)) {
+        if (!camposEndereco[campo].value) {
+          camposEndereco[campo].value = dados.usuario[campo] || "";
+        }
+      }
+
+      if (camposEndereco.cidade.value && camposEndereco.uf.value) {
+        validarRegiaoAtual();
+      }
+
       for (const card of cards) {
         if (tipos[card.dataset.servico]) {
           const codigo = tipos[card.dataset.servico];
@@ -475,7 +637,17 @@
         (pedido.campos.urgente === "1" ? " · Urgente" : ""),
       resumoData: pedido.inicio.slice(0, 10).split("-").reverse().join("/"),
       resumoHorario: pedido.inicio.slice(11, 16),
-      resumoEndereco: pedido.campos.endereco,
+      resumoEndereco: [
+        `${pedido.campos.logradouro}, ${pedido.campos.numero}`,
+        pedido.campos.complemento
+          ? `Complemento: ${pedido.campos.complemento}`
+          : "",
+        pedido.campos.bairro,
+        `${pedido.campos.cidade}/${pedido.campos.uf}`,
+        `CEP ${pedido.campos.cep}`,
+      ]
+        .filter(Boolean)
+        .join(", "),
       resumoDescricao: pedido.campos.descricao,
     };
     for (const [id, valor] of Object.entries(valores))
@@ -513,7 +685,12 @@
     if (carregando || enviando) return;
     const nome = elemento("nomeCompleto").value.trim().replace(/\s+/g, " ");
     const telefone = elemento("telefone").value.replace(/\D/g, "");
-    const endereco = elemento("endereco").value.trim();
+    const endereco = Object.fromEntries(
+      Object.entries(camposEndereco).map(([campo, input]) => [
+        campo,
+        input.value.trim(),
+      ]),
+    );
     const descricao = elemento("descricao").value.trim();
     const respostasTriagem = coletarRespostasTriagem();
     let erro = "";
@@ -523,10 +700,20 @@
       erro = "Informe nome e sobrenome, com até 150 caracteres.";
     else if (!/^\d{10,11}$/.test(telefone))
       erro = "Informe o telefone com DDD, com 10 ou 11 números.";
-    else if ([...endereco].length < 10 || [...endereco].length > 500)
-      erro = "Informe o endereço completo, entre 10 e 500 caracteres.";
+    else if (!/^\d{5}-?\d{3}$/.test(endereco.cep))
+      erro = "Informe um CEP válido com 8 dígitos.";
+    else if (
+      endereco.logradouro.length < 2 ||
+      !endereco.numero ||
+      endereco.bairro.length < 2 ||
+      endereco.cidade.length < 2 ||
+      !/^[A-Za-z]{2}$/.test(endereco.uf)
+    )
+      erro = "Confira os campos obrigatórios do endereço.";
     else if ([...descricao].length < 10 || [...descricao].length > 2000)
       erro = "Descreva o problema usando entre 10 e 2.000 caracteres.";
+    else if (!validarRegiaoAtual())
+      erro = "Informe um CEP válido de Sorocaba, Itu ou Votorantim.";
     else if (!horario) erro = "Selecione a data e o horário.";
     if (erro) return mensagem(erro, true);
     elemento("botaoRevisar").disabled = true;
@@ -551,7 +738,7 @@
         disponibilidade: horario,
         nome,
         telefone,
-        endereco,
+        ...endereco,
         descricao,
         urgente: urgente ? "1" : "0",
         respostas_triagem: respostasTriagem,
@@ -672,6 +859,28 @@
         linkPedidos.hidden = false;
         return;
       }
+      const camposEnderecoObrigatorios = [
+        "cep",
+        "logradouro",
+        "numero",
+        "complemento",
+        "bairro",
+        "cidade",
+        "uf",
+      ];
+      if (
+        !camposEnderecoObrigatorios.every((campo) =>
+          Object.prototype.hasOwnProperty.call(anterior.campos, campo),
+        )
+      ) {
+        mensagem(
+          "Este envio foi iniciado antes da validação de região. Confira Meus Pedidos antes de criar outro pedido.",
+          true,
+        );
+        linkPedidos.hidden = false;
+        return;
+      }
+
       servico = anterior.campos.tipo_servico;
       urgente = anterior.campos.urgente === "1";
       atualizarServico();

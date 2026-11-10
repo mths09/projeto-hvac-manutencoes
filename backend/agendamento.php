@@ -309,14 +309,42 @@ function salvarTriagemAgendamento(mysqli $db, int $idSolicitacao, int $idRespond
 
 function validarDadosAgendamento(array $entrada): array
 {
+    $campos = [
+        'protocolo',
+        'tipo_servico',
+        'disponibilidade',
+        'nome',
+        'telefone',
+        'descricao',
+        'urgente',
+        'cep',
+        'logradouro',
+        'numero',
+        'complemento',
+        'bairro',
+        'cidade',
+        'uf'
+    ];
     $dados = [];
-    foreach (['protocolo', 'tipo_servico', 'disponibilidade', 'nome', 'telefone', 'endereco', 'descricao', 'urgente'] as $campo) {
-        $valor = $entrada[$campo] ?? null;
-        if (!is_string($valor) || !mb_check_encoding($valor, 'UTF-8') || str_contains($valor, "\0")) {
-            throw new ErroAgendamento('Preencha todos os campos com valores válidos.', 422);
+
+    foreach($campos as $campo) {
+        $valor = $entrada[$campo] ?? ($campo === 'complemento' ? '' : null);
+
+        if(
+            !is_string($valor) ||
+            !mb_check_encoding($valor, 'UTF-8') ||
+            str_contains($valor, "\0")
+        ) {
+            throw new ErroAgendamento(
+                'Preencha todos os campos com valores válidos.',
+                422
+            );
         }
+
         $dados[$campo] = trim($valor);
     }
+
+
     if (!preg_match('/^SRV-[a-f0-9]{24}$/D', $dados['protocolo'])) {
         throw new ErroAgendamento('Identificador inválido. Consulte Meus Pedidos antes de tentar novamente.', 403);
     }
@@ -339,17 +367,58 @@ function validarDadosAgendamento(array $entrada): array
     if (!preg_match('/^[1-9][0-9]{9,10}$/D', $dados['telefone'])) {
         throw new ErroAgendamento('Informe um telefone com DDD, com 10 ou 11 dígitos.', 422);
     }
-    foreach (['endereco' => 500, 'descricao' => 2000] as $campo => $limite) {
-        if (mb_strlen($dados[$campo], 'UTF-8') < 10 || mb_strlen($dados[$campo], 'UTF-8') > $limite) {
-            throw new ErroAgendamento("O campo {$campo} deve ter de 10 a {$limite} caracteres.", 422);
-        }
-    }
     if (!in_array($dados['urgente'], ['0', '1'], true)) {
         throw new ErroAgendamento('Informe uma opção de urgência válida.', 422);
     }
     if (isset($entrada['tecnico']) && (!is_string($entrada['tecnico']) || trim($entrada['tecnico']) !== '')) {
         throw new ErroAgendamento('A atribuição de técnico não está disponível neste sistema.', 422);
     }
+
+    if(
+        mb_strlen($dados['descricao'], 'UTF-8') < 10 ||
+        mb_strlen($dados['descricao'], 'UTF-8') > 2000
+    ) {
+        throw new ErroAgendamento(
+            'Descreva o problema usando entre 10 e 2.000 caracteres.',
+            422
+        );
+    }
+
+    $resultadoEndereco = validarEndereco($dados);
+
+    if($resultadoEndereco['erros'] !== []) {
+        throw new ErroAgendamento(
+            'Confira o CEP e os campos do endereço de atendimento.',
+            422,
+            'ENDERECO_INVALIDO'
+        );
+    }
+
+    $dados = array_merge($dados, $resultadoEndereco['dados']);
+
+    $regiao = buscarRegiaoAtendida($dados['cidade'], $dados['uf']);
+
+    if($regiao === null) {
+        throw new ErroAgendamento(
+            'No momento atendemos Sorocaba, Itu e Votorantim, no estado de SP.',
+            422,
+            'REGIAO_NAO_ATENDIDA'
+        );
+    }
+
+    // salvando endereço de forma consistente
+    $dados['cidade'] = $regiao['cidade'];
+    $dados['uf'] = $regiao['uf'];
+    $dados['endereco'] = montarEnderecoInformado($dados);
+
+    if (mb_strlen($dados['endereco'], 'UTF-8') > 500) {
+        throw new ErroAgendamento(
+            'O endereço completo excede o limite permitido.',
+            422,
+            'ENDERECO_INVALIDO'
+        );
+    }
+
     return $dados;
 }
 
@@ -457,9 +526,23 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados, arra
              $dados['nome'], $dados['telefone'], $cliente['email'], $dados['descricao'], $dados['urgente']]
         );
         $idSolicitacao = $conexao->insert_id;
-        consultarAgendamento($conexao,
-            'INSERT INTO endereco_atendimento (id_solicitacao, endereco_informado) VALUES (?, ?)',
-            [$idSolicitacao, $dados['endereco']]
+        consultarAgendamento(
+            $conexao,
+            'INSERT INTO endereco_atendimento
+                (id_solicitacao, endereco_informado, cep, logradouro, numero,
+                complemento, bairro, cidade, uf)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                $idSolicitacao,
+                $dados['endereco'],
+                $dados['cep'],
+                $dados['logradouro'],
+                $dados['numero'],
+                $dados['complemento'] !== '' ? $dados['complemento'] : null,
+                $dados['bairro'],
+                $dados['cidade'],
+                $dados['uf'],
+            ]
         );
         salvarTriagemAgendamento($conexao, $idSolicitacao, (int) $idCliente, $dados['tipo_servico'], $dados['respostas_triagem']);
         $arquivosFisicosNovos = salvarAnexosAgendamento($conexao, $idSolicitacao, $idCliente, $anexos);
@@ -542,13 +625,33 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
             throw new ErroAgendamento('Entre na sua conta para continuar.', 401);
         }
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
         require __DIR__ . '/conexao.php';
-        $usuario = consultarAgendamento($conexao,
-            'SELECT id_usuario, nome, email, telefone, perfil, ativo,
-                (SELECT endereco_informado FROM endereco_usuario eu
-                 WHERE eu.id_usuario = usuario.id_usuario AND eu.ativo = 1
-                 ORDER BY eu.principal DESC, eu.id_endereco_usuario DESC LIMIT 1) AS endereco
-             FROM usuario WHERE id_usuario = ?', [$id]
+        require_once __DIR__ . '/validar_endereco.php';
+        require_once __DIR__ . '/regioes_config.php';
+
+        $usuario = consultarAgendamento(
+            $conexao,
+            'SELECT
+                u.id_usuario,
+                u.nome,
+                u.email,
+                u.telefone,
+                u.perfil,
+                u.ativo,
+                eu.cep,
+                eu.logradouro,
+                eu.numero,
+                eu.complemento,
+                eu.bairro,
+                eu.cidade,
+                eu.uf
+            FROM usuario u
+            LEFT JOIN endereco_usuario eu
+            ON eu.id_usuario = u.id_usuario
+            AND eu.ativo = 1
+            WHERE u.id_usuario = ?',
+            [$id]
         )->get_result()->fetch_assoc();
         conferirClienteAgendamento($usuario);
         $_SESSION['csrf_agendamento'] ??= bin2hex(random_bytes(32));
@@ -602,7 +705,19 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
             }
             unset($horario);
             responderAgendamento(200, ['sucesso' => true, 'csrf' => $csrf, 'protocolo' => $protocolo,
-                'hoje' => date('Y-m-d'), 'usuario' => ['id' => (string) $id, 'nome' => $usuario['nome'], 'telefone' => $usuario['telefone'], 'endereco' => $usuario['endereco'] ?? ''],
+                'hoje' => date('Y-m-d'), 
+                'usuario' => [
+                    'id' => (string) $id,
+                    'nome' => $usuario['nome'],
+                    'telefone' => $usuario['telefone'] ?? '',
+                    'cep' => $usuario['cep'] ?? '',
+                    'logradouro' => $usuario['logradouro'] ?? '',
+                    'numero' => $usuario['numero'] ?? '',
+                    'complemento' => $usuario['complemento'] ?? '',
+                    'bairro' => $usuario['bairro'] ?? '',
+                    'cidade' => $usuario['cidade'] ?? '',
+                    'uf' => $usuario['uf'] ?? '',
+                ],
                 'servicos' => $servicos, 'questionarios' => $questionarios, 'horarios' => $horarios,
                 'confirmacao_automatica' => CONFIRMACAO_AUTOMATICA]);
         }

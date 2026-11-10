@@ -1062,6 +1062,37 @@ body {
   object-fit: contain;
 }
 
+.dados-endereco-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+
+.campo-endereco-largo,
+.status-regiao {
+  grid-column: 1 / -1;
+}
+
+.status-regiao {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.status-regiao[data-estado="ok"] {
+  color: #a5f3fc;
+}
+
+.status-regiao[data-estado="erro"] {
+  color: #fecdd3;
+}
+
+@media (max-width: 560px) {
+  .dados-endereco-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 480px) {
   .whatsapp-flutuante {
     right: max(1rem, env(safe-area-inset-right));
@@ -1327,5 +1358,51 @@ body {
   .botao-revisar,
   .botao-confirmar {
     min-height: 48px;
+  }
+
+  .footer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    padding: 2.5rem 1.25rem 1.25rem;
+  }
+
+  .footer > div {
+    min-width: 0;
+  }
+
+  .coluna-logo {
+    max-width: none;
+  }
+
+  .logo-descricao {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .footer ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  .footer a,
+  .footer-dados {
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+  }
+
+  .footer-fundo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .footer-fundo p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .legal-links {
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
   }
 }
