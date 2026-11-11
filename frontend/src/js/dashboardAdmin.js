@@ -262,12 +262,15 @@ function scheduleRow(order) {
 }
 
 function renderOverview() {
+  const agora = Date.now();
   const todayOrders = sorted(
-    orders.filter(
-      (order) =>
-        order.appointmentDate === TODAY &&
-        ["AGENDADO", "EM_ANDAMENTO", "CONCLUIDO"].includes(order.statusCode),
-    ),
+    orders.filter((order) => {
+      if (order.appointmentDate !== TODAY) return false;
+      if (order.statusCode === "EM_ANDAMENTO") return true;
+      if (order.statusCode !== "AGENDADO" || !/^\d{2}:\d{2}$/.test(order.time)) return false;
+      const inicio = new Date(order.appointmentDate + "T" + order.time + ":00").getTime();
+      return Number.isFinite(inicio) && inicio >= agora;
+    }),
   );
   const urgentOrders = sorted(
     orders.filter(
