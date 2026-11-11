@@ -591,6 +591,76 @@ function executarAgendamento(mysqli $conexao, array $usuario, array $dados, arra
     }
 }
 
+// montagem de email para administrador
+function prepararEmailNovoPedido(
+    mysqli $db,
+    array $dados,
+    array $usuario,
+    array $anexos
+): array {
+    $servico = consultarAgendamento(
+        $db,
+        'SELECT nome FROM tipo_servico WHERE codigo = ? LIMIT 1',
+        [$dados['tipo_servico']]
+    )->get_result()->fetch_assoc();
+
+    $respostas = consultarAgendamento(
+        $db,
+        'SELECT p.enunciado, r.valor_texto
+        FROM solicitacao s
+        JOIN triagem t ON t.id_solicitacao = s.id_solicitacao
+        JOIN resposta_triagem r ON r.id_triagem = t.id_triagem
+        JOIN pergunta_triagem p ON p.id_pergunta = r.id_pergunta
+        WHERE s.protocolo = ?
+        ORDER BY p.ordem, p.id_pergunta',
+        [$dados['protocolo']]
+    )->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    $horario = consultarAgendamento(
+        $db,
+        'SELECT inicio_previsto, fim_previsto
+        FROM disponibilidade
+        WHERE id_disponibilidade = ?',
+        [$dados['disponibilidade']]
+    )->get_result()->fetch_assoc();
+
+    $config = configEmailHvac();
+    $baseUrl = rtrim((string) ($config['app_url'] ?? ''), '/');
+    $linkPainel = $baseUrl !== ''
+        ? $baseUrl . '/frontend/src/paginas/tela-adm.html'
+        : 'Configure HVAC_APP_URL para incluir o link do painel.';
+
+    $textoTriagem = [];
+    foreach($respostas as $resposta) {
+        $textoTriagem[] = '- ' . $resposta['enunciado'] . ': ' .
+        $resposta['valor_texto'];
+    }
+
+    $inicio = $horario['inicio_previsto'] ?? 'Não informado';
+    $fim = $horario['fim_previsto'] ?? 'Não informado';
+
+    $mensagem = "Um novo pedido foi recebido pelo site.\n\n"
+        . "Protocolo: {$dados['protocolo']}\n"
+        . 'Serviço: ' . ($servico['nome'] ?? $dados['tipo_servico']) . "\n"
+        . "Cliente: {$dados['nome']}\n"
+        . 'E-mail do cliente: ' . ($usuario['email'] ?? 'Não informado') . "\n"
+        . "Telefone: {$dados['telefone']}\n"
+        . "Endereço: {$dados['endereco']}\n"
+        . "Horário: {$inicio} até {$fim}\n"
+        . 'Urgente: ' . ($dados['urgente'] === '1' ? 'Sim' : 'Não') . "\n"
+        . "\nDescrição do problema:\n{$dados['descricao']}\n"
+        . "\nRespostas da triagem:\n"
+        . ($textoTriagem ? implode("\n", $textoTriagem) : 'Nenhuma resposta encontrada.') . "\n"
+        . "\nQuantidade de arquivos anexados: " . count($anexos) . "\n"
+        . "\nAcesse o painel administrativo:\n{$linkPainel}\n";
+
+    return [
+        'destinatario' => (string) ($config['notify_to'] ?? ''),
+        'assunto' => 'Novo pedido ' . $dados['protocolo'] . ' - HVAC Lex Company',
+        'mensagem' => $mensagem
+    ];
+}
+
 function responderAgendamento(int $http, array $dados): never
 {
     http_response_code($http);
@@ -746,8 +816,36 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
         if (!session_write_close()) {
             throw new RuntimeException('Falha ao salvar a intenção de envio.');
         }
+        
         $resultado = executarAgendamento($conexao, $usuario, $dados, $anexos);
+
+        if (empty($resultado['repetido'])) {
+            try {
+                require_once __DIR__ . '/email_notificacao.php';
+
+                $email = prepararEmailNovoPedido($conexao, $dados, $usuario, $anexos);
+                $envio = enviarEmailHvac(
+                    $email['destinatario'],
+                    $email['assunto'],
+                    $email['mensagem']
+                );
+
+                if (!$envio['enviado']) {
+                    error_log(
+                        'Aviso de novo pedido não enviado para o protocolo '
+                        . $dados['protocolo'] . ': ' . $envio['erro']
+                    );
+                }
+            } catch (Throwable $erroEmail) {
+                error_log(
+                    'Erro ao preparar aviso de novo pedido para o protocolo '
+                    . $dados['protocolo'] . ': ' . $erroEmail->getMessage()
+                );
+            }
+        }
+
         responderAgendamento($resultado['repetido'] ? 200 : 201, $resultado);
+
     } catch (Throwable $erro) {
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
