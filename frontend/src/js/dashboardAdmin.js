@@ -2,6 +2,7 @@ const API = "../../../backend/solicitacoes_admin.php";
 const AGENDA_API = "../../../backend/agenda_admin.php";
 const PORTFOLIO_API = "../../../backend/portfolio_admin.php";
 const ADMIN_NOTIFICATIONS_API = "../../../backend/notificacoes_admin.php";
+const DOCUMENTOS_API = "../../../backend/documentos_admin.php";
 const STATUS_LABELS = {
   SOLICITADO: "Solicitado",
   AGENDADO: "Agendado",
@@ -61,7 +62,7 @@ function normalizarPedido(pedido) {
       STATUS_LABELS[codigoStatus] || String(pedido.status_nome || codigoStatus),
     statusCode: codigoStatus,
     reschedulePending: Boolean(pedido.reagendamento_pendente),
-    previousAppointment: String(pedido.inicio_anterior || ''),
+    previousAppointment: String(pedido.inicio_anterior || ""),
     statusOptions: Array.isArray(pedido.status_permitidos)
       ? pedido.status_permitidos.filter((codigo) => STATUS_LABELS[codigo])
       : [],
@@ -86,7 +87,7 @@ function normalizarPedido(pedido) {
   };
 }
 
-async function carregarSolicitacoesAdmin( 
+async function carregarSolicitacoesAdmin(
   mostrarCarregamento = true,
   silencioso = false,
   atualizarNotificacoes = true,
@@ -289,8 +290,11 @@ function renderOverview() {
     orders.filter((order) => {
       if (order.appointmentDate !== TODAY) return false;
       if (order.statusCode === "EM_ANDAMENTO") return true;
-      if (order.statusCode !== "AGENDADO" || !/^\d{2}:\d{2}$/.test(order.time)) return false;
-      const inicio = new Date(order.appointmentDate + "T" + order.time + ":00").getTime();
+      if (order.statusCode !== "AGENDADO" || !/^\d{2}:\d{2}$/.test(order.time))
+        return false;
+      const inicio = new Date(
+        order.appointmentDate + "T" + order.time + ":00",
+      ).getTime();
       return Number.isFinite(inicio) && inicio >= agora;
     }),
   );
@@ -400,9 +404,12 @@ function table(list, editable) {
 
 function filteredOrders(history) {
   return orders.filter((order) => {
-    const statusHistorico = content.querySelector("#history-status")?.value || "Todos";
-    const servicoHistorico = content.querySelector("#history-service")?.value || "Todos";
-    const dataInicial = content.querySelector("#history-date-from")?.value || "";
+    const statusHistorico =
+      content.querySelector("#history-status")?.value || "Todos";
+    const servicoHistorico =
+      content.querySelector("#history-service")?.value || "Todos";
+    const dataInicial =
+      content.querySelector("#history-date-from")?.value || "";
     const dataFinal = content.querySelector("#history-date-to")?.value || "";
     const textoBusca = history
       ? content.querySelector("#history-search")?.value || ""
@@ -410,16 +417,18 @@ function filteredOrders(history) {
     const matchesPage = history
       ? ["CONCLUIDO", "CANCELADO"].includes(order.statusCode)
       : order.statusCode !== "CONCLUIDO";
-    const matchesSearch = [
-      order.id,
-      order.client,
-      order.equipment,
-    ]
+    const matchesSearch = [order.id, order.client, order.equipment]
       .join(" ")
       .toLocaleLowerCase("pt-BR")
       .includes(textoBusca.toLocaleLowerCase("pt-BR"));
-    const matchesStatus = !history || statusHistorico === "Todos" || order.statusCode === statusHistorico;
-    const matchesService = !history || servicoHistorico === "Todos" || order.equipment === servicoHistorico;
+    const matchesStatus =
+      !history ||
+      statusHistorico === "Todos" ||
+      order.statusCode === statusHistorico;
+    const matchesService =
+      !history ||
+      servicoHistorico === "Todos" ||
+      order.equipment === servicoHistorico;
     const matchesStart = !history || !dataInicial || order.date >= dataInicial;
     const matchesEnd = !history || !dataFinal || order.date <= dataFinal;
     return (
@@ -456,7 +465,13 @@ function renderRequests(history = false) {
         <label>Serviço
           <select id="history-service">
             <option value="Todos">Todos</option>
-            ${[...new Set(orders.map((order) => order.equipment))].sort((a,b) => a.localeCompare(b, "pt-BR")).map((nome) => `<option value="${escapeHTML(nome)}">${escapeHTML(nome)}</option>`).join("")}
+            ${[...new Set(orders.map((order) => order.equipment))]
+              .sort((a, b) => a.localeCompare(b, "pt-BR"))
+              .map(
+                (nome) =>
+                  `<option value="${escapeHTML(nome)}">${escapeHTML(nome)}</option>`,
+              )
+              .join("")}
           </select>
         </label>
         <label>De
@@ -474,16 +489,31 @@ function renderRequests(history = false) {
     `;
 
     const atualizarHistorico = () => {
-        content.querySelector("#history-results").innerHTML = table(
-          filteredOrders(true),
-          false,
-        );
+      content.querySelector("#history-results").innerHTML = table(
+        filteredOrders(true),
+        false,
+      );
     };
-    content.querySelectorAll("#history-search, #history-status, #history-service, #history-date-from, #history-date-to")
-      .forEach((campo) => campo.addEventListener(campo.tagName === "INPUT" && campo.type === "text" ? "input" : "change", atualizarHistorico));
+    content
+      .querySelectorAll(
+        "#history-search, #history-status, #history-service, #history-date-from, #history-date-to",
+      )
+      .forEach((campo) =>
+        campo.addEventListener(
+          campo.tagName === "INPUT" && campo.type === "text"
+            ? "input"
+            : "change",
+          atualizarHistorico,
+        ),
+      );
     content.querySelector("#history-clear").addEventListener("click", () => {
-      content.querySelectorAll("#history-search, #history-status, #history-service, #history-date-from, #history-date-to")
-        .forEach((campo) => { campo.value = campo.tagName === "SELECT" ? "Todos" : ""; });
+      content
+        .querySelectorAll(
+          "#history-search, #history-status, #history-service, #history-date-from, #history-date-to",
+        )
+        .forEach((campo) => {
+          campo.value = campo.tagName === "SELECT" ? "Todos" : "";
+        });
       atualizarHistorico();
     });
 
@@ -531,95 +561,157 @@ function renderRequests(history = false) {
         ...order.statusOptions.filter((codigo) => codigo !== "CANCELADO"),
       ]),
     ];
-    const podeAlterarStatus = statusOptions.some((codigo) => codigo !== order.statusCode);
-    const pedidoEncerrado = ["CONCLUIDO", "CANCELADO"].includes(order.statusCode);
-    const temAgendamento = Boolean(order.appointmentDate && order.time && order.time !== "—");
-    const aguardandoConfirmacao = order.statusCode === "SOLICITADO" && temAgendamento;
-    const tituloAgendamento = order.reschedulePending ? "Reagendamento solicitado" : (aguardandoConfirmacao ? "Novo horário solicitado" : "Agendamento");
+    const podeAlterarStatus = statusOptions.some(
+      (codigo) => codigo !== order.statusCode,
+    );
+    const pedidoEncerrado = ["CONCLUIDO", "CANCELADO"].includes(
+      order.statusCode,
+    );
+    const temAgendamento = Boolean(
+      order.appointmentDate && order.time && order.time !== "—",
+    );
+    const aguardandoConfirmacao =
+      order.statusCode === "SOLICITADO" && temAgendamento;
+    const tituloAgendamento = order.reschedulePending
+      ? "Reagendamento solicitado"
+      : aguardandoConfirmacao
+        ? "Novo horário solicitado"
+        : "Agendamento";
     const valorAgendamento = temAgendamento
       ? dateBR(order.appointmentDate) + " às " + order.time
       : "Aguardando agendamento";
     const telefoneMarkup = phone
-      ? '<a class="sr-phone" href="tel:' + escapeHTML(phone.replace(/[^\d+]/g, "")) + '">' + escapeHTML(phone) + '</a>'
+      ? '<a class="sr-phone" href="tel:' +
+        escapeHTML(phone.replace(/[^\d+]/g, "")) +
+        '">' +
+        escapeHTML(phone) +
+        "</a>"
       : '<span class="sr-description">Telefone não informado</span>';
-    const statusMarkup = statusOptions.map((codigo) =>
-      '<option value="' + escapeHTML(codigo) + '" ' +
-      (order.statusCode === codigo ? "selected" : "") + ">" +
-      escapeHTML(STATUS_LABELS[codigo] || codigo) + "</option>",
-    ).join("");
+    const statusMarkup = statusOptions
+      .map(
+        (codigo) =>
+          '<option value="' +
+          escapeHTML(codigo) +
+          '" ' +
+          (order.statusCode === codigo ? "selected" : "") +
+          ">" +
+          escapeHTML(STATUS_LABELS[codigo] || codigo) +
+          "</option>",
+      )
+      .join("");
     const arquivosMarkup = documentCount
-      ? '<span class="sr-files" aria-label="' + documentCount + " " +
+      ? '<span class="sr-files" aria-label="' +
+        documentCount +
+        " " +
         (documentCount === 1 ? "documento anexado" : "documentos anexados") +
-        '">📎 ' + documentCount + " " +
-        (documentCount === 1 ? "documento" : "documentos") + "</span>"
+        '">📎 ' +
+        documentCount +
+        " " +
+        (documentCount === 1 ? "documento" : "documentos") +
+        "</span>"
       : "";
     const cancelarMarkup = order.statusOptions.includes("CANCELADO")
       ? '<button type="button" class="sr-delete" data-sr-delete="' +
-        escapeHTML(order.id) + '" aria-label="Cancelar pedido ' +
-        escapeHTML(order.id) + '">Cancelar pedido</button>'
+        escapeHTML(order.id) +
+        '" aria-label="Cancelar pedido ' +
+        escapeHTML(order.id) +
+        '">Cancelar pedido</button>'
       : "";
     const confirmacaoMarkup = order.reschedulePending
-      ? '<div class="sr-description sr-reschedule-times"><strong>Horário atual:</strong> ' + escapeHTML(order.previousAppointment ? dateBR(order.previousAppointment.slice(0, 10)) + ' às ' + order.previousAppointment.slice(11, 16) : '—') + '<br><strong>Aguardando aprovação do novo horário.</strong></div>'
-      : (aguardandoConfirmacao ? '<div class="sr-description">Aguardando confirmação da equipe</div>' : "");
+      ? '<div class="sr-description sr-reschedule-times"><strong>Horário atual:</strong> ' +
+        escapeHTML(
+          order.previousAppointment
+            ? dateBR(order.previousAppointment.slice(0, 10)) +
+                " às " +
+                order.previousAppointment.slice(11, 16)
+            : "—",
+        ) +
+        "<br><strong>Aguardando aprovação do novo horário.</strong></div>"
+      : aguardandoConfirmacao
+        ? '<div class="sr-description">Aguardando confirmação da equipe</div>'
+        : "";
 
     return [
       '<article class="sr-card ' + (order.urgent ? "urgent-card" : "") + '">',
       '  <header class="sr-header">',
       '    <div class="sr-tags">',
-      '      <strong class="sr-id">' + escapeHTML(order.id) + '</strong>',
-      order.urgent ? '      <span class="sr-badge sr-urgent">⚡ Urgente</span>' : "",
+      '      <strong class="sr-id">' + escapeHTML(order.id) + "</strong>",
+      order.urgent
+        ? '      <span class="sr-badge sr-urgent">⚡ Urgente</span>'
+        : "",
       statusBadge(order.status),
-      '    </div>',
+      "    </div>",
       '    <span class="sr-created">Criado em ' +
-        (order.createdAt ? escapeHTML(dateBR(order.createdAt)) : "—") + '</span>',
-      '  </header>',
+        (order.createdAt ? escapeHTML(dateBR(order.createdAt)) : "—") +
+        "</span>",
+      "  </header>",
       '  <div class="sr-columns">',
       '    <section class="sr-info">',
       '      <div class="sr-label">Cliente</div>',
-      '      <div class="sr-value">' + escapeHTML(order.client) + '</div>',
-      '      ' + telefoneMarkup,
-      '    </section>',
+      '      <div class="sr-value">' + escapeHTML(order.client) + "</div>",
+      "      " + telefoneMarkup,
+      "    </section>",
       '    <section class="sr-info">',
       '      <div class="sr-label">Serviço</div>',
-      '      <div class="sr-value">' + escapeHTML(order.equipment) + '</div>',
-      '      <div class="sr-description">' + escapeHTML(order.description || "Sem descrição") + '</div>',
-      '    </section>',
+      '      <div class="sr-value">' + escapeHTML(order.equipment) + "</div>",
+      '      <div class="sr-description">' +
+        escapeHTML(order.description || "Sem descrição") +
+        "</div>",
+      "    </section>",
       '    <section class="sr-info sr-info-appointment">',
       '      <div class="sr-appointment-summary">',
-      '        <div>',
-      '          <div class="sr-label">' + tituloAgendamento + '</div>',
-      '          <div class="sr-appointment-value">' + escapeHTML(valorAgendamento) + '</div>',
-      '          ' + confirmacaoMarkup,
-      '        </div>',
+      "        <div>",
+      '          <div class="sr-label">' + tituloAgendamento + "</div>",
+      '          <div class="sr-appointment-value">' +
+        escapeHTML(valorAgendamento) +
+        "</div>",
+      "          " + confirmacaoMarkup,
+      "        </div>",
       '        <div class="sr-appointment-address">',
       '          <div class="sr-label">Endereço do atendimento</div>',
-      '          <div class="sr-description">' + escapeHTML(order.address || "Endereço não informado") + '</div>',
-      '        </div>',
-      '      </div>',
-      '    </section>',
-      '  </div>',
+      '          <div class="sr-description">' +
+        escapeHTML(order.address || "Endereço não informado") +
+        "</div>",
+      "        </div>",
+      "      </div>",
+      "    </section>",
+      "  </div>",
       '  <footer class="sr-footer">',
       '    <div class="sr-controls">',
-      order.reschedulePending ? '' : '      <label class="sr-field">',
-      order.reschedulePending ? '' : '        <span>Status do pedido</span>',
-      order.reschedulePending ? '' : '        <select data-sr-status="' + escapeHTML(order.id) +
-        '" aria-label="Alterar status de ' + escapeHTML(order.id) + '"' +
-        (podeAlterarStatus ? "" : " disabled") + '>',
-      order.reschedulePending ? '' : statusMarkup,
-      order.reschedulePending ? '' : '        </select>',
-      order.reschedulePending ? '' : '      </label>',
-      '    </div>',
+      order.reschedulePending ? "" : '      <label class="sr-field">',
+      order.reschedulePending ? "" : "        <span>Status do pedido</span>",
+      order.reschedulePending
+        ? ""
+        : '        <select data-sr-status="' +
+          escapeHTML(order.id) +
+          '" aria-label="Alterar status de ' +
+          escapeHTML(order.id) +
+          '"' +
+          (podeAlterarStatus ? "" : " disabled") +
+          ">",
+      order.reschedulePending ? "" : statusMarkup,
+      order.reschedulePending ? "" : "        </select>",
+      order.reschedulePending ? "" : "      </label>",
+      "    </div>",
       '    <div class="sr-actions">',
-      order.reschedulePending ? '<button type="button" class="sr-reschedule-approve" data-sr-reschedule="aprovar" data-sr-id="' + escapeHTML(order.id) + '">Aprovar novo horário</button><button type="button" class="sr-reschedule-reject" data-sr-reschedule="recusar" data-sr-id="' + escapeHTML(order.id) + '">Recusar</button>' : '',
+      order.reschedulePending
+        ? '<button type="button" class="sr-reschedule-approve" data-sr-reschedule="aprovar" data-sr-id="' +
+          escapeHTML(order.id) +
+          '">Aprovar novo horário</button><button type="button" class="sr-reschedule-reject" data-sr-reschedule="recusar" data-sr-id="' +
+          escapeHTML(order.id) +
+          '">Recusar</button>'
+        : "",
       '      <span class="sr-save-status" data-sr-saving role="status" hidden>Salvando…</span>',
       arquivosMarkup,
       '      <button type="button" class="sr-details" data-sr-details="' +
-        escapeHTML(order.id) + '" aria-label="Ver detalhes do pedido ' +
-        escapeHTML(order.id) + '">Ver detalhes <span aria-hidden="true">→</span></button>',
+        escapeHTML(order.id) +
+        '" aria-label="Ver detalhes do pedido ' +
+        escapeHTML(order.id) +
+        '">Ver detalhes <span aria-hidden="true">→</span></button>',
       cancelarMarkup,
-      '    </div>',
-      '  </footer>',
-      '</article>',
+      "    </div>",
+      "  </footer>",
+      "</article>",
     ].join("");
   }
   content.innerHTML = `
@@ -717,7 +809,11 @@ function renderRequests(history = false) {
     if (!order) return;
 
     if (statusId) {
-      if (event.target.value === "CANCELADO" || !order.statusOptions.includes(event.target.value)) return;
+      if (
+        event.target.value === "CANCELADO" ||
+        !order.statusOptions.includes(event.target.value)
+      )
+        return;
       void enviarAcaoAdmin(
         order,
         "status",
@@ -736,14 +832,26 @@ function renderRequests(history = false) {
       return;
     }
 
-    const rescheduleButton = event.target.closest('[data-sr-reschedule]');
+    const rescheduleButton = event.target.closest("[data-sr-reschedule]");
     if (rescheduleButton) {
-      const order = orders.find((item) => item.id === rescheduleButton.dataset.srId);
+      const order = orders.find(
+        (item) => item.id === rescheduleButton.dataset.srId,
+      );
       if (!order || !order.reschedulePending) return;
       const decisao = rescheduleButton.dataset.srReschedule;
-      const prompt = decisao === 'aprovar' ? 'Aprovar o novo horário do pedido ' + order.id + '?' : 'Recusar o reagendamento do pedido ' + order.id + ' e manter o horário atual?';
+      const prompt =
+        decisao === "aprovar"
+          ? "Aprovar o novo horário do pedido " + order.id + "?"
+          : "Recusar o reagendamento do pedido " +
+            order.id +
+            " e manter o horário atual?";
       if (!confirm(prompt)) return;
-      void enviarAcaoAdmin(order, 'reagendamento', { decisao }, rescheduleButton);
+      void enviarAcaoAdmin(
+        order,
+        "reagendamento",
+        { decisao },
+        rescheduleButton,
+      );
       return;
     }
 
@@ -767,9 +875,9 @@ function renderRequests(history = false) {
       if (!confirm(`Cancelar o pedido ${order.id} de ${order.client}?`)) {
         return;
       }
-      const controle = list.querySelector(
-        `[data-sr-status="${CSS.escape(order.id)}"]`,
-      ) || deleteButton;
+      const controle =
+        list.querySelector(`[data-sr-status="${CSS.escape(order.id)}"]`) ||
+        deleteButton;
       if (controle) {
         void enviarAcaoAdmin(
           order,
@@ -835,7 +943,12 @@ function renderRequests(history = false) {
       ["Cliente", order.client],
       ["Telefone", order.phone || "Não informado"],
       ["Serviço", order.equipment],
-      ["Agendamento", order.appointmentDate ? dateBR(order.appointmentDate) + " às " + order.time : "Aguardando agendamento"],
+      [
+        "Agendamento",
+        order.appointmentDate
+          ? dateBR(order.appointmentDate) + " às " + order.time
+          : "Aguardando agendamento",
+      ],
       ["Endereço", order.address || "Não informado"],
       ["Descrição", order.description || "Sem descrição"],
       [
@@ -902,6 +1015,54 @@ function renderRequests(history = false) {
       `
           : ""
       }
+      
+          <section class="sr-documentos">
+      <h3>Documentos do pedido</h3>
+
+      <ul data-documentos-lista>
+        <li>Carregando documentos...</li>
+      </ul>
+
+      <form data-documentos-form>
+        <label>
+          Título
+          <input name="titulo" type="text" maxlength="150" required />
+        </label>
+
+        <label>
+          Tipo
+          <select name="tipo" required>
+            <option value="">Selecione</option>
+            <option value="ORCAMENTO">Orçamento</option>
+            <option value="RELATORIO">Relatório</option>
+            <option value="RECIBO">Recibo</option>
+            <option value="GARANTIA">Garantia</option>
+            <option value="OUTRO">Outro</option>
+          </select>
+        </label>
+
+        <label>
+          Arquivo PDF
+          <input
+            name="documento"
+            type="file"
+            accept=".pdf,application/pdf"
+            required
+          />
+          <small> PDF de até 10 MB.</small>
+        </label>
+
+        <label class="sr-documentos-visibilidade">
+          <input type="checkbox" name="disponivel_cliente" value="1" />
+          Disponibilizar para o cliente
+        </label>
+
+        <p data-documentos-feedback role="status"></p>
+
+        <button type="submit">Enviar documento</button>
+      </form>
+    </section>
+          
 
       <div class="form-actions">
         <button class="primary" data-sr-close>Fechar</button>
@@ -917,6 +1078,85 @@ function renderRequests(history = false) {
     }
 
     document.body.appendChild(modal);
+
+    const listaDocumentos = modal.querySelector("[data-documentos-lista]");
+    const formularioDocumentos = modal.querySelector("[data-documentos-form]");
+    const feedbackDocumentos = modal.querySelector(
+      "[data-documentos-feedback]",
+    );
+
+    async function carregarDocumentos() {
+      const url = `${DOCUMENTOS_API}?protocolo=${encodeURIComponent(order.id)}`;
+
+      const resposta = await fetch(url, {
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok || dados?.sucesso !== true) {
+        throw new Error(
+          dados?.mensagem || "Não foi possível carregar os documentos.",
+        );
+      }
+
+      listaDocumentos.replaceChildren();
+
+      if (!dados.documentos.length) {
+        const vazio = document.createElement("li");
+        vazio.textContent = "Nenhum documento cadastrado para este pedido";
+        listaDocumentos.append(vazio);
+        return;
+      }
+
+      for (const documento of dados.documentos) {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+
+        link.href = String(documento.url);
+        link.textContent = `${documento.titulo} (${documento.disponivel_cliente ? "visível ao cliente" : "somente admin"})`;
+
+        item.append(link);
+        listaDocumentos.append(item);
+      }
+    }
+
+    void carregarDocumentos().catch((erro) => {
+      listaDocumentos.textContent = erro.message;
+    });
+
+    formularioDocumentos.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      feedbackDocumentos.textContent = "Enviando documento...";
+
+      const dadosFormulario = new FormData(formularioDocumentos);
+      dadosFormulario.set("csrf", adminCsrf);
+      dadosFormulario.set("protocolo", order.id);
+
+      try {
+        const resposta = await fetch(DOCUMENTOS_API, {
+          method: "POST",
+          credentials: "same-origin",
+          body: dadosFormulario,
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok || dados?.sucesso !== true) {
+          throw new Error(
+            dados?.mensagem || "Não foi possível enviar o documento.",
+          );
+        }
+
+        feedbackDocumentos.textContent = "Documento enviado.";
+        formularioDocumentos.reset();
+        await carregarDocumentos();
+      } catch (erro) {
+        feedbackDocumentos.textContent = erro.message;
+      }
+    });
 
     modal.querySelector("[data-sr-close]").addEventListener("click", () => {
       modal.close();
@@ -1956,27 +2196,37 @@ function renderAdminNotifications() {
   document.querySelector("#notification-count").textContent = naoLidas;
   resumo.textContent = `${naoLidas} não lida(s)`;
   lista.innerHTML = adminNotifications.length
-    ? adminNotifications.map((item) => `
+    ? adminNotifications
+        .map(
+          (item) => `
         <button type="button" class="admin-notification-row ${item.lida ? "read" : "unread"}"
           data-admin-notification-id="${escapeHTML(item.id)}"
           data-admin-notification-protocol="${escapeHTML(item.protocolo || "")}">
           <span class="admin-notification-dot" aria-hidden="true"></span>
           <span><strong>${escapeHTML(item.titulo)}</strong><small>${escapeHTML(item.mensagem)}</small><time>${escapeHTML(dateBR(String(item.criada_em || "").slice(0, 10)))} ${escapeHTML(String(item.criada_em || "").slice(11, 16))}</time></span>
-        </button>`).join("")
+        </button>`,
+        )
+        .join("")
     : '<div class="empty">Você não tem notificações.</div>';
 }
 
 async function carregarNotificacoesAdmin() {
   try {
     const resposta = await fetch(ADMIN_NOTIFICATIONS_API, {
-      credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
       window.location.replace("./login.html");
       return;
     }
-    if (!resposta.ok || dados?.sucesso !== true || !Array.isArray(dados.notificacoes)) {
+    if (
+      !resposta.ok ||
+      dados?.sucesso !== true ||
+      !Array.isArray(dados.notificacoes)
+    ) {
       throw new Error(dados?.mensagem || "Falha ao carregar notificações.");
     }
     adminNotifications = dados.notificacoes;
@@ -1992,8 +2242,13 @@ async function acaoNotificacaoAdmin(acao, id = "") {
   feedback.hidden = true;
   try {
     const resposta = await fetch(ADMIN_NOTIFICATIONS_API, {
-      method: "POST", credentials: "same-origin", cache: "no-store",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify({ acao, id, csrf: notificationsCsrf || adminCsrf }),
     });
     const dados = await resposta.json();
@@ -2001,7 +2256,10 @@ async function acaoNotificacaoAdmin(acao, id = "") {
       window.location.replace("./login.html");
       return false;
     }
-    if (!resposta.ok || dados?.sucesso !== true) throw new Error(dados?.mensagem || "Não foi possível atualizar as notificações.");
+    if (!resposta.ok || dados?.sucesso !== true)
+      throw new Error(
+        dados?.mensagem || "Não foi possível atualizar as notificações.",
+      );
     feedback.textContent = dados.mensagem || "Notificações atualizadas.";
     feedback.hidden = false;
     await carregarNotificacoesAdmin();
@@ -2018,7 +2276,8 @@ function render() {
     (order) => order.statusCode === "SOLICITADO",
   ).length;
   document.querySelector("#pending-count").textContent = pending;
-  document.querySelector("#notification-count").textContent = adminNotifications.filter((item) => !item.lida).length;
+  document.querySelector("#notification-count").textContent =
+    adminNotifications.filter((item) => !item.lida).length;
 
   document.querySelectorAll(".tab").forEach((tab) => {
     const active = tab.dataset.page === page;
@@ -2077,22 +2336,35 @@ document.querySelector("#notifications").addEventListener("click", () => {
   void carregarNotificacoesAdmin();
 });
 
-document.querySelector("#close-notifications").addEventListener("click", () => document.querySelector("#notifications-dialog").close());
-document.querySelector("#mark-notifications-read").addEventListener("click", () => void acaoNotificacaoAdmin("ler_todas"));
-document.querySelector("#clear-read-notifications").addEventListener("click", () => void acaoNotificacaoAdmin("limpar_lidas"));
-document.querySelector("#admin-notification-list").addEventListener("click", async (event) => {
-  const botao = event.target.closest("[data-admin-notification-id]");
-  if (!botao) return;
-  const protocolo = botao.dataset.adminNotificationProtocol || "";
-  const marcado = await acaoNotificacaoAdmin("ler", botao.dataset.adminNotificationId);
-  if (protocolo && marcado) {
-    document.querySelector("#notifications-dialog").close();
-    page = "requests";
-    search = protocolo;
-    filter = "Todos";
-    render();
-  }
-});
+document
+  .querySelector("#close-notifications")
+  .addEventListener("click", () =>
+    document.querySelector("#notifications-dialog").close(),
+  );
+document
+  .querySelector("#mark-notifications-read")
+  .addEventListener("click", () => void acaoNotificacaoAdmin("ler_todas"));
+document
+  .querySelector("#clear-read-notifications")
+  .addEventListener("click", () => void acaoNotificacaoAdmin("limpar_lidas"));
+document
+  .querySelector("#admin-notification-list")
+  .addEventListener("click", async (event) => {
+    const botao = event.target.closest("[data-admin-notification-id]");
+    if (!botao) return;
+    const protocolo = botao.dataset.adminNotificationProtocol || "";
+    const marcado = await acaoNotificacaoAdmin(
+      "ler",
+      botao.dataset.adminNotificationId,
+    );
+    if (protocolo && marcado) {
+      document.querySelector("#notifications-dialog").close();
+      page = "requests";
+      search = protocolo;
+      filter = "Todos";
+      render();
+    }
+  });
 
 document.querySelector("#new-order").addEventListener("click", () => {
   abrirModalNovoPedido();
@@ -2206,9 +2478,12 @@ function resetarBuscaCliente() {
   const seletor = form.elements.namedItem("client_id");
   const feedback = document.querySelector("#client-match-feedback");
   if (!seletor || !feedback) return;
-  seletor.replaceChildren(new Option("Informe o telefone para buscar contas", ""));
+  seletor.replaceChildren(
+    new Option("Informe o telefone para buscar contas", ""),
+  );
   seletor.disabled = true;
-  feedback.textContent = "O pedido aparecerá no painel do cliente se for vinculado a uma conta.";
+  feedback.textContent =
+    "O pedido aparecerá no painel do cliente se for vinculado a uma conta.";
 }
 
 form.elements.phone.addEventListener("input", () => {
@@ -2224,16 +2499,22 @@ form.elements.phone.addEventListener("input", () => {
   seletor.disabled = true;
   if (!/^\d{10,11}$/.test(telefone)) {
     seletor.replaceChildren(new Option("Informe telefone com DDD", ""));
-    feedback.textContent = "Digite um telefone válido com DDD para procurar uma conta.";
+    feedback.textContent =
+      "Digite um telefone válido com DDD para procurar uma conta.";
     return;
   }
   buscaClientePendente = true;
   feedback.textContent = "Procurando contas cadastradas com este telefone…";
   buscaClienteTemporizador = setTimeout(async () => {
     try {
-      const resposta = await fetch(`${API}?acao=buscar_cliente&telefone=${encodeURIComponent(telefone)}`, {
-        credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
-      });
+      const resposta = await fetch(
+        `${API}?acao=buscar_cliente&telefone=${encodeURIComponent(telefone)}`,
+        {
+          credentials: "same-origin",
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        },
+      );
       const resultado = await resposta.json();
       if (sequencia !== buscaClienteSequencia) return;
       if (resposta.status === 401 || resposta.status === 403) {
@@ -2241,13 +2522,20 @@ form.elements.phone.addEventListener("input", () => {
         return;
       }
       if (!resposta.ok || resultado?.sucesso !== true) {
-        throw new Error(resultado?.mensagem || "Não foi possível buscar a conta.");
+        throw new Error(
+          resultado?.mensagem || "Não foi possível buscar a conta.",
+        );
       }
       buscaClientePendente = false;
-      const clientes = Array.isArray(resultado.clientes) ? resultado.clientes : [];
+      const clientes = Array.isArray(resultado.clientes)
+        ? resultado.clientes
+        : [];
       seletor.replaceChildren(new Option("Não vincular a uma conta", ""));
       clientes.forEach((cliente) => {
-        const opcao = new Option(`${cliente.nome} — ${cliente.email}`, String(cliente.id));
+        const opcao = new Option(
+          `${cliente.nome} — ${cliente.email}`,
+          String(cliente.id),
+        );
         opcao.dataset.nome = String(cliente.nome || "");
         opcao.dataset.telefone = String(cliente.telefone || "");
         seletor.add(opcao);
@@ -2262,7 +2550,8 @@ form.elements.phone.addEventListener("input", () => {
       buscaClienteFalhou = true;
       seletor.replaceChildren(new Option("Busca indisponível", ""));
       seletor.disabled = true;
-      feedback.textContent = erro.message || "Falha ao buscar conta do cliente.";
+      feedback.textContent =
+        erro.message || "Falha ao buscar conta do cliente.";
     }
   }, 300);
 });
@@ -2271,9 +2560,12 @@ form.elements.namedItem("client_id")?.addEventListener("change", (event) => {
   const opcao = event.currentTarget.selectedOptions[0];
   if (!opcao?.value) return;
   form.elements.client.value = opcao.dataset.nome || form.elements.client.value;
-  form.elements.phone.value = opcao.dataset.telefone || form.elements.phone.value;
+  form.elements.phone.value =
+    opcao.dataset.telefone || form.elements.phone.value;
   const feedback = document.querySelector("#client-match-feedback");
-  if (feedback) feedback.textContent = "Conta selecionada. O pedido aparecerá no painel desse cliente.";
+  if (feedback)
+    feedback.textContent =
+      "Conta selecionada. O pedido aparecerá no painel desse cliente.";
 });
 
 function abrirModalNovoPedido() {
