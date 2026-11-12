@@ -10,7 +10,7 @@ const STATUS_LABELS = {
   CANCELADO: "Cancelado",
 };
 const statuses = Object.values(STATUS_LABELS);
-const TODAY = localDate();
+let TODAY = localDate();
 let orders = [];
 let serviceTypes = [];
 let page = "overview";
@@ -19,6 +19,8 @@ let filter = "Todos";
 let adminCsrf = "";
 let adminLoading = true;
 let adminError = "";
+let atualizandoAgenda = false;
+let ultimaAtualizacaoAgenda = 0;
 let adminMessage = "";
 let adminMessageError = false;
 let portfolioItems = [];
@@ -84,7 +86,11 @@ function normalizarPedido(pedido) {
   };
 }
 
-async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
+async function carregarSolicitacoesAdmin( 
+  mostrarCarregamento = true,
+  silencioso = false,
+  atualizarNotificacoes = true,
+) {
   if (mostrarCarregamento) {
     adminLoading = true;
     adminError = "";
@@ -125,16 +131,32 @@ async function carregarSolicitacoesAdmin(mostrarCarregamento = true) {
     adminError = "";
     adminLoading = false;
     if (mostrarCarregamento) render();
-    void carregarNotificacoesAdmin();
+    if (atualizarNotificacoes) void carregarNotificacoesAdmin();
+    return true;
   } catch (erro) {
+    console.error(erro);
+    if (silencioso) return false;
     adminLoading = false;
     adminError =
       "Não foi possível carregar as solicitações do banco. Verifique o servidor e tente novamente.";
-    console.error(erro);
     render();
+    return false;
   }
 }
 
+async function atualizarAgendaHoje() {
+  if (document.hidden || page !== "overview" || atualizandoAgenda) return;
+  if (Date.now() - ultimaAtualizacaoAgenda < 5000) return;
+  atualizandoAgenda = true;
+  ultimaAtualizacaoAgenda = Date.now();
+  TODAY = localDate();
+  try {
+    await carregarSolicitacoesAdmin(false, true, false);
+    if (!document.hidden && page === "overview") render();
+  } finally {
+    atualizandoAgenda = false;
+  }
+}
 async function enviarAcaoAdmin(pedido, acao, valores, controle) {
   if (!adminCsrf) return;
   const valorAnterior = controle.value;
@@ -2041,6 +2063,7 @@ function navigate(nextPage) {
   search = "";
   filter = "Todos";
   render();
+  if (nextPage === "overview") void atualizarAgendaHoje();
 }
 
 document.querySelectorAll(".tab").forEach((tab) => {
@@ -2371,3 +2394,9 @@ form.elements.client.addEventListener("input", () => {
 
 render();
 void carregarSolicitacoesAdmin();
+
+setInterval(() => void atualizarAgendaHoje(), 30_000);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) void atualizarAgendaHoje();
+});
+window.addEventListener("focus", () => void atualizarAgendaHoje());
