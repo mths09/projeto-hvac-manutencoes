@@ -2,95 +2,66 @@
 
 declare(strict_types=1);
 
-// Os erros internos ficam no log do PHP.
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
-
-// O cadastro.js espera uma resposta JSON.
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-function responderCadastro(
-    int $status,
-    string $mensagem,
-    array $erros = []
-): void {
+function responderCadastro(int $status, string $mensagem, array $erros = []): never
+{
     http_response_code($status);
-
-    echo json_encode(
-        [
-            'sucesso' => $status === 201,
-            'mensagem' => $mensagem,
-            'erros' => (object) $erros
-        ],
-        JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
-    );
-
+    echo json_encode([
+        'sucesso' => $status === 202,
+        'mensagem' => $mensagem,
+        'erros' => (object) $erros,
+    ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     exit;
 }
 
-// Aceitar somente o envio por POST.
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     header('Allow: POST');
-
-    responderCadastro(
-        405,
-        'Método não permitido. Envie o formulário de cadastro.'
-    );
+    responderCadastro(405, 'Método não permitido. Envie o formulário de cadastro.');
 }
-
-// Limitar o tamanho dos dados recebidos.
 if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 16384) {
-    responderCadastro(
-        413,
-        'Os dados enviados ultrapassam o limite do cadastro.'
-    );
+    responderCadastro(413, 'Os dados enviados ultrapassam o limite do cadastro.');
 }
 
 try {
     require_once __DIR__ . '/validar_cadastro.php';
-    require_once __DIR__. '/validar_endereco.php';
+    require_once __DIR__ . '/validar_endereco.php';
+    require_once __DIR__ . '/cadastro_confirmacao.php';
 
     $resultadoCadastro = validarCadastro($_POST);
     $resultadoEndereco = validarEndereco($_POST);
-
     $erros = $resultadoCadastro['erros'] + $resultadoEndereco['erros'];
-
-    if($erros) {
-        responderCadastro(
-            422,
-            implode(' ', $erros),
-            $erros
-        );
+    if ($erros !== []) {
+        responderCadastro(422, implode(' ', $erros), $erros);
+    }
+    if (($_POST['aceite_privacidade'] ?? null) !== '1') {
+        responderCadastro(422, 'É necessário aceitar a Política de Privacidade.');
     }
 
-    $dados = $resultadoCadastro['dados']; 
-    $endereco = $resultadoEndereco['dados']; 
-
-    // O perfil é definido no servidor.
-    // Um visitante nunca pode se cadastrar como administrador.
-    $perfil = 'cliente';
-
-    // salva somente hash da senha
-    $senhaHash = password_hash(
-        $dados['senha'],
-        PASSWORD_BCRYPT,
-        ['cost' => 12]
-    );
+    $dados = $resultadoCadastro['dados'];
+    $endereco = $resultadoEndereco['dados'];
+    $senhaHash = password_hash($dados['senha'], PASSWORD_BCRYPT, ['cost' => 12]);
+    if (!is_string($senhaHash)) {
+        throw new RuntimeException('Não foi possível proteger a senha.');
+    }
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    
-    $aceite = $_POST['aceite_privacidade'] ?? null;
-
-    if ($aceite !== '1') {
-        responderCadastro(
-            422,
-            'É necessário aceitar a Política de Privacidade.'
-        );
-    }
-
     require_once __DIR__ . '/conexao.php';
+
+    $stmt = $conexao->prepare('SELECT 1 FROM usuario WHERE email = ? LIMIT 1');
+    $stmt->bind_param('s', $dados['email']);
+    $stmt->execute();
+    $emailCadastrado = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    if ($emailCadastrado) {
+        responderCadastro(409, 'Este e-mail já está cadastrado.', [
+            'email' => 'Use outro e-mail para cadastrar uma nova conta.',
+        ]);
+    }
 
     if (telefoneJaCadastrado($conexao, $dados['telefone'])) {
         responderCadastro(409, 'Este telefone já está cadastrado.', [
@@ -98,142 +69,45 @@ try {
         ]);
     }
 
-    $conexao->begin_transaction();
-
-try {
-    // ------ usuario ------
-    $sql = '
-        INSERT INTO usuario (
-            nome,
-            email,
-            telefone,
-            data_nascimento,
-            senha_hash,
-            perfil
-        )
-        VALUES (?, ?, ?, ?, ?, ?)
-    ';
-    $stmt = $conexao->prepare($sql);
-    $stmt->bind_param(
-        'ssssss',
-        $dados['nome'],
-        $dados['email'],
-        $dados['telefone'],
-        $dados['data_nascimento'],
-        $senhaHash,
-        $perfil
-    );
-    $stmt->execute();
-    $usuarioId = $conexao->insert_id;
-    $stmt->close();
-
-    // ------ endereco -------
-    $complemento = $endereco['complemento'] === '' ? null : $endereco['complemento']; // adicionar "null" ao complemento
-    $enderecoInformado = montarEnderecoInformado($endereco);
-
-    $principal = 1;
-    $ativo = 1;
-
-    $sql = '
-        INSERT INTO endereco_usuario (
-            id_usuario,
-            endereco_informado,
-            cep,
-            logradouro,
-            numero,
-            complemento,
-            bairro,
-            cidade,
-            uf,
-            principal,
-            ativo
-        )
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ';
-        $stmt = $conexao->prepare($sql);
-    $stmt->bind_param(
-        'issssssssii',
-        $usuarioId,
-        $enderecoInformado, 
-        $endereco['cep'],
-        $endereco['logradouro'],
-        $endereco['numero'],
-        $complemento,
-        $endereco['bairro'],
-        $endereco['cidade'],
-        $endereco['uf'],
-        $principal,
-        $ativo,
-    );
-    $stmt->execute();
-    $stmt->close();
-
-    // termos de politica e privacidade
     $ipHash = hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido'));
     $userAgentHash = hash('sha256', (string) ($_SERVER['HTTP_USER_AGENT'] ?? 'desconhecido'));
-    $versaoPolitica = '1.0';
-
-    $stmt = $conexao->prepare(
-        'INSERT INTO aceite_politica
-            (id_usuario, versao, ip_hash, user_agent_hash)
-        VALUES (?, ?, ?, ?)'
-    );
-    $stmt->bind_param('isss', $usuarioId, $versaoPolitica, $ipHash, $userAgentHash);
-    $stmt->execute();
-    $stmt->close();
-
-    $conexao->commit();
-
-} catch (Throwable $erroInterno) {
-    try {
-        $conexao->rollback();
-    } catch (Throwable $erroRollBack) {
-        error_log('Falha no rollback do cadastro: ' . get_class($erroRollBack));
-    }
-    throw $erroInterno;
-}
-
-    responderCadastro(
-        201,
-        'Cadastro realizado com sucesso!'
+    $resultado = armazenarCadastroPendenteEEnviar(
+        $conexao,
+        $dados,
+        $endereco,
+        $senhaHash,
+        $ipHash,
+        $userAgentHash
     );
 
+    $mensagem = !empty($resultado['ja_enviado'])
+        ? 'Se o endereço puder ser confirmado, já enviamos um link. Confira sua caixa de entrada e o spam.'
+        : 'Enviamos um link de confirmação para seu e-mail. Abra-o em até 24 horas para concluir o cadastro.';
+    responderCadastro(202, $mensagem);
+} catch (ErroCadastroConfirmacao $erro) {
+    responderCadastro($erro->http, $erro->getMessage(), $erro->erros);
 } catch (mysqli_sql_exception $erro) {
-    // O banco já possui uma restrição UNIQUE para o e-mail.
     if ((int) $erro->getCode() === 1062) {
+        if (str_contains($erro->getMessage(), 'un_cadastro_pendente_telefone')) {
+            responderCadastro(409, 'Este telefone já está em confirmação para outra conta.', [
+                'telefone' => 'Use outro telefone para cadastrar uma nova conta.',
+            ]);
+        }
         if (str_contains($erro->getMessage(), 'un_usuario_telefone_normalizado')) {
             responderCadastro(409, 'Este telefone já está cadastrado.', [
                 'telefone' => 'Use outro telefone para cadastrar uma nova conta.',
             ]);
         }
-        responderCadastro(
-            409,
-            'Este e-mail já está cadastrado.',
-            [
-                'email' => 'Use outro e-mail para cadastrar uma nova conta.'
-            ]
-        );
+        responderCadastro(409, 'Este e-mail já está cadastrado.', [
+            'email' => 'Use outro e-mail para cadastrar uma nova conta.',
+        ]);
     }
-    // Não registrar senha ou valores enviados no formulário.
-    error_log(
-        'Falha no banco durante cadastro. Código: ' . $erro->getCode()
-    );
-    responderCadastro(
-        503,
-        'Não foi possível acessar o banco. Tente novamente mais tarde.'
-    );
-
+    error_log('Falha no banco durante solicitação de cadastro: código ' . $erro->getCode());
+    responderCadastro(503, 'Não foi possível acessar o banco. Tente novamente mais tarde.');
 } catch (Throwable $erro) {
     error_log(sprintf(
-        'Falha interna no cadastro: class=%s code=%s file=%s line=%d',
-        get_class($erro),
-        (string) $erro->getCode(),
-        $erro->getFile(),
-        $erro->getLine()
+        'Falha interna na solicitação de cadastro: class=%s code=%s file=%s line=%d',
+        get_class($erro), (string) $erro->getCode(), $erro->getFile(), $erro->getLine()
     ));
-
-    responderCadastro(
-        500,
-        'Não foi possível concluir o cadastro. Tente novamente.'
-    );
+    responderCadastro(500, 'Não foi possível iniciar o cadastro. Tente novamente.');
 }
