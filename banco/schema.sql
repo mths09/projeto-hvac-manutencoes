@@ -545,6 +545,36 @@ CREATE TABLE `usuario` (
   `atualizado_em` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `aceite_politica` (
+  `id_aceite` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id_usuario` bigint(20) NOT NULL,
+  `versao` varchar(20) NOT NULL,
+  `aceito_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `ip_hash` char(64) NOT NULL,
+  `user_agent_hash` char(64) NOT NULL,
+  PRIMARY KEY (`id_aceite`),
+  UNIQUE KEY `un_aceite_usuario_versao` (`id_usuario`,`versao`),
+  KEY `fk_aceite_usuario` (`id_usuario`),
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `cadastro_pendente` (
+  `id_cadastro_pendente` bigint(20) NOT NULL AUTO_INCREMENT,
+  `email` varchar(254) NOT NULL,
+  `telefone` varchar(25) NOT NULL,
+  `dados_json` longtext NOT NULL,
+  `token_hash` char(64) NOT NULL,
+  `ip_hash` char(64) NOT NULL,
+  `criada_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `expira_em` datetime NOT NULL,
+  `enviado_em` datetime DEFAULT NULL,
+  PRIMARY KEY (`id_cadastro_pendente`),
+  UNIQUE KEY `un_cadastro_pendente_email` (`email`),
+  UNIQUE KEY `un_cadastro_pendente_telefone` (`telefone`),
+  UNIQUE KEY `un_cadastro_pendente_token_hash` (`token_hash`),
+  KEY `idx_cadastro_pendente_ip_data` (`ip_hash`,`criada_em`),
+  KEY `idx_cadastro_pendente_expira` (`expira_em`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 --
 -- Índices para tabelas despejadas
 --
@@ -863,3 +893,5 @@ ALTER TABLE `tecnico` MODIFY `id_tecnico` bigint(20) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `tipo_servico` MODIFY `id_tipo_servico` bigint(20) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `triagem` MODIFY `id_triagem` bigint(20) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `usuario` MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `aceite_politica` ADD CONSTRAINT `fk_aceite_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
