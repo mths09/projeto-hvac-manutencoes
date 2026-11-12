@@ -1,5 +1,6 @@
 const formularioLogin = document.querySelector("#form-login");
 const mensagemLogin = document.querySelector("#mensagem-login");
+const contadorLogin = document.querySelector("#contador-login");
 const botaoLogin = document.querySelector("#btn-login");
 const campoEmail = formularioLogin.elements.email;
 const campoSenha = formularioLogin.elements.senha;
@@ -8,6 +9,8 @@ const erroSenha = document.querySelector("#erro-senha");
 
 let validacaoTentada = false;
 let enviandoLogin = false;
+let liberarLoginEm = 0;
+let temporizadorLogin = null;
 
 function definirErroCampo(campo, elementoErro, texto) {
   elementoErro.textContent = texto;
@@ -69,6 +72,39 @@ function mostrarMensagemLogin(texto, tipo) {
   mensagemLogin.hidden = false;
 }
 
+function formatarTempo(segundos) {
+  const minutos = Math.floor(segundos / 60);
+  const restante = segundos % 60;
+  return String(minutos).padStart(2, "0") + ":" + String(restante).padStart(2, "0");
+}
+
+function atualizarContagemLogin() {
+  const segundos = Math.max(0, Math.ceil((liberarLoginEm - Date.now()) / 1000));
+  if (segundos > 0) {
+
+    botaoLogin.disabled = true;
+    botaoLogin.textContent = "Aguarde " + formatarTempo(segundos);
+    return;
+  }
+
+  if (temporizadorLogin !== null) window.clearInterval(temporizadorLogin);
+  temporizadorLogin = null;
+  liberarLoginEm = 0;
+  contadorLogin.hidden = true;
+  contadorLogin.textContent = "";
+  botaoLogin.disabled = false;
+  botaoLogin.textContent = "Entrar na conta →";
+  mostrarMensagemLogin("O bloqueio terminou. Você já pode tentar entrar novamente.", "info");
+}
+
+function iniciarContagemLogin(segundos) {
+  liberarLoginEm = Date.now() + segundos * 1000;
+  mostrarMensagemLogin("Muitas tentativas. Aguarde o contador terminar antes de tentar novamente.", "erro");
+  if (temporizadorLogin !== null) window.clearInterval(temporizadorLogin);
+  atualizarContagemLogin();
+  temporizadorLogin = window.setInterval(atualizarContagemLogin, 1000);
+}
+
 document.getElementById("btn-cadastro")?.addEventListener("click", () => {
   window.location.href = "./cadastro.html";
 });
@@ -76,6 +112,10 @@ document.getElementById("btn-cadastro")?.addEventListener("click", () => {
 formularioLogin.addEventListener("submit", async (evento) => {
   evento.preventDefault();
 
+  if (liberarLoginEm > Date.now()) {
+    atualizarContagemLogin();
+    return;
+  }
   if (enviandoLogin) return;
 
   campoEmail.value = campoEmail.value.trim();
@@ -113,7 +153,9 @@ formularioLogin.addEventListener("submit", async (evento) => {
 
     const dados = await resposta.json();
     if (!resposta.ok || dados?.sucesso !== true) {
-      throw new Error(dados?.mensagem || "Não foi possível entrar na conta.");
+      const erro = new Error(dados?.mensagem || "Não foi possível entrar na conta.");
+      erro.aguardarSegundos = Number(dados?.aguardar_segundos) || 0;
+      throw erro;
     }
 
     const destinosPermitidos = {
@@ -132,17 +174,25 @@ formularioLogin.addEventListener("submit", async (evento) => {
     redirecionando = true;
     window.location.replace(dados.destino);
   } catch (erro) {
-    const texto =
-      erro instanceof TypeError
-        ? "Não foi possível conectar ao servidor."
-        : erro.message;
-    mostrarMensagemLogin(texto, "erro");
+    if (erro.aguardarSegundos > 0) {
+      iniciarContagemLogin(erro.aguardarSegundos);
+    } else {
+      const texto =
+        erro instanceof TypeError
+          ? "Não foi possível conectar ao servidor."
+          : erro.message;
+      mostrarMensagemLogin(texto, "erro");
+    }
   } finally {
     formularioLogin.setAttribute("aria-busy", "false");
     if (!redirecionando) {
       enviandoLogin = false;
-      botaoLogin.disabled = false;
-      botaoLogin.textContent = "Entrar na conta →";
+      if (liberarLoginEm > Date.now()) {
+        atualizarContagemLogin();
+      } else {
+        botaoLogin.disabled = false;
+        botaoLogin.textContent = "Entrar na conta →";
+      }
     }
   }
 });

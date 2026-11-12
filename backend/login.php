@@ -22,39 +22,92 @@ function responderLogin(int $status, array $dados): never
     exit;
 }
 
-function contarTentativasPorPar(
-    mysqli $conexao,
-    string $emailHash,
-    string $ipHash
-): int {
+function contarTentativasPorEmail(mysqli $conexao, string $emailHash): int
+{
     $stmt = $conexao->prepare(
-        'SELECT COUNT(*) AS total
-        FROM tentativa_login
-        WHERE email_hash = ?
-            AND ip_hash = ?
-            AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
+        'SELECT COUNT(*) AS total FROM tentativa_login
+         WHERE email_hash = ? AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
     );
-    $stmt->bind_param('ss', $emailHash, $ipHash);
+    $stmt->bind_param('s', $emailHash);
     $stmt->execute();
     $linha = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-
     return (int) ($linha['total'] ?? 0);
 }
 
-function contarTentativasPorIp(mysqli $conexao, string $ipHash): int {
+function contarTentativasPorIp(mysqli $conexao, string $ipHash): int
+{
     $stmt = $conexao->prepare(
-        'SELECT COUNT(*) AS total
-        FROM tentativa_login
-        WHERE ip_hash = ?
-            AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
+        'SELECT COUNT(*) AS total FROM tentativa_login
+         WHERE ip_hash = ? AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
     );
     $stmt->bind_param('s', $ipHash);
     $stmt->execute();
     $linha = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-
     return (int) ($linha['total'] ?? 0);
+}
+
+function duracaoBloqueioEmail(int $tentativas): int
+{
+    if ($tentativas < LIMITE_TENTATIVAS_EMAIL_LOGIN) return 0;
+    return min(($tentativas - LIMITE_TENTATIVAS_EMAIL_LOGIN + 1) * 20, 60);
+}
+
+function segundosRestantesBloqueio(int $ultimaTentativa, int $duracao, ?int $agora = null): int
+{
+    return max(0, $ultimaTentativa + $duracao - ($agora ?? time()));
+}
+
+function timestampTentativaEmail(mysqli $conexao, string $emailHash, bool $maisRecente): ?int
+{
+    $funcao = $maisRecente ? 'MAX' : 'MIN';
+    $stmt = $conexao->prepare(
+        "SELECT UNIX_TIMESTAMP({$funcao}(tentada_em)) AS instante FROM tentativa_login
+         WHERE email_hash = ? AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)"
+    );
+    $stmt->bind_param('s', $emailHash);
+    $stmt->execute();
+    $valor = $stmt->get_result()->fetch_assoc()['instante'] ?? null;
+    $stmt->close();
+    return $valor === null ? null : (int) $valor;
+}
+
+function timestampTentativaIpMaisAntiga(mysqli $conexao, string $ipHash): ?int
+{
+    $stmt = $conexao->prepare(
+        'SELECT UNIX_TIMESTAMP(MIN(tentada_em)) AS instante FROM tentativa_login
+         WHERE ip_hash = ? AND tentada_em >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
+    );
+    $stmt->bind_param('s', $ipHash);
+    $stmt->execute();
+    $valor = $stmt->get_result()->fetch_assoc()['instante'] ?? null;
+    $stmt->close();
+    return $valor === null ? null : (int) $valor;
+}
+
+function segundosBloqueioLogin(mysqli $conexao, string $emailHash, string $ipHash): int
+{
+    $falhasEmail = contarTentativasPorEmail($conexao, $emailHash);
+    $falhasIp = contarTentativasPorIp($conexao, $ipHash);
+    $agora = time();
+    $esperaEmail = 0;
+    $esperaIp = 0;
+
+    if ($falhasEmail >= LIMITE_TENTATIVAS_EMAIL_LOGIN) {
+        $ultima = timestampTentativaEmail($conexao, $emailHash, true);
+        if ($ultima !== null) $esperaEmail = segundosRestantesBloqueio($ultima, duracaoBloqueioEmail($falhasEmail), $agora);
+    }
+    if ($falhasIp >= LIMITE_TENTATIVAS_IP_LOGIN) {
+        $primeira = timestampTentativaIpMaisAntiga($conexao, $ipHash);
+        if ($primeira !== null) $esperaIp = segundosRestantesBloqueio($primeira, JANELA_TENTATIVAS_LOGIN_MINUTOS * 60, $agora);
+    }
+    return max($esperaEmail, $esperaIp);
+}
+
+function loginBloqueadoPorTentativas(mysqli $conexao, string $emailHash, string $ipHash): bool
+{
+    return segundosBloqueioLogin($conexao, $emailHash, $ipHash) > 0;
 }
 
 function registrarFalhaLogin(mysqli $conexao, string $emailHash, string $ipHash): void
@@ -67,41 +120,38 @@ function registrarFalhaLogin(mysqli $conexao, string $emailHash, string $ipHash)
     $stmt->close();
 }
 
+function responderBloqueioLogin(int $segundos): never
+{
+    header('Retry-After: ' . $segundos);
+    responderLogin(429, [
+        'sucesso' => false,
+        'mensagem' => 'Muitas tentativas de acesso. Aguarde antes de tentar novamente.',
+        'aguardar_segundos' => $segundos,
+    ]);
+}
+
 function negarLogin(mysqli $conexao, string $emailHash, string $ipHash): never
 {
     registrarFalhaLogin($conexao, $emailHash, $ipHash);
-
-    $porPar = contarTentativasPorPar($conexao, $emailHash, $ipHash);
-    $porIp = contarTentativasPorIp($conexao, $ipHash);
-
-    $bloqueado = $porPar >= 5 || $porIp >= 30;
-
+    $segundos = segundosBloqueioLogin($conexao, $emailHash, $ipHash);
     $conexao->close();
-
-    if ($bloqueado) {
-        responderLogin(429, [
-            'sucesso' => false,
-            'mensagem' => 'Muitas tentativas de acesso. Aguarde ' . JANELA_TENTATIVAS_LOGIN_MINUTOS . ' minutos e tente novamente.'
-        ]);
-    }
-
+    if ($segundos > 0) responderBloqueioLogin($segundos);
     responderLogin(401, [
         'sucesso' => false,
         'mensagem' => 'E-mail ou senha inválidos. Confira os dados e tente novamente.'
     ]);
 }
 
-function limparTentativasLoginBemSucedidas(
-    mysqli $conexao,
-    string $emailHash,
-    string $ipHash
-): void {
-    $stmt = $conexao->prepare(
-        'DELETE FROM tentativa_login WHERE email_hash = ? AND ip_hash = ?'
-    );
-    $stmt->bind_param('ss', $emailHash, $ipHash);
+function limparTentativasLoginBemSucedidas(mysqli $conexao, string $emailHash): void
+{
+    $stmt = $conexao->prepare('DELETE FROM tentativa_login WHERE email_hash = ?');
+    $stmt->bind_param('s', $emailHash);
     $stmt->execute();
     $stmt->close();
+}
+
+if (defined('HVAC_LOGIN_TESTE')) {
+    return;
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -158,18 +208,10 @@ try {
          LIMIT 500'
     );
 
-    $porEmail = contarTentativasPorPar($conexao, 'email_hash', $emailHash);
-    $porIp = contarTentativasPorIp($conexao, $ipHash);
-
-    if (
-        $porEmail >= LIMITE_TENTATIVAS_EMAIL_LOGIN
-        || $porIp >= LIMITE_TENTATIVAS_IP_LOGIN
-    ) {
+    $segundosBloqueio = segundosBloqueioLogin($conexao, $emailHash, $ipHash);
+    if ($segundosBloqueio > 0) {
         $conexao->close();
-        responderLogin(429, [
-            'sucesso' => false,
-            'mensagem' => 'Muitas tentativas de acesso. Aguarde ' . JANELA_TENTATIVAS_LOGIN_MINUTOS . ' minutos e tente novamente.'
-        ]);
+        responderBloqueioLogin($segundosBloqueio);
     }
 
     $stmt = $conexao->prepare(
@@ -197,7 +239,7 @@ try {
         negarLogin($conexao, $emailHash, $ipHash);
     }
 
-    limparTentativasLoginBemSucedidas($conexao, $emailHash, $ipHash);
+    limparTentativasLoginBemSucedidas($conexao, $emailHash);
     $conexao->close();
 
     ini_set('session.use_strict_mode', '1');

@@ -85,6 +85,19 @@ body {
   color: #bbf7d0;
 }
 
+#contador-login {
+  margin: -6px 0 14px;
+  color: #67e8f9;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+#contador-login[hidden] {
+  display: none;
+}
+
 #btn-login:disabled {
   opacity: 0.65;
   cursor: wait;
