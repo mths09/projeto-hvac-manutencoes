@@ -187,6 +187,56 @@
     return figura;
   }
 
+  // Renderizando documentos
+  function renderizarDocumentos(documentos) {
+    const lista = $("#lista-documentos-atendimento");
+    if (!lista) return;
+
+    lista.replaceChildren();
+
+    const itens = Array.isArray(documentos) ? documentos : [];
+
+    if (itens.length === 0) {
+      lista.className = "estado-vazio";
+      lista.append(
+        criar(
+          "p",
+          "",
+          "Nenhum documento foi disponibilizado para este atendimento.",
+        ),
+      );
+      return;
+    }
+
+    lista.className = "lista-documentos-servico";
+
+    for (const documento of itens) {
+      const cartao = criar("article", "cartao-documento-servico");
+      const informacoes = criar("div", "informacoes-documento-servico");
+
+      informacoes.append(
+        criar("strong", "", documento.titulo || "Documento"),
+        criar(
+          "span",
+          "",
+          `${documento.tipo || "Documento"}${documento.emitido_em ? ` . ${formatarData(documento.emitido_em)}` : ""}`,
+        ),
+      );
+
+      const link = criar("a", "link-baixar-documento", "Baixar PDF");
+      link.href = String(documento.url || "");
+      link.dowload = "";
+
+      link.setAttribute(
+        "aria-label",
+        `Baixar ${documento.titulo || "documento do atendimento"}`,
+      );
+
+      cartao.append(informacoes, link);
+      lista.append(cartao);
+    }
+  }
+
   function renderizarAnexos(anexos) {
     const lista = $("#lista-fotos-atendimento");
     if (!lista) return;
@@ -212,7 +262,7 @@
     lista.append(galeria);
   }
 
-  function preencherServico(servico) {
+  function preencherServico(servico, documentos = []) {
     // Título: protocolo + tipo do serviço
     const titulo = $("#titulo-pedido");
 
@@ -251,6 +301,7 @@
     texto("#descricao-problema", servico.descricao, "Sem descrição adicional.");
 
     renderizarAnexos(servico.anexos);
+    renderizarDocumentos(documentos);
 
     montarLinhaTempo(servico);
   }
@@ -311,8 +362,6 @@
 
       preencherUsuario(dados.usuario || {});
 
-      // O PHP só devolve os serviços do cliente logado, então um id de
-      // outro cliente simplesmente não é encontrado aqui.
       const servico = (dados.servicos || []).find(
         (item) => String(item.id) === String(idServico),
       );
@@ -322,7 +371,14 @@
         return;
       }
 
-      preencherServico(servico);
+      const documentosDoServico = Array.isArray(dados.documentos)
+        ? dados.documentos.filter(
+            (documento) =>
+              String(documento.protocolo) === String(servico.protocolo),
+          )
+        : [];
+
+      preencherServico(servico, documentosDoServico);
     } catch (erro) {
       console.error("Erro ao carregar o serviço:", erro);
       mostrarErro(

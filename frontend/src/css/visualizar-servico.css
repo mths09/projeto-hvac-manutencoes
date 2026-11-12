@@ -633,6 +633,67 @@ body > header {
   font-size: 0.9rem;
 }
 
+.lista-documentos-servico {
+  display: grid;
+  gap: 10px;
+}
+
+.cartao-documento-servico {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 13px;
+  background: rgb(255 255 255 / 3%);
+}
+
+.informacoes-documento-servico {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.informacoes-documento-servico strong {
+  color: #fff;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.informacoes-documento-servico span {
+  color: var(--texto-secundario);
+  font-size: 11px;
+}
+
+.link-baixar-documento {
+  flex-shrink: 0;
+  padding: 9px 12px;
+  border-radius: 9px;
+  color: var(--azul-marinho-escuro);
+  background: var(--gradiente-frio);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.link-baixar-documento:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 520px) {
+  .cartao-documento-servico {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .link-baixar-documento {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 @media (max-width: 480px) {
   .whatsapp-flutuante {
     right: max(1rem, env(safe-area-inset-right));
