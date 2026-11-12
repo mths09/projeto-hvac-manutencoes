@@ -665,8 +665,7 @@
         const link = criar("a", "link-documento", "Abrir");
 
         link.href = String(url);
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
+        link.download = "";
 
         link.setAttribute(
           "aria-label",

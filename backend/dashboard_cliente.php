@@ -212,7 +212,9 @@ try {
             'titulo' => (string) $linha['titulo'],
             'tipo' => (string) $linha['tipo'],
             'emitido_em' => (string) $linha['emitido_em'],
-            'protocolo' => (string) $linha['protocolo']
+            'protocolo' => (string) $linha['protocolo'],
+            'url' => '../../../backend/documento_download.php?id='
+                . rawurlencode((string) $linha['id'])
         ];
     }
 
