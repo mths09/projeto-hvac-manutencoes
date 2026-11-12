@@ -199,7 +199,7 @@ formCadastro.addEventListener("submit", async (event) => {
 
   enviandoCadastro = true;
   botao.disabled = true;
-  botao.textContent = "Criando sua conta…";
+  botao.textContent = "Enviando confirmação…";
   formCadastro.setAttribute("aria-busy", "true");
 
   try {
@@ -232,7 +232,7 @@ formCadastro.addEventListener("submit", async (event) => {
       return;
     }
 
-    // Só confirma depois que o PHP informa que salvou a conta.
+    // O servidor só cria a conta após a confirmação do e-mail.
     cadastroConcluido = true;
     formCadastro.reset();
     buscaCep.cancelar();
@@ -241,16 +241,16 @@ formCadastro.addEventListener("submit", async (event) => {
     });
 
     exibirMensagem(
-      "Cadastro realizado com sucesso! Clique em Entrar na conta abaixo.",
+      "Enviamos um link de confirmação para seu e-mail. Abra-o em até 24 horas para concluir o cadastro.",
       true,
     );
 
-    formCadastro.querySelector('a[href="./login.html"]')?.focus();
+
   } catch (erro) {
     console.error("Falha ao confirmar cadastro:", erro);
     exibirMensagem(
       "Não foi possível confirmar o cadastro. Verifique sua conexão. " +
-        "Se você já enviou seus dados, tente entrar na conta antes de cadastrar novamente.",
+        "Se o e-mail chegou, abra o link para concluir o cadastro.",
     );
   } finally {
     enviandoCadastro = false;
