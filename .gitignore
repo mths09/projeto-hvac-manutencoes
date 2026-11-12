@@ -2,7 +2,6 @@
 
 backend/email_config.local.php
 
-/backend/teste_smtp.php
 
 backend/uploads/*
 !backend/uploads/.htaccess
