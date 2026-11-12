@@ -287,3 +287,8 @@ body.pagina-cadastro {
     margin: 28px auto 44px;
   }
 }
+
+
+.pagina-cadastro [hidden] {
+  display: none !important;
+}
