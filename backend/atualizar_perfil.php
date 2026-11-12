@@ -20,6 +20,7 @@ function responder(int $status, array $dados) {
 }
 
 require_once __DIR__ . '/validar_endereco.php';
+require_once __DIR__ . '/telefone_unico.php';
 
 // so aceita o metodo PATCH
 if(($_SERVER['REQUEST_METHOD'] ?? '') !== 'PATCH') {
@@ -175,7 +176,7 @@ $telefone = null;
 
 if(is_string($dados['telefone'] ?? null)) {
     $telefoneEntrada = trim($dados['telefone']);
-    $telefone = preg_replace('/\D/', '', $telefoneEntrada);
+    $telefone = normalizarTelefoneUnico($telefoneEntrada);
 
     if(
         !preg_match('/^[0-9()\s.-]+$/D', $telefoneEntrada) ||
@@ -241,6 +242,14 @@ try {
             ],
         ]);
     }
+    if (telefoneJaCadastrado($conexao, $telefone, (int) $idUsuario)) {
+        responder(409, [
+            'sucesso' => false,
+            'mensagem' => 'Este telefone já está em uso por outra conta.',
+            'erros' => ['telefone' => 'Use outro telefone para atualizar o perfil.'],
+        ]);
+    }
+
 
     // iniciando a transação
     $conexao->begin_transaction();
@@ -363,12 +372,15 @@ try {
     $ehEmailDuplicado = $erro instanceof mysqli_sql_exception 
         && $erro->getCode() === 1062 
         && str_contains($erro->getMessage(), 'un_usuario_email');
+    $ehTelefoneDuplicado = $erro instanceof mysqli_sql_exception
+        && $erro->getCode() === 1062
+        && str_contains($erro->getMessage(), 'un_usuario_telefone_normalizado');
     
     // inclua o rótulo "race-email" ou "erro" para filtrar depois
     error_log(sprintf(
         '[atualizar_perfil][%s][%s] class=%s code=%s file=%s line=%d',
         $errorId,
-        $ehEmailDuplicado ? 'race-email' : 'erro',
+        $ehEmailDuplicado ? 'race-email' : ($ehTelefoneDuplicado ? 'race-telefone' : 'erro'),
         get_class($erro),
         (string) $erro->getCode(),
         $erro->getFile(),
@@ -396,6 +408,13 @@ try {
             'erros' => [
                 'email' => 'Este e-mail já existe.',
             ]
+        ]);
+    }
+    if ($ehTelefoneDuplicado) {
+        responder(409, [
+            'sucesso' => false,
+            'mensagem' => 'Este telefone já está em uso por outra conta.',
+            'erros' => ['telefone' => 'Use outro telefone para atualizar o perfil.'],
         ]);
     }
 

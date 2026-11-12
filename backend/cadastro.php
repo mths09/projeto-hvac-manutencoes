@@ -91,6 +91,13 @@ try {
     }
 
     require_once __DIR__ . '/conexao.php';
+
+    if (telefoneJaCadastrado($conexao, $dados['telefone'])) {
+        responderCadastro(409, 'Este telefone já está cadastrado.', [
+            'telefone' => 'Use outro telefone para cadastrar uma nova conta.',
+        ]);
+    }
+
     $conexao->begin_transaction();
 
 try {
@@ -194,6 +201,11 @@ try {
 } catch (mysqli_sql_exception $erro) {
     // O banco já possui uma restrição UNIQUE para o e-mail.
     if ((int) $erro->getCode() === 1062) {
+        if (str_contains($erro->getMessage(), 'un_usuario_telefone_normalizado')) {
+            responderCadastro(409, 'Este telefone já está cadastrado.', [
+                'telefone' => 'Use outro telefone para cadastrar uma nova conta.',
+            ]);
+        }
         responderCadastro(
             409,
             'Este e-mail já está cadastrado.',

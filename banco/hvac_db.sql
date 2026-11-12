@@ -589,6 +589,7 @@ CREATE TABLE `usuario` (
   `email` varchar(254) NOT NULL,
   `senha_hash` varchar(255) NOT NULL,
   `telefone` varchar(25) NOT NULL,
+  `telefone_normalizado` varchar(25) GENERATED ALWAYS AS (NULLIF(REGEXP_REPLACE(`telefone`, '[^0-9]', ''), '')) VIRTUAL,
   `data_nascimento` date DEFAULT NULL,
   `perfil` varchar(20) NOT NULL,
   `ativo` tinyint(1) NOT NULL DEFAULT 1,
@@ -841,7 +842,8 @@ ALTER TABLE `triagem`
 --
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id_usuario`),
-  ADD UNIQUE KEY `un_usuario_email` (`email`);
+  ADD UNIQUE KEY `un_usuario_email` (`email`),
+  ADD UNIQUE KEY `un_usuario_telefone_normalizado` (`telefone_normalizado`);
 
 -- Usuário administrador inicial para instalações limpas
 -- A senha armazenada é um hash bcrypt compatível com password_verify().

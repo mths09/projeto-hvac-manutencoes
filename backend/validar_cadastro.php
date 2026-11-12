@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/telefone_unico.php';
+
 function validarCadastro(array $entrada): array
 {
     $campos = [
@@ -61,7 +63,7 @@ function validarCadastro(array $entrada): array
     }
 
     // Telefone: aceita a máscara, mas salva somente os números.
-    $telefone = preg_replace('/[^0-9]/', '', $dados['telefone']);
+    $telefone = normalizarTelefoneUnico($dados['telefone']);
 
     if (
         !preg_match('/^[0-9()\s-]+$/D', $dados['telefone']) ||
