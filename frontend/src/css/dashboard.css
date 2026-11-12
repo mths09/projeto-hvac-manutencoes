@@ -1551,7 +1551,7 @@ p {
 ========================================= */
 
 .dialog-editar {
-  width: min(640px, calc(100vw - 32px));
+  width: min(800px, calc(100vw - 32px));
 }
 
 .form-perfil {
@@ -2136,5 +2136,37 @@ p {
   .acoes-notificacoes .botao-secundario {
     width: 100%;
     flex-basis: auto;
+  }
+}
+
+/* Reorganiza o endereço conforme a largura real do cartão lateral. */
+.endereco-card {
+  container: endereco-principal / inline-size;
+  display: grid;
+  grid-template-columns: 45px minmax(0, 1fr);
+}
+
+@container endereco-principal (max-width: 420px) {
+  .dados-endereco {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .dados-endereco .campo-cep,
+  .dados-endereco .campo-logradouro,
+  .dados-endereco .campo-bairro {
+    grid-column: 1 / -1;
+  }
+
+  .dados-endereco .campo-cidade {
+    grid-column: 1;
+  }
+
+  .dados-endereco .campo-uf {
+    grid-column: 2;
+  }
+
+  .dados-endereco .campo-perfil {
+    padding: 12px;
   }
 }
