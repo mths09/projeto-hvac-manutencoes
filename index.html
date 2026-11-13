@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HVAC Manutenções Sorocaba - A solução que você procura!</title>
     <link rel="icon" href="./frontend/assets/logoHVAC.png" />
-    <link rel="stylesheet" href="./frontend/src/css/index.css" />
+    <link rel="stylesheet" href="./frontend/src/css/index.css?v=20261113-contatos-2" />
   </head>
   <body>
     <!-- Barra de Navegação -->
@@ -34,12 +34,12 @@
         <div class="nav-menu" id="menu-principal">
           <a href="#inicio" class="nav-link"> Início </a>
           <a href="#servicos" class="nav-link"> Serviços </a>
-          <a href="#portfolio" class="nav-link"> Portfólio </a>
+          <a href="./frontend/src/paginas/pagina-projetos.html" class="nav-link"> Projetos </a>
+          <a href="./frontend/src/paginas/pagina-sobre.html" class="nav-link"> Sobre Nós</a>
           <a href="#contatos" class="nav-link"> Contatos </a>
         </div>
 
         <a href="./frontend/src/paginas/login.html" class="btn-cliente">
-          <!-- Simbolo Pessoa em svg -->
           <img src="./frontend/assets/icons/pessoa.svg" alt="" class="svg-pessoa" />
           <span class="btn-cliente-label">Área do Cliente</span>
         </a>
@@ -261,12 +261,14 @@
       <div class="fundo-continuo fundo-continuo--portfolio">
         <!-- ------ PORTFOLIO ------ -->
         <section id="portfolio">
-          <p class="texto-section">Portfólio</p>
+          <p class="texto-section">Projetos</p>
 
           <h2>Trabalhos Realizados</h2>
           <p>Mais de 500 clientes satisfeitos em Sorocaba e região.</p>
 
-          <!-- NOTA: INSERIR IMAGENS DO PORTFOLIO AQUI-->
+          <a href="./frontend/src/paginas/pagina-projetos.html" class="botao-ver-projetos">
+            Ver todos os projetos
+          </a>
           <div id="portfolio-grid"></div>
 
           <div class="faixa-status">
@@ -296,59 +298,78 @@
         </section>
       </div>
       <!-- CONTATOS -->
-      <section id="contatos">
-        <p class="texto-contatos">Nosso Atendimento</p>
-
-        <h2 class="titulo-contatos"> Como funciona nosso <span> Atendimento?</span></h2>
-        <section class="grid-atendimento">
-          
-          <div class="atendimentos">
-            <h3 class="atendimentos-titulo"> Onde e quando atendemos: </h3>
-
-            <p> <strong> Região: </strong> Sorocaba, Itu, Votorantim e região </p>
-            <p> <strong> Horário: </strong> 8h às 18h, com horários fixos </p>
-            <p> <strong> Endereço: </strong> Rua Tenente Giovaldo, 57 · Éden · Sorocaba </p>
-            
-            <p class="atendimentos-observacao"> O orçamento é feito após a visita técnica.</p>
-          </div>
-
-          <div class="agendar">
-            <h3 class="titulo-agendar"> Pronto para começar?</h3>
-            <span class="descricao-agendar"> Em poucos minutos você relata seu problema e recebe a confirmação pelo WhatsApp. </span>
-
-            <a class="agendar-botao" href="./frontend/src/paginas/agendamento.html"> Agendar Atendimento</a>
-          </div>
-        </section>
-
-        <!-- CARDS DADOS -->
-        <div class="info-cards">
-          <div class="card">
-            <span>📍</span>
-            <p class="card-titulo"><strong> Endereço </strong></p>
-            <p class="card-texto">
-              Rua Tenente Giovaldo, 67 
-              Sorocaba, SP - 18105-000
+      <section id="contatos" aria-labelledby="titulo-contatos">
+        <div class="contatos-container">
+          <div class="contatos-cabecalho">
+            <p class="texto-contatos">Atendimento em Sorocaba e região</p>
+            <h2 class="titulo-contatos" id="titulo-contatos">
+              Seu próximo passo começa <span>com uma conversa.</span>
+            </h2>
+            <p class="contatos-introducao">
+              Conte o que sua residência precisa. A equipe ajuda você a organizar
+              uma avaliação técnica com clareza e tranquilidade.
             </p>
           </div>
 
-          <div class="card">
-            <span> 🕒 </span>
-            <p class="card-titulo">
-              <strong> Horário de Funcionamento </strong>
-            </p>
-            <p class="card-texto">
-              Segunda a Sexta: 8h às 18h 
-              Sábado: 8h às 12h 
-            </p>
-          </div>
+          <div class="contatos-painel">
+            <div class="contatos-convite">
+              <p class="contatos-selo">HVAC Sorocaba · Gestão técnica residencial</p>
+              <h3>Vamos entender o que sua casa precisa?</h3>
+              <p class="contatos-descricao">
+                Escolha o canal mais conveniente: fale diretamente com a equipe
+                ou agende um atendimento pelo sistema.
+              </p>
 
-          <div class="card">
-            <span> 📧 </span>
-            <p class="card-titulo"><strong> E-mail </strong></p>
-            <p class="card-texto">
-              contato@hvaclex.com.br 
-              orcamento@hvaclex.com.br
-            </p>
+              <div class="contatos-acoes">
+                <a
+                  class="contato-acao contato-acao-whatsapp"
+                  href="https://wa.me/5511943870287?text=Olá,%20gostaria%20de%20mais%20informações!"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src="./frontend/assets/icons/whatsapp.svg" alt="" />
+                  <span><small>WhatsApp</small><strong>Iniciar conversa</strong></span>
+                  <span class="contato-acao-seta" aria-hidden="true">↗</span>
+                </a>
+
+                <a class="contato-acao contato-acao-agendar" href="./frontend/src/paginas/agendamento.html">
+                  <img src="./frontend/assets/icons/calendario.svg" alt="" />
+                  <span><small>Atendimento</small><strong>Agendar avaliação</strong></span>
+                  <span class="contato-acao-seta" aria-hidden="true">→</span>
+                </a>
+              </div>
+
+              <div class="contatos-emails">
+                <span>Se preferir, escreva para:</span>
+                <a href="mailto:contato@hvaclex.com.br">contato@hvaclex.com.br</a>
+                <a href="mailto:orcamento@hvaclex.com.br">orcamento@hvaclex.com.br</a>
+              </div>
+            </div>
+
+            <aside class="contatos-detalhes" aria-label="Informações de atendimento">
+              <p class="contatos-detalhes-sobretitulo">Informações de atendimento</p>
+              <h3>Atendimento pensado para a sua rotina.</h3>
+
+              <dl class="lista-detalhes-contato">
+                <div>
+                  <dt><span aria-hidden="true">01</span> Região atendida</dt>
+                  <dd>Sorocaba, Itu, Votorantim e região</dd>
+                </div>
+                <div>
+                  <dt><span aria-hidden="true">02</span> Horários</dt>
+                  <dd>Segunda a sexta, das 8h às 18h<br />Sábado, das 8h às 12h</dd>
+                </div>
+                <div>
+                  <dt><span aria-hidden="true">03</span> Base local</dt>
+                  <dd>Rua Tenente Giovaldo, 57<br />Éden · Sorocaba/SP</dd>
+                </div>
+              </dl>
+
+              <p class="contatos-observacao">
+                <span class="contatos-observacao-icone" aria-hidden="true">i</span>
+                <span>O orçamento é definido após a visita técnica.</span>
+              </p>
+            </aside>
           </div>
         </div>
       </section>
@@ -383,7 +404,8 @@
       <div>
         <h4 class="footer-coluna-titulo">Empresa</h4>
         <ul>
-          <li><a href="#portfolio">Portfólio</a></li>
+          <li><a href="./frontend/src/paginas/pagina-projetos.html">Projetos</a></li>
+          <li><a href="./frontend/src/paginas/pagina-sobre.html">Sobre</a></li>
           <li><a href="./frontend/src/paginas/cadastro.html">Área do Cliente</a></li>
           <li><a href="#contatos">Contatos</a></li>
         </ul>
@@ -405,8 +427,8 @@
       <div class="footer-fundo">
         <p>© 2026 HVAC Lex Company. Todos os direitos reservados.</p>
         <ul class="legal-links">
-          <li><a href="./frontend/src/paginas/privacidade.html">Privacidade</a></li>
-          <li><a href="./frontend/src/paginas/privacidade.html#termos">Termos de Uso</a></li>
+          <li><a href="./frontend/src/paginas/privacidade-termos.html">Privacidade</a></li>
+          <li><a href="./frontend/src/paginas/privacidade-termos.html#termos">Termos de Uso</a></li>
         </ul>
       </div>
     </footer>

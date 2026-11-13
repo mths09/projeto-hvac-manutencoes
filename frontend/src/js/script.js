@@ -88,7 +88,7 @@ async function carregarPortfolio() {
   }
 
   grid.setAttribute("aria-busy", "true");
-  grid.textContent = "Carregando portfólio...";
+  grid.textContent = "Carregando projetos...";
 
   try {
     const resposta = await fetch("./backend/portfolio_publico.php", {
@@ -102,13 +102,13 @@ async function carregarPortfolio() {
       !Array.isArray(dados.itens)
     ) {
       throw new Error(
-        dados?.mensagem || "Não foi possível carregar o portfólio.",
+        dados?.mensagem || "Não foi possível carregar os projetos.",
       );
     }
     renderizarPortfolio(dados.itens.slice(0, 6));
   } catch (erro) {
     grid.textContent =
-      "Não foi possível carregar o portfólio. Tente novamente mais tarde.";
+      "Não foi possível carregar os projetos. Tente novamente mais tarde.";
 
     console.error(erro);
   } finally {
