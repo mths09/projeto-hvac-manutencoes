@@ -1,0 +1,302 @@
+.pagina-institucional {
+  color: #f5f8ff;
+  background: #05091e;
+}
+
+/* O clip esconde o excesso horizontal sem criar uma área de rolagem que atrapalhe o sticky. */
+.pagina-projetos {
+  overflow-x: clip;
+}
+
+.pagina-institucional .sobretitulo {
+  margin-bottom: 0.9rem;
+  color: #51d8f5;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pagina-institucional h1,
+.pagina-institucional h2,
+.pagina-institucional h3 {
+  color: #fff;
+}
+
+/* A capa fica presa abaixo do cabeçalho enquanto a próxima seção passa por cima. */
+.projetos-capa-stage {
+  position: relative;
+  z-index: 1;
+  height: calc(100svh + 35vh);
+}
+
+.projetos-hero {
+  position: sticky;
+  top: var(--altura-cabecalho);
+  height: calc(100svh - var(--altura-cabecalho));
+  min-height: 34rem;
+  padding: clamp(2rem, 7vw, 6rem) max(1.5rem, calc((100vw - 1180px) / 2));
+  display: flex;
+  align-items: center;
+  background-image:
+    linear-gradient(90deg, rgba(4, 10, 29, 0.94) 0%, rgba(4, 10, 29, 0.78) 46%, rgba(4, 10, 29, 0.38) 100%),
+    linear-gradient(0deg, rgba(4, 10, 29, 0.56), rgba(4, 10, 29, 0.08) 65%),
+    url("../../assets/institucional/casa-hero.jpg");
+  background-position: center, center, center 54%;
+  background-size: cover;
+  isolation: isolate;
+}
+
+.projetos-hero-conteudo {
+  position: relative;
+  max-width: 700px;
+}
+
+.projetos-hero h1 {
+  max-width: 680px;
+  margin-bottom: 1.2rem;
+  font-size: clamp(2.8rem, 6vw, 5.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.projetos-hero-conteudo > p:not(.sobretitulo):not(.projetos-hero-nota) {
+  max-width: 610px;
+  margin-bottom: 1.8rem;
+  color: #d2daea;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.75;
+}
+
+.projetos-hero-nota {
+  margin-top: 1rem;
+  color: #c3cce0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.botao-primario {
+  min-height: 48px;
+  padding: 0.85rem 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #041224;
+  background: linear-gradient(135deg, #00e5ff, #58c8ff);
+  border-radius: 0.65rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.botao-primario:hover,
+.botao-primario:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 28px rgba(0, 229, 255, 0.24);
+}
+
+/* A margem negativa cria a entrada da seção escura sobre a imagem de fundo. */
+.secao-projetos {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin: calc(-35vh - var(--altura-cabecalho)) 0 0;
+  padding: clamp(4rem, 7vw, 6.5rem) max(1.5rem, calc((100vw - 1180px) / 2));
+  background: #05091e;
+  border-radius: 1.35rem 1.35rem 0 0;
+  box-shadow: 0 -22px 70px rgba(0, 0, 0, 0.34);
+}
+
+.secao-projetos > :not(.secao-cabecalho) {
+  max-width: 1180px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.secao-cabecalho {
+  max-width: 740px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.secao-cabecalho h2,
+.cta-projetos h2 {
+  margin-bottom: 1rem;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.secao-cabecalho > p:last-child,
+.cta-projetos > p:not(.sobretitulo) {
+  color: #b7c1d4;
+  line-height: 1.75;
+}
+
+.filtros-projetos {
+  margin: 2rem auto 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.filtro-projeto {
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  color: #c6d2e7;
+  background: #0b1737;
+  border: 1px solid #263d70;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.filtro-projeto:hover,
+.filtro-projeto:focus-visible,
+.filtro-projeto.ativo {
+  color: #fff;
+  background: #123669;
+  border-color: #2e9bdf;
+}
+
+.resultado-filtros {
+  min-height: 1.4rem;
+  margin-bottom: 1rem;
+  color: #8f9db7;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.grade-projetos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.cartao-projeto {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.36fr) minmax(0, 1fr);
+  background: linear-gradient(145deg, rgba(16, 38, 82, 0.95), rgba(8, 17, 46, 0.98));
+  border: 1px solid rgba(61, 113, 205, 0.58);
+  border-radius: 1.1rem;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+}
+
+.cartao-projeto[hidden] {
+  display: none;
+}
+
+.cartao-projeto > img {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  object-fit: cover;
+}
+
+.cartao-projeto-conteudo {
+  padding: 1.35rem;
+}
+
+.categoria-projeto {
+  color: #72c8ff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cartao-projeto h3 {
+  margin: 0.55rem 0 0.7rem;
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+
+.cartao-projeto p {
+  color: #c4cde0;
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.cartao-projeto .resultado-projeto {
+  margin-top: 0.65rem;
+  color: #e6f8ff;
+}
+
+.cartao-projeto details {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(143, 175, 226, 0.2);
+}
+
+.cartao-projeto summary {
+  padding-top: 0.8rem;
+  color: #5de0f5;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.cartao-projeto details p {
+  padding-top: 0.7rem;
+}
+
+.aviso-demonstrativo {
+  margin-top: 1.5rem;
+  padding: 1rem 1.2rem;
+  color: #c4cde0;
+  background: rgba(17, 38, 78, 0.72);
+  border-left: 3px solid #44c7ea;
+  border-radius: 0.35rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.cta-projetos {
+  position: relative;
+  z-index: 2;
+  padding: clamp(3.5rem, 7vw, 6rem) 1.5rem;
+  background: #0a1736;
+  border-top: 1px solid rgba(0, 229, 255, 0.14);
+  text-align: center;
+}
+
+.cta-projetos > p:not(.sobretitulo) {
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .grade-projetos {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .projetos-hero {
+    padding-inline: 1rem;
+    background-position: center, center, 60% center;
+  }
+
+  .projetos-hero h1 {
+    font-size: clamp(2.7rem, 12vw, 4rem);
+  }
+
+  .secao-projetos {
+    padding-inline: 1rem;
+  }
+
+  .cartao-projeto {
+    grid-template-columns: 1fr;
+  }
+
+  .cartao-projeto > img {
+    height: 220px;
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .botao-primario {
+    transition: none;
+  }
+}

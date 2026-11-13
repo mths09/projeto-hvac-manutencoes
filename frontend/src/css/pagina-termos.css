@@ -1,0 +1,22 @@
+.pagina-legal { color: #f5f8ff; background: #05091e; }
+.legal-container { width: min(1180px,calc(100% - 3rem)); margin-inline: auto; padding: clamp(3rem,7vw,6rem) 0; }
+.legal-cabecalho { max-width: 850px; margin-bottom: 2rem; }
+.legal-cabecalho .sobretitulo { margin-bottom: .8rem; color: #51d8f5; font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.legal-cabecalho h1 { margin-bottom: 1rem; color: #fff; font-size: clamp(2.3rem,5vw,4rem); line-height: 1.07; letter-spacing: -.04em; }
+.legal-cabecalho > p:not(.sobretitulo) { color: #b8c4d9; line-height: 1.7; }
+.legal-nota { margin-top: 1.2rem; padding: 1rem 1.15rem; color: #e1f5ff !important; background: #0b1b3b; border-left: 3px solid #00cde9; border-radius: .35rem; }
+.legal-layout { display: grid; grid-template-columns: minmax(220px,.32fr) minmax(0,.68fr); align-items: start; gap: 1.5rem; }
+.legal-indice { position: sticky; top: 96px; padding: 1.2rem; background: #0a1530; border: 1px solid rgba(72,132,222,.35); border-radius: .9rem; }
+.legal-indice h2 { margin-bottom: .8rem; color: #fff; font-size: 1rem; }
+.legal-indice nav { display: grid; gap: .3rem; }
+.legal-indice a { padding: .45rem .5rem; color: #b8c4d9; border-radius: .4rem; font-size: .87rem; line-height: 1.35; text-decoration: none; }
+.legal-indice a:hover, .legal-indice a:focus-visible { color: #fff; background: #10254c; }
+.legal-conteudo { display: grid; gap: .8rem; }
+.legal-secao { padding: clamp(1.1rem,3vw,1.7rem); background: linear-gradient(145deg,rgba(13,27,75,.86),rgba(8,17,46,.9)); border: 1px solid rgba(72,132,222,.3); border-radius: .85rem; scroll-margin-top: 96px; }
+.legal-secao h2 { margin-bottom: .75rem; color: #fff; font-size: 1.22rem; line-height: 1.35; }
+.legal-secao p, .legal-secao li { color: #c2cde0; font-size: .95rem; line-height: 1.75; }
+.legal-secao p + p { margin-top: .7rem; }
+.legal-secao ul { padding-left: 1.3rem; }
+.legal-secao li + li { margin-top: .35rem; }
+@media (max-width: 780px) { .legal-container { width: min(100% - 2rem,1180px); } .legal-layout { grid-template-columns: 1fr; } .legal-indice { position: static; } .legal-indice nav { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 460px) { .legal-indice nav { grid-template-columns: 1fr; } }
