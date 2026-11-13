@@ -842,6 +842,49 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
                     . $dados['protocolo'] . ': ' . $erroEmail->getMessage()
                 );
             }
+
+            // confirmação ao cliente
+            try {
+                require_once  __DIR__ . '/email_notificacao.php';
+
+                $emailCliente = trim((string) ($usuario['email'] ?? ''));
+
+                if(filter_var($emailCliente, FILTER_VALIDATE_EMAIL)) {
+                    $configEmail = configEmailHvac();
+                    $baseUrl = rtrim((string) ($configEmail['app_url'] ?? ''), '/');
+
+                    $mensagemCliente = "Olá, {$usuario['nome']}.\n\n"
+                        . "Recebemos seu pedido de atendimento.\n\n"
+                        . "Protocolo: {$dados['protocolo']}\n"
+                        . "{$resultado['mensagem']}\n\n";
+
+                    if($baseUrl !== '') {
+                        $mensagemCliente .=
+                            "Acesse o painel para acompanhar o pedido:\n"
+                            . $baseUrl . '/frontend/src/paginas/dashboard.html' . "\n\n";
+                    }
+
+                    $mensagemCliente .= "HVAC Lex Company";
+
+                    $envioCliente = enviarEmailHvac(
+                        $emailCliente,
+                        'Pedido recebido ' . $dados['protocolo'] . ' - HVAC Lex Company',
+                        $mensagemCliente
+                    );
+
+                    if(!$envioCliente['enviado']) {
+                        error_log(
+                            'Confirmação por e-mail não enviada ao cliente para o protocolo '
+                            . $dados['protoclo'] . ': ' . $envioCliente['erro']
+                        );
+                    }
+                }
+            } catch (Throwable $erroEmailCliente) {
+                error_log(
+                    'Erro ao preparar confirmação por e-mail ao cliente para o protocolo '
+                    . $dados['protocolo'] . ': ' . $erroEmailCliente->getMessage()
+                );
+            }
         }
 
         responderAgendamento($resultado['repetido'] ? 200 : 201, $resultado);
