@@ -50,6 +50,190 @@ function comandoSmtp($socket, string $comando, array $codigosAceitos): string
     return lerRespostaSmtp($socket, $codigosAceitos);
 }
 
+function montarEmailConfirmacaoCadastroHvac(
+    string $nome,
+    string $url
+): array {
+    $nomeHtml = htmlspecialchars(
+        $nome,
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $urlHtml = htmlspecialchars(
+        $url,
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $html = <<<HTML
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Confirme seu cadastro</title>
+    </head>
+
+    <body style="margin:0;padding:0;background-color:#f3f4f6;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+            style="background-color:#f3f4f6;">
+
+            <tr>
+                <td align="center" style="padding:24px 12px;">
+
+                    <table role="presentation" width="100%"
+                        cellpadding="0" cellspacing="0"
+                            style="max-width:600px;background-color:#ffffff;
+                            font-family:Arial,Helvetica,sans-serif;
+                            color:#334155;">
+
+                        <!-- Logo -->
+                        <tr>
+                            <td style="padding:24px;background-color:#08112e;
+                                    border-bottom:3px solid #00e5ff;">
+                                <img
+                                    src="cid:logo.hvac@hvac.local"
+                                    width="320"
+                                    alt="HVAC Lex Company"
+                                    style="display:block;width:320px;
+                                        max-width:100%;height:auto;
+                                        border:0;color:#ffffff;
+                                        font-size:18px;">
+                            </td>
+                        </tr>
+
+                        <!-- Apresentação -->
+                        <tr>
+                            <td style="padding:28px 24px 24px;">
+                                <h1 style="margin:0 0 16px;font-size:24px;
+                                        line-height:1.3;color:#0d1b4b;">
+                                    Confirme seu cadastro
+                                </h1>
+
+                                <p style="margin:0 0 12px;font-size:16px;
+                                        line-height:1.6;">
+                                    Olá, {$nomeHtml}!
+                                </p>
+
+                                <p style="margin:0;font-size:15px;
+                                        line-height:1.6;">
+                                    Falta apenas confirmar seu endereço de
+                                    e-mail para concluir o cadastro na
+                                    HVAC Lex Company.
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Prazo -->
+                        <tr>
+                            <td style="padding:0 24px 24px;">
+                                <table role="presentation" width="100%"
+                                        cellpadding="0" cellspacing="0"
+                                        style="background-color:#e0faff;
+                                            border:1px solid #c4e8ef;">
+                                    <tr>
+                                        <td style="padding:20px;">
+                                            <h2 style="margin:0 0 8px;
+                                                    font-size:18px;
+                                                    color:#0d1b4b;">
+                                                Link válido por 24 horas
+                                            </h2>
+
+                                            <p style="margin:0;font-size:15px;
+                                                    line-height:1.6;">
+                                                Use o botão abaixo dentro
+                                                desse prazo para confirmar
+                                                seu e-mail.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Ação principal -->
+                        <tr>
+                            <td style="padding:0 24px 28px;">
+                                <a href="{$urlHtml}"
+                                    style="display:inline-block;
+                                        background-color:#00e5ff;
+                                        color:#08112e;
+                                        text-decoration:none;
+                                        padding:14px 22px;
+                                        border-radius:6px;
+                                        font-size:15px;
+                                        font-weight:bold;">
+                                    Confirmar meu cadastro
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Link alternativo -->
+                        <tr>
+                            <td style="padding:0 24px 24px;">
+                                <p style="margin:0 0 8px;font-size:13px;
+                                        line-height:1.6;color:#475569;">
+                                    Se o botão não funcionar, copie e cole
+                                    este endereço no navegador:
+                                </p>
+
+                                <p style="margin:0;font-size:12px;
+                                        line-height:1.6;
+                                        overflow-wrap:anywhere;
+                                        word-break:break-all;">
+                                    <a href="{$urlHtml}"
+                                        style="color:#1565c0;
+                                            text-decoration:underline;">
+                                        {$urlHtml}
+                                    </a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Orientação -->
+                        <tr>
+                            <td style="padding:0 24px 28px;">
+                                <p style="margin:0;font-size:13px;
+                                        line-height:1.6;color:#475569;">
+                                    Se você não solicitou este cadastro,
+                                    ignore esta mensagem.
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Rodapé -->
+                        <tr>
+                            <td style="padding:20px 24px;
+                                    border-top:1px solid #e2e8f0;
+                                    font-size:12px;color:#64748b;
+                                    line-height:1.6;">
+                                HVAC Lex Company<br>
+                                Mensagem automática de confirmação de cadastro.
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    HTML;
+
+    $texto = "Olá, {$nome}!\n\n"
+        . "Falta apenas confirmar seu endereço de e-mail "
+        . "para concluir o cadastro na HVAC Lex Company.\n\n"
+        . "O link é válido por 24 horas.\n\n"
+        . "Confirmar meu cadastro:\n{$url}\n\n"
+        . "Se você não solicitou este cadastro, ignore esta mensagem.\n\n"
+        . "HVAC Lex Company";
+
+    return [
+        'html' => $html,
+        'texto' => $texto
+    ];
+}
+
 function montarEmailAtualizacaoHvac(
     string $protocolo,
     string $status
@@ -248,6 +432,8 @@ function montarEmailAtualizacaoHvac(
         'texto' => $texto,
     ];
 }
+
+
 
 // Mantém o corpo MIME separado do SMTP para permitir testes sem enviar e-mails.
 function montarConteudoEmailHvac(string $mensagem, bool $html = false, ?string $textoAlternativo = null): string

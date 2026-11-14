@@ -144,19 +144,26 @@ function armazenarCadastroPendenteEEnviar(
     }
 
     $url = urlConfirmacaoCadastro($appUrl, $token);
-    $mensagem = "Olá, {$dados['nome']}.\n\n"
-        . "Para confirmar que você controla este endereço de e-mail e concluir seu cadastro, abra o link abaixo em até 24 horas:\n\n"
-        . $url . "\n\n"
-        . "Se você não solicitou este cadastro, ignore esta mensagem.";
 
     try {
+        $conteudoEmail = montarEmailConfirmacaoCadastroHvac(
+            (string) $dados['nome'],
+            $url
+        );
+
         $resultadoEmail = enviarEmailHvac(
             $dados['email'],
             'Confirme seu cadastro - HVAC Lex Company',
-            $mensagem
+            $conteudoEmail['html'],
+            true,
+            $conteudoEmail['texto']
         );
     } catch (Throwable $erro) {
-        error_log('Falha ao enviar confirmação de cadastro: ' . get_class($erro));
+        error_log(
+            'Falha ao enviar confirmação de cadastro: '
+            . get_class($erro)
+        );
+
         $resultadoEmail = ['enviado' => false];
     }
 
