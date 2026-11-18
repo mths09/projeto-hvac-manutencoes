@@ -554,7 +554,7 @@ CREATE TABLE `aceite_politica` (
   `user_agent_hash` char(64) NOT NULL,
   PRIMARY KEY (`id_aceite`),
   UNIQUE KEY `un_aceite_usuario_versao` (`id_usuario`,`versao`),
-  KEY `fk_aceite_usuario` (`id_usuario`),
+  KEY `fk_aceite_usuario` (`id_usuario`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -816,6 +816,13 @@ ALTER TABLE `triagem`
   ADD KEY `fk_triagem_respondente` (`id_respondente`);
 
 --
+-- Índices de tabela `usuario`
+--
+ALTER TABLE `usuario`
+  ADD PRIMARY KEY (`id_usuario`),
+  ADD UNIQUE KEY `un_usuario_email` (`email`),
+  ADD UNIQUE KEY `un_usuario_telefone_normalizado` (`telefone_normalizado`);
+
 -- Restrições para tabelas `triagem`
 --
 ALTER TABLE `triagem`
@@ -858,12 +865,6 @@ SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 --
--- Índices de tabela `usuario`
---
-ALTER TABLE `usuario`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD UNIQUE KEY `un_usuario_email` (`email`),
-  ADD UNIQUE KEY `un_usuario_telefone_normalizado` (`telefone_normalizado`);
 
 -- Aplicar AUTO_INCREMENT somente depois de criar as chaves primárias.
 ALTER TABLE `agendamento` MODIFY `id_agendamento` bigint(20) NOT NULL AUTO_INCREMENT;
@@ -895,3 +896,4 @@ ALTER TABLE `triagem` MODIFY `id_triagem` bigint(20) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `usuario` MODIFY `id_usuario` bigint(20) NOT NULL AUTO_INCREMENT;
 
 ALTER TABLE `aceite_politica` ADD CONSTRAINT `fk_aceite_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
+

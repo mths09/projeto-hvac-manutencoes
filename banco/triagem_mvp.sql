@@ -1,6 +1,5 @@
--- Triagem MVP para a instalação local do HVAC.
--- Execute depois de banco/hvac_db.sql. Não apaga nem altera questionários existentes.
-USE hvac_db;
+-- Triagem MVP. Selecione o banco de destino antes de executar.
+-- Execute depois de banco/schema.sql e banco/seed.sql. Não altera questionários existentes.
 SET NAMES utf8mb4;
 START TRANSACTION;
 
