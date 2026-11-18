@@ -628,7 +628,7 @@ function prepararEmailNovoPedido(
     $baseUrl = rtrim((string) ($config['app_url'] ?? ''), '/');
     $linkPainel = $baseUrl !== ''
         ? $baseUrl . '/frontend/src/paginas/tela-adm.html'
-        : 'Configure HVAC_APP_URL para incluir o link do painel.';
+        : '';
 
     $textoTriagem = [];
     foreach($respostas as $resposta) {
@@ -636,28 +636,388 @@ function prepararEmailNovoPedido(
         $resposta['valor_texto'];
     }
 
-    $inicio = $horario['inicio_previsto'] ?? 'Não informado';
-    $fim = $horario['fim_previsto'] ?? 'Não informado';
+    $protocoloHtml = htmlspecialchars(
+        (string) $dados['protocolo'],
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
 
-    $mensagem = "Um novo pedido foi recebido pelo site.\n\n"
+    $servicoHtml = htmlspecialchars(
+        (string) ($servico['nome'] ?? $dados['tipo_servico']),
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $clienteHtml = htmlspecialchars(
+        (string) $dados['nome'],
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $emailClienteHtml = htmlspecialchars(
+        (string) ($usuario['email'] ?? 'Não informado'),
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $telefoneHtml = htmlspecialchars(
+        (string) $dados['telefone'],
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $enderecoHtml = htmlspecialchars(
+        (string) $dados['endereco'],
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $inicioFormatado = !empty($horario['inicio_previsto'])
+        ? (new DateTimeImmutable($horario['inicio_previsto']))->format('d/m/Y H:i')
+        : 'Não informado';
+
+    $fimFormatado = !empty($horario['fim_previsto'])
+        ? (new DateTimeImmutable($horario['fim_previsto']))->format('d/m/Y H:i')
+        : 'Não informado';
+
+    $horarioHtml = htmlspecialchars(
+        $inicioFormatado . ' até ' . $fimFormatado,
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $urgenteHtml = htmlspecialchars(
+        (string) $dados['urgente'] === '1' ? 'Sim' : 'Não',
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $descricaoProblemaHtml = nl2br(htmlspecialchars(
+        (string) $dados['descricao'],
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    ));
+
+    $triagemHtml = '';
+
+    foreach ($respostas as $resposta) {
+        $pergunta = htmlspecialchars(
+            (string) $resposta['enunciado'],
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8'
+        );
+
+        $respostaHtml = nl2br(htmlspecialchars(
+            (string) $resposta['valor_texto'],
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8'
+        ));
+
+        $triagemHtml .= <<<HTML
+        <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">
+            <strong>{$pergunta}</strong><br>
+            {$respostaHtml}
+        </p>
+        HTML;
+    }
+
+    if ($triagemHtml === '') {
+        $triagemHtml = '<p>Nenhuma resposta encontrada.</p>';
+    }
+
+    $anexosHtml = htmlspecialchars(
+        (string) count($anexos),
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+
+    $botaoHtml = '';
+
+    if($baseUrl !== '') {
+        $urlPainel = htmlspecialchars(
+            $baseUrl . '/frontend/src/paginas/tela-adm.html',
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8'
+        );
+
+        $botaoHtml = <<<HTML
+                        <p style="margin: 24px 0 0;">
+                        <a href="{$urlPainel}"
+                            style="display: inline-block; background-color: #00e5ff;
+                                    color: #08112e; text-decoration: none;
+                                    padding: 14px 22px; border-radius: 6px; font-weight: bold;">
+                            Abrir painel administrativo
+                        </a>
+                        </p>
+                    HTML;
+    }
+
+    $mensagem = <<<HTML
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Pedido Recebido</title>
+            </head>
+
+            <body style="margin:0; padding:0; background-color: #f3f4f6;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                        style="background-color: #f3f4f6">
+                    <tr>
+                        <td align="center" style="padding: 24px 12px;">
+                            <table role="presentation" width="100%"
+                                    cellpadding="0" cellspacing="0"
+                                    style="max-width: 600px;background-color: #fff;
+                                        font-family: Arial, Helvetica, sans-serif;
+                                        color: #334155;">
+
+                                <!-- Cabeçalho -->
+                                <tr>
+                                    <td style="padding:24px;background-color:#08112e; border-bottom:3px solid #00e5ff;
+                                            color:#ffffff;">
+                                        <img src="cid:logo.hvac@hvac.local" width="320" alt="HVAC Lex Company" style="display:block;width:320px;max-width:100%;height:auto;border:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:18px;">
+                                        <p style="margin:8px 0 0;font-size:14px;">
+                                            Administrativo · Solicitação de atendimento
+                                        </p>
+                                    </td>
+                                </tr>
+
+                                <!-- Saudação -->
+                                <tr>
+                                    <td style="padding:28px 24px 20px;">
+                                        <h1 style="margin:0 0 16px;font-size:24px;
+                                                color:#0d1b4b; font-weight: bold;">
+                                            Um novo pedido foi recebido
+                                        </h1>
+                                        <p style="margin:0 0 12px;font-size:16px;">
+                                            Olá, Administrador!
+                                        </p>
+                                        <p style="margin:0;font-size:15px;line-height:1.6;">
+                                            Uma nova solicitação foi registrada pelo cliente {$clienteHtml}.
+                                            Confira abaixo as informações do pedido.
+                                        </p>
+                                    </td>
+                                </tr>
+
+                                <!-- Resumo -->
+                                <tr>
+                                    <td style="padding:0 24px 12px;">
+                                        <h2 style="margin:0;font-size:18px;color:#0d1b4b;">
+                                            Resumo do pedido
+                                        </h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 24px 24px;">
+                                        <table role="presentation" width="100%"
+                                            cellpadding="0" cellspacing="0"
+                                            style="background-color:#e0faff;
+                                                    border:1px solid #e2e8f0;">
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        PROTOCOLO
+                                                    </p>
+                                                    <p style="margin:0;font-size:18px;font-weight:bold;line-height:1.6;color:#0d1b4b; overflow-wrap:anywhere;
+                                                            word-break:break-all;">
+                                                        {$protocoloHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        SERVIÇO
+                                                    </p>
+                                                    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                                        {$servicoHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        HORÁRIO SOLICITADO
+                                                    </p>
+                                                    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                                        {$horarioHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        URGÊNCIA
+                                                    </p>
+                                                    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                                        {$urgenteHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Dados do Cliente -->
+                                <tr>
+                                    <td style="padding:0 24px 12px;">
+                                        <h2 style="margin:0;font-size:18px;color:#0d1b4b;">
+                                            Dados do Cliente
+                                        </h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 24px 24px;">
+                                        <table role="presentation" width="100%"
+                                            cellpadding="0" cellspacing="0"
+                                            style="background-color:#e0faff;
+                                                    border:1px solid #e2e8f0;">
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        Nome:
+                                                    </p>
+                                                    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                                        {$clienteHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        E-mail:
+                                                    </p>
+                                                    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                                        {$emailClienteHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        Telefone:
+                                                    </p>
+                                                    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                                        {$telefoneHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:12px 20px;">
+                                                    <p style="margin:0 0 6px;font-size:12px;
+                                                            color:#64748b;">
+                                                        Endereço
+                                                    </p>
+                                                    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                                        {$enderecoHtml}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Descrição do Problema -->
+                                <tr>
+                                    <td style="padding:0 24px 12px;">
+                                        <h2 style="margin:0;font-size:18px;color:#0d1b4b;">
+                                            Descrição do Problema
+                                        </h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 24px 24px;">
+                                        <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                            {$descricaoProblemaHtml}
+                                        </p>
+                                    </td>
+                                </tr>
+
+                                <!-- Triagem -->
+                                <tr>
+                                    <td style="padding:0 24px 12px;">
+                                        <h2 style="margin:0;font-size:18px;color:#0d1b4b;">
+                                            Triagem
+                                        </h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 24px 24px;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                        {$triagemHtml}
+                                    </td>
+                                </tr>
+
+                                <!-- Arquivos -->
+                                <tr>
+                                    <td style="padding:0 24px 12px;">
+                                        <h2 style="margin:0;font-size:18px;color:#0d1b4b;">
+                                            Arquivos Anexados
+                                        </h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 24px 24px;">
+                                        <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;overflow-wrap:anywhere;">
+                                            Quantidade de arquivos: {$anexosHtml}<br>Consulte os arquivos no painel administrativo.
+                                        </p>
+                                    </td>
+                                </tr>
+
+                            <!-- Rodapé -->
+                            <tr>
+                                <td style="padding:0 24px 28px;">
+                                    {$botaoHtml}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:20px 24px;border-top:1px solid #e2e8f0;
+                                        font-size:12px;color:#64748b;line-height:1.6;">
+                                    HVAC Lex Company<br>
+                                    Aviso automático de nova solicitação.
+                                </td>
+                            </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+
+    HTML;
+
+    // Mesmas informações do HTML, para leitores que preferem texto simples.
+    $mensagemTexto = "Um novo pedido foi recebido pelo site.\n\n"
         . "Protocolo: {$dados['protocolo']}\n"
         . 'Serviço: ' . ($servico['nome'] ?? $dados['tipo_servico']) . "\n"
-        . "Cliente: {$dados['nome']}\n"
-        . 'E-mail do cliente: ' . ($usuario['email'] ?? 'Não informado') . "\n"
-        . "Telefone: {$dados['telefone']}\n"
-        . "Endereço: {$dados['endereco']}\n"
-        . "Horário: {$inicio} até {$fim}\n"
-        . 'Urgente: ' . ($dados['urgente'] === '1' ? 'Sim' : 'Não') . "\n"
-        . "\nDescrição do problema:\n{$dados['descricao']}\n"
-        . "\nRespostas da triagem:\n"
-        . ($textoTriagem ? implode("\n", $textoTriagem) : 'Nenhuma resposta encontrada.') . "\n"
-        . "\nQuantidade de arquivos anexados: " . count($anexos) . "\n"
-        . "\nAcesse o painel administrativo:\n{$linkPainel}\n";
+        . "Horário solicitado: {$inicioFormatado} até {$fimFormatado}\n"
+        . 'Urgência: ' . ($dados['urgente'] === '1' ? 'Sim' : 'Não') . "\n\n"
+        . "Dados do cliente\nNome: {$dados['nome']}\n"
+        . 'E-mail: ' . ($usuario['email'] ?? 'Não informado') . "\n"
+        . "Telefone: {$dados['telefone']}\nEndereço: {$dados['endereco']}\n\n"
+        . "Descrição do problema\n{$dados['descricao']}\n\nTriagem\n"
+        . ($textoTriagem ? implode("\n", $textoTriagem) : 'Nenhuma resposta encontrada.')
+        . "\n\nQuantidade de arquivos: " . count($anexos)
+        . "\nConsulte os arquivos no painel administrativo.\n"
+        . ($linkPainel !== '' ? "\nAbrir painel administrativo: {$linkPainel}\n" : '')
+        . "\nHVAC Lex Company\nAviso automático de nova solicitação.";
 
     return [
         'destinatario' => (string) ($config['notify_to'] ?? ''),
         'assunto' => 'Novo pedido ' . $dados['protocolo'] . ' - HVAC Lex Company',
-        'mensagem' => $mensagem
+        'mensagem' => $mensagem,
+        'texto' => $mensagemTexto
     ];
 }
 
@@ -775,7 +1135,7 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
             }
             unset($horario);
             responderAgendamento(200, ['sucesso' => true, 'csrf' => $csrf, 'protocolo' => $protocolo,
-                'hoje' => date('Y-m-d'), 
+                'hoje' => date('Y-m-d'),
                 'usuario' => [
                     'id' => (string) $id,
                     'nome' => $usuario['nome'],
@@ -816,7 +1176,7 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
         if (!session_write_close()) {
             throw new RuntimeException('Falha ao salvar a intenção de envio.');
         }
-        
+
         $resultado = executarAgendamento($conexao, $usuario, $dados, $anexos);
 
         if (empty($resultado['repetido'])) {
@@ -827,7 +1187,9 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
                 $envio = enviarEmailHvac(
                     $email['destinatario'],
                     $email['assunto'],
-                    $email['mensagem']
+                    $email['mensagem'],
+                    true,
+                    $email['texto']
                 );
 
                 if (!$envio['enviado']) {
@@ -853,29 +1215,170 @@ if (!defined('HVAC_AGENDAMENTO_TESTE')) {
                     $configEmail = configEmailHvac();
                     $baseUrl = rtrim((string) ($configEmail['app_url'] ?? ''), '/');
 
-                    $mensagemCliente = "Olá, {$usuario['nome']}.\n\n"
-                        . "Recebemos seu pedido de atendimento.\n\n"
-                        . "Protocolo: {$dados['protocolo']}\n"
-                        . "{$resultado['mensagem']}\n\n";
+                    $nomeHtml = htmlspecialchars(
+                        (string) $usuario['nome'],
+                        ENT_QUOTES | ENT_SUBSTITUTE,
+                        'UTF-8'
+                    );
+
+                    $protocoloHtml = htmlspecialchars(
+                        (string) $dados['protocolo'],
+                        ENT_QUOTES | ENT_SUBSTITUTE,
+                        'UTF-8'
+                    );
+
+                    $situacaoHtml = nl2br(htmlspecialchars(
+                        (string) $resultado['mensagem'],
+                        ENT_QUOTES | ENT_SUBSTITUTE,
+                        'UTF-8'
+                    ));
+
+                    $botaoHtml = '';
 
                     if($baseUrl !== '') {
-                        $mensagemCliente .=
-                            "Acesse o painel para acompanhar o pedido:\n"
-                            . $baseUrl . '/frontend/src/paginas/dashboard.html' . "\n\n";
+                        $urlPainel = htmlspecialchars(
+                            $baseUrl . '/frontend/src/paginas/dashboard.html',
+                            ENT_QUOTES | ENT_SUBSTITUTE,
+                            'UTF-8'
+                        );
+
+                        $botaoHtml = <<<HTML
+                        <p style="margin: 24px 0 0;">
+                            <a href="{$urlPainel}"
+                                style="display: inline-block; background-color: #00e5ff;
+                                    color: #08112e; text-decoration: none;
+                                    padding: 14px 22px; border-radius: 6px; font-weight: bold;">
+                                Acompanhar pedido
+                            </a>
+                        </p>
+                        HTML;
                     }
 
-                    $mensagemCliente .= "HVAC Lex Company";
+                    $mensagemCliente = <<<HTML
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                        <title> Pedido Recebido </title>
+                    </head>
+
+                    <body style="margin: 0; padding: 0; background-color: #f3f4f6;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #f3f4f6;">
+                            <tr>
+                                <td align="center" style="padding: 24px 12px;">
+                                    <table role="presentation" width="100%"
+                                        cellpadding="0" cellspacing="0"
+                                        style="max-width: 600px; background-color: #fff;
+                                            font-family: Arial, Helvetica, sans-serif;
+                                            color: #334155;">
+                                        <!-- Cabeçalho -->
+                                        <tr>
+                                            <td style="padding:24px; background-color: #08112e; border-bottom:3px solid #00e5ff;
+                                                    color: #fff;">
+                                                <img src="cid:logo.hvac@hvac.local" width="320" alt="HVAC Lex Company" style="display:block;width:320px;max-width:100%;height:auto;border:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:18px;">
+                                            </td>
+                                        </tr>
+
+                                        <!-- Saudação -->
+                                        <tr>
+                                            <td style="padding: 28px 24px 20px;">
+                                                <h1 style="margin: 0 0 16px; font-size: 24px;
+                                                        color: #0d1b4b;">
+                                                    Recebemos seu pedido
+                                                </h1>
+                                                <p style="margin: 0 0  12px; font-size: 16px;">
+                                                    Olá, {$nomeHtml}!
+                                                </p>
+                                                <p style="margin:0; font-size: 15px; line-height: 1.6;">
+                                                    Sua solicitação foi registrada.
+                                                    Confira abaixo as informações do pedido.
+                                                </p>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Resumo -->
+                                        <tr>
+                                            <td style="padding:0 24px 24px;">
+                                                <table role="presentation" width="100%"
+                                                    cellpadding="0" cellspacing="0"
+                                                    style="background-color:#e0faff;
+                                                            border:1px solid #e2e8f0;">
+                                                    <tr>
+                                                        <td style="padding:20px;">
+                                                            <p style="margin:0 0 6px;font-size:12px;
+                                                                    color:#64748b;">
+                                                                PROTOCOLO
+                                                            </p>
+                                                            <p style="margin:0 0 18px;font-size:20px;
+                                                                    font-weight:bold;color:#0d1b4b; overflow-wrap:anywhere;
+                                                                    word-break:break-all;">
+                                                                {$protocoloHtml}
+                                                            </p>
+                                                            <p style="margin:0;font-size:15px;
+                                                                    line-height:1.6;">
+                                                                {$situacaoHtml}
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Próximo Passo -->
+                                        <tr>
+                                            <td style="padding:0 24px 28px;">
+                                                <h2 style="margin:0 0 12px;font-size:18px;
+                                                        color:#0d1b4b;">
+                                                    Acompanhe seu atendimento
+                                                </h2>
+                                                <p style="margin:0;font-size:15px;line-height:1.6;">
+                                                    Consulte sua conta para acompanhar
+                                                    a situação e os detalhes da solicitação.
+                                                </p>
+
+                                                {$botaoHtml}
+                                            </td>
+                                        </tr>
+
+                                        <!-- Rodapé -->
+                                        <tr>
+                                            <td style="padding: 20px 24px; border-top: 1px solid #e2e8f0;
+                                                    font-size: 12px; color: #64748b; line-height: 1.6;">
+                                                HVAC Lex Company <br>
+                                                Mensagem automática referente à sua solicitação.
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </body>
+                    </html>
+                    HTML;
+
+                    $mensagemClienteTexto = "Olá, {$usuario['nome']}!\n\n"
+                        . "Recebemos seu pedido.\nProtocolo: {$dados['protocolo']}\n"
+                        . "{$resultado['mensagem']}\n\n"
+                        . "Consulte sua conta para acompanhar a situação e os detalhes da solicitação.\n"
+                        . ($baseUrl !== '' ? "\nAcompanhar pedido: {$baseUrl}/frontend/src/paginas/dashboard.html\n" : '')
+                        . "\nHVAC Lex Company\nMensagem automática referente à sua solicitação.";
 
                     $envioCliente = enviarEmailHvac(
                         $emailCliente,
                         'Pedido recebido ' . $dados['protocolo'] . ' - HVAC Lex Company',
-                        $mensagemCliente
+                        $mensagemCliente,
+                        true,
+                        $mensagemClienteTexto
                     );
 
                     if(!$envioCliente['enviado']) {
                         error_log(
                             'Confirmação por e-mail não enviada ao cliente para o protocolo '
-                            . $dados['protoclo'] . ': ' . $envioCliente['erro']
+                            . $dados['protocolo'] . ': ' . $envioCliente['erro']
                         );
                     }
                 }

@@ -638,8 +638,10 @@ HVAC Lex Company"];
                 $idNotificacaoEmail = (int) $conexao->insert_id;
                 $dadosEmailStatus = [
                     'destinatario' => $emailCliente,
-                    'assunto' => 'Atualização do pedido ' . $protocolo . ' — HVAC Lex Company',
-                    'mensagem' => "Olá,\n\n{$mensagemStatus}\n\nAcesse sua conta para ver os detalhes do atendimento.\n\nHVAC Lex Company",
+                    'assunto' => 'Atualização do pedido ' . $protocolo
+                        . ' — HVAC Lex Company',
+                    'protocolo' => $protocolo,
+                    'status' => (string) $statusDestino['nome'],
                 ];
             }
             $mensagem = 'Status atualizado para ' . $statusDestino['nome'] . '.';
@@ -648,10 +650,18 @@ HVAC Lex Company"];
         $conexao->commit();
         if ($idNotificacaoEmail !== null && $dadosEmailStatus !== null) {
             require_once __DIR__ . '/email_notificacao.php';
+
+            $conteudoEmail = montarEmailAtualizacaoHvac(
+                $dadosEmailStatus['protocolo'],
+                $dadosEmailStatus['status']
+            );
+
             $resultadoEmail = enviarEmailHvac(
                 $dadosEmailStatus['destinatario'],
                 $dadosEmailStatus['assunto'],
-                $dadosEmailStatus['mensagem']
+                $conteudoEmail['html'],
+                true,
+                $conteudoEmail['texto']
             );
             consultarSolicitacoesAdmin(
                 $conexao,
