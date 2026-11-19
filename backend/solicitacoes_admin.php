@@ -505,13 +505,12 @@ try {
                 if (filter_var($emailCliente, FILTER_VALIDATE_EMAIL)) {
                     consultarSolicitacoesAdmin($conexao, "INSERT INTO notificacao (id_destinatario, id_solicitacao, id_agendamento, tipo_evento, titulo, mensagem, canal, status_envio) VALUES (?, ?, ?, 'STATUS_ALTERADO', 'Decisão sobre reagendamento', ?, 'EMAIL', 'PENDENTE')", [$pedido['id_cliente'], $pedido['id_solicitacao'], $agendamento['id_agendamento'], $mensagem]);
                     $idNotificacaoEmail = (int) $conexao->insert_id;
-                    $dadosEmailStatus = ['destinatario' => $emailCliente, 'assunto' => 'Decisão sobre reagendamento do pedido ' . $protocolo . ' — HVAC Lex Company', 'mensagem' => "Olá,
-
-{$mensagem}
-
-Acesse sua conta para ver os detalhes.
-
-HVAC Lex Company"];
+                    $dadosEmailStatus = [
+                        'destinatario' => $emailCliente,
+                        'assunto' => 'Decisão sobre reagendamento do pedido ' . $protocolo . ' - HVAC Lex Company',
+                        'protocolo' => $protocolo,
+                        'status' => $mensagem
+                    ];
                 }
             }
         } elseif ($acao === 'status') {
