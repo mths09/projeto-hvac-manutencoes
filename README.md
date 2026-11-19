@@ -113,7 +113,12 @@ projeto-hvac-manutencoes/
 
    Salve o arquivo e reinicie o Apache para aplicar as alterações.
 
-7. Acesse:
+7. Para habilitar conexão com o banco, copie
+   `backend/db_config.example.php` para
+   `backend/db_config.local.php` e configure com seus dados.
+   Nunca envie o arquivo `backend/db_config.local.php` ao Git.
+
+8. Acesse:
 
    `http://localhost/projeto-hvac-manutencoes/index.html`
 
