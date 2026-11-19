@@ -72,7 +72,7 @@ projeto-hvac-manutencoes/
 ### Pré-requisitos
 
 - Windows com XAMPP, ou ambiente equivalente com Apache e MySQL/MariaDB
-- PHP 8.1 ou superior
+- PHP 8.5.12
 - MariaDB 10.4 ou superior
 - Git
 - Extensões PHP: `mysqli`, `mbstring`, `fileinfo` e `openssl`
