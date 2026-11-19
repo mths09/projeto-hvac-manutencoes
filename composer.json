@@ -1,0 +1,13 @@
+{
+  "name": "hvac/projeto-hvac-manutencoes",
+  "description": "HVAC Lex Company web application",
+  "type": "project",
+  "require": {
+    "google/apiclient": "^2.18"
+  },
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true,
+    "platform-check": false
+  }
+}

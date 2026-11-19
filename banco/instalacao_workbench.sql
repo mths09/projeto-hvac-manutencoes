@@ -542,6 +542,7 @@ CREATE TABLE `usuario` (
   `nome` varchar(150) NOT NULL,
   `email` varchar(254) NOT NULL,
   `senha_hash` varchar(255) NOT NULL,
+  `google_sub` varchar(255) DEFAULT NULL,
   `telefone` varchar(25) NOT NULL,
   `telefone_normalizado` varchar(25) GENERATED ALWAYS AS (NULLIF(REGEXP_REPLACE(`telefone`, '[^0-9]', ''), '')) VIRTUAL,
   `data_nascimento` date DEFAULT NULL,
@@ -827,7 +828,8 @@ ALTER TABLE `triagem`
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id_usuario`),
   ADD UNIQUE KEY `un_usuario_email` (`email`),
-  ADD UNIQUE KEY `un_usuario_telefone_normalizado` (`telefone_normalizado`);
+  ADD UNIQUE KEY `un_usuario_telefone_normalizado` (`telefone_normalizado`),
+  ADD UNIQUE KEY `un_usuario_google_sub` (`google_sub`);
 
 -- Aplicar AUTO_INCREMENT somente depois de criar as chaves primárias.
 ALTER TABLE `agendamento` MODIFY `id_agendamento` bigint(20) NOT NULL AUTO_INCREMENT;

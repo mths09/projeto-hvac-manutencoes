@@ -27,7 +27,11 @@ RUN apt-get update \
         > /usr/local/etc/php/conf.d/hvac.ini \
     && apache2ctl configtest
 
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
 WORKDIR /var/www/html
+COPY composer.json ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 COPY . /var/www/html/
 
 EXPOSE 8080
