@@ -2,6 +2,7 @@
 
 backend/email_config.local.php
 
+backend/db_config.local.php
 
 backend/uploads/*
 !backend/uploads/.htaccess
