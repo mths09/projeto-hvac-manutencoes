@@ -1,0 +1,33 @@
+name: Verificações PHP
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testes-php:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v4
+
+      - name: Preparar o PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: mbstring, mysqli
+
+      - name: Conferir a sintaxe dos arquivos PHP
+        run: find backend tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Executar o runner de testes
+        run: php tests/run.php
