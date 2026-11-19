@@ -696,3 +696,23 @@ form input[aria-invalid="true"]:focus {
     white-space: nowrap;
   }
 }
+.google-signin-container {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+  margin: 8px 0 12px;
+}
+
+.google-signin-container[hidden] {
+  display: none;
+}
+
+.aviso-cadastro-google {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #22d3ee;
+  border-radius: 10px;
+  background: rgba(34, 211, 238, 0.08);
+  color: #cffafe;
+  font-size: 13px;
+}

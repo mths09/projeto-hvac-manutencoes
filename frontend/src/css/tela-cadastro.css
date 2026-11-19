@@ -292,3 +292,8 @@ body.pagina-cadastro {
 .pagina-cadastro [hidden] {
   display: none !important;
 }
+/* `hidden` continua ocultando campos mesmo com regras de layout do cadastro. */
+.campos-cadastro > div[hidden],
+[hidden].ajuda-cadastro {
+  display: none !important;
+}

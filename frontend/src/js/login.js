@@ -196,3 +196,72 @@ formularioLogin.addEventListener("submit", async (evento) => {
     }
   }
 });
+
+async function prepararLoginGoogle() {
+  const container = document.getElementById("google-login-container");
+  if (!container) return;
+
+  try {
+    const configUrl = new URL("../../../backend/google_config.php", location.href);
+    const configResponse = await fetch(configUrl, { credentials: "same-origin", headers: { Accept: "application/json" } });
+    const config = await configResponse.json();
+    if (!configResponse.ok || config.sucesso !== true) return;
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    await new Promise((resolve, reject) => {
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.append(script);
+    });
+
+    if (!window.google?.accounts?.id || typeof config.client_id !== "string" || !config.client_id) return;
+    window.google.accounts.id.initialize({
+      client_id: config.client_id,
+      nonce: config.nonce,
+      callback: async ({ credential }) => {
+        if (!credential) {
+          mostrarMensagemLogin("O Google não retornou uma credencial válida.", "erro");
+          return;
+        }
+        mostrarMensagemLogin("Validando sua conta Google...", "info");
+        try {
+          const resposta = await fetch(new URL("../../../backend/login_google.php", location.href), {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ credential, csrf: config.csrf }),
+          });
+          const dados = await resposta.json();
+          if (!resposta.ok || dados.sucesso !== true) throw new Error(dados.mensagem || "Não foi possível entrar com Google.");
+          if (dados.cadastro_google === true && dados.destino === "./cadastro.html?google=1") {
+            window.location.replace(dados.destino);
+            return;
+          }
+          if (dados.area !== "cliente" || dados.destino !== "./dashboard.html") {
+            throw new Error("O servidor retornou um destino de acesso inválido.");
+          }
+          window.location.replace(dados.destino);
+        } catch (erro) {
+          mostrarMensagemLogin(erro instanceof TypeError ? "Não foi possível conectar ao servidor." : erro.message, "erro");
+        }
+      },
+    });
+    window.google.accounts.id.renderButton(container, {
+      type: "standard",
+      theme: "outline",
+      size: "large",
+      text: "continue_with",
+      shape: "rectangular",
+      width: Math.min(360, Math.max(220, Math.floor(container.clientWidth || 320))),
+      logo_alignment: "left",
+    });
+    container.hidden = false;
+  } catch (erro) {
+    console.error("Não foi possível carregar o login Google:", erro);
+  }
+}
+
+prepararLoginGoogle();
