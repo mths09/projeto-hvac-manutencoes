@@ -1,0 +1,9 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+Options -Indexes
+RewriteEngine On
+RewriteRule ^(\.git|\.vscode|banco|tests|docs|tmp)(/|$) - [F,NC,L]
+RewriteRule (^|/)[^/]*config[^/]*\.(php|json|ini)$ - [F,NC,L]
+RewriteRule \.(sql|md|ini|log|env|bak|zip)$ - [F,NC,L]
+</IfModule>
