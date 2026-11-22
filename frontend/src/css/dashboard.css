@@ -722,6 +722,28 @@ p {
   background: var(--superficie-ciano);
 }
 
+.aviso-completar-cadastro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 18px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border: 1px solid rgb(255 152 0 / 40%);
+  border-radius: var(--raio-card);
+  background: rgb(255 152 0 / 8%);
+}
+
+.aviso-completar-cadastro[hidden] {
+  display: none;
+}
+
+.aviso-completar-cadastro p {
+  margin: 4px 0 0;
+  color: var(--texto-secundario);
+}
+
 .status-conteudo {
   display: flex;
   align-items: center;

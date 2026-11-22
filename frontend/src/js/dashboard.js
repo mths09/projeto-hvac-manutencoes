@@ -238,6 +238,24 @@
     definirTexto(".endereco-uf", texto(end.uf, "—").toUpperCase());
   }
 
+  // Contas criadas pelo login Google começam sem telefone e endereço.
+  function atualizarAvisoCadastro(usuario) {
+    const aviso = elemento("#aviso-completar-cadastro");
+    if (!aviso) return;
+
+    const faltando = [];
+    if (!String(usuario.telefone ?? "").trim()) faltando.push("telefone");
+    if (!usuario.endereco) faltando.push("endereço");
+
+    aviso.hidden = faltando.length === 0;
+    if (faltando.length > 0) {
+      definirTexto(
+        "#aviso-completar-texto",
+        `Informe seu ${faltando.join(" e ")} para agilizar seus agendamentos.`,
+      );
+    }
+  }
+
   function atualizarPerfil(usuario = {}) {
     const nome = String(usuario.nome || "Cliente").trim() || "Cliente";
 
@@ -257,6 +275,7 @@
     );
 
     atualizarEndereco(usuario);
+    atualizarAvisoCadastro(usuario);
 
     const avatar = elemento("#avatar-usuario");
     const avatarPerfil = elemento("#avatar-meu-perfil");

@@ -218,6 +218,9 @@ async function prepararLoginGoogle() {
     });
 
     if (!window.google?.accounts?.id || typeof config.client_id !== "string" || !config.client_id) return;
+
+    // Login padrão do Google: só nome e e-mail, sem permissões extras.
+    // Telefone, endereço e nascimento ficam no perfil.
     window.google.accounts.id.initialize({
       client_id: config.client_id,
       nonce: config.nonce,
@@ -236,11 +239,8 @@ async function prepararLoginGoogle() {
           });
           const dados = await resposta.json();
           if (!resposta.ok || dados.sucesso !== true) throw new Error(dados.mensagem || "Não foi possível entrar com Google.");
-          if (dados.cadastro_google === true && dados.destino === "./cadastro.html?google=1") {
-            window.location.replace(dados.destino);
-            return;
-          }
-          if (dados.area !== "cliente" || dados.destino !== "./dashboard.html") {
+          const destinosGoogle = ["./dashboard.html"];
+          if (dados.area !== "cliente" || !destinosGoogle.includes(dados.destino)) {
             throw new Error("O servidor retornou um destino de acesso inválido.");
           }
           window.location.replace(dados.destino);
@@ -259,6 +259,8 @@ async function prepararLoginGoogle() {
       logo_alignment: "left",
     });
     container.hidden = false;
+    const avisoPolitica = document.getElementById("aviso-politica-google");
+    if (avisoPolitica) avisoPolitica.hidden = false;
   } catch (erro) {
     console.error("Não foi possível carregar o login Google:", erro);
   }

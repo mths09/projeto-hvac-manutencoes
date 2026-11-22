@@ -35,8 +35,6 @@ const buscaCep = ativarBuscaCep(camposEndereco, statusCep);
 
 let enviandoCadastro = false;
 let cadastroConcluido = false;
-const cadastroGoogle = new URLSearchParams(location.search).get("google") === "1";
-let csrfCadastroGoogle = "";
 
 const hoje = new Date();
 nascimento.max = [
@@ -113,7 +111,7 @@ function validarCadastroNaTela() {
   mostrarErro(emailCadastro, validarEmail(emailCadastro.value));
   mostrarErro(telefoneCadastro, validarTelefone(telefoneCadastro.value));
   mostrarErro(nascimento, validarNascimento(nascimento));
-  if (!cadastroGoogle) validarSenhas();
+  validarSenhas();
   validarCamposEndereco(camposEndereco);
 
   const primeiroInvalido = formCadastro.querySelector(":invalid");
@@ -177,7 +175,7 @@ for (const [chave, validar] of Object.entries(validadoresEndereco)) {
   );
 }
 
-if (!cadastroGoogle) senhaCadastro.addEventListener("input", validarSenhas);
+senhaCadastro.addEventListener("input", validarSenhas);
 confirmarSenha.addEventListener("input", validarSenhas);
 
 // Uma nova edição permite iniciar outro cadastro.
@@ -193,10 +191,6 @@ formCadastro.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (enviandoCadastro || cadastroConcluido) return;
-  if (cadastroGoogle && !csrfCadastroGoogle) {
-    exibirMensagem("A etapa de cadastro Google expirou. Volte ao login e tente novamente.");
-    return;
-  }
 
   mensagem.hidden = true;
   mensagem.classList.remove("sucesso");
@@ -205,16 +199,12 @@ formCadastro.addEventListener("submit", async (event) => {
 
   enviandoCadastro = true;
   botao.disabled = true;
-  botao.textContent = cadastroGoogle ? "Criando sua conta…" : "Enviando confirmação…";
+  botao.textContent = "Enviando confirmação…";
   formCadastro.setAttribute("aria-busy", "true");
 
   try {
     const dadosFormulario = new FormData(formCadastro);
-    const urlCadastro = cadastroGoogle
-      ? new URL("../../../backend/cadastro_google.php", location.href)
-      : formCadastro.action;
-    if (cadastroGoogle) dadosFormulario.set("csrf", csrfCadastroGoogle);
-    const resposta = await fetch(urlCadastro, {
+    const resposta = await fetch(formCadastro.action, {
       method: "POST",
       credentials: "same-origin",
       body: dadosFormulario,
@@ -240,14 +230,6 @@ formCadastro.addEventListener("submit", async (event) => {
           ? dados.mensagem
           : "Não foi possível concluir o cadastro.",
       );
-      return;
-    }
-
-    if (cadastroGoogle) {
-      if (dados.area !== "cliente" || dados.destino !== "./dashboard.html") {
-        throw new Error("O servidor retornou um destino de acesso inválido.");
-      }
-      window.location.replace(dados.destino);
       return;
     }
 
@@ -278,41 +260,3 @@ formCadastro.addEventListener("submit", async (event) => {
     formCadastro.setAttribute("aria-busy", "false");
   }
 });
-
-async function prepararCadastroGoogle() {
-  if (!cadastroGoogle) return;
-  const aviso = document.getElementById("aviso-cadastro-google");
-  aviso.textContent = "Complete seus dados para criar sua conta de cliente com Google. Sua conta será criada após aceitar a Política de Privacidade.";
-  aviso.hidden = false;
-
-  for (const id of ["senha", "confirmar_senha"]) {
-    const campo = document.getElementById(id);
-    campo.required = false;
-    campo.disabled = true;
-    campo.closest("div")?.setAttribute("hidden", "");
-  }
-  document.getElementById("ajuda-senha")?.setAttribute("hidden", "");
-
-  try {
-    const resposta = await fetch(new URL("../../../backend/cadastro_google.php", location.href), {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-    });
-    const dados = await resposta.json();
-    if (!resposta.ok || typeof dados.csrf !== "string" || !dados.google) {
-      throw new Error(dados.mensagem || "A etapa de cadastro Google expirou.");
-    }
-    csrfCadastroGoogle = dados.csrf;
-    const nomes = String(dados.google.nome || "").trim().split(/\s+/u).filter(Boolean);
-    nomeCadastro.value = nomes.shift() || "";
-    sobrenomeCadastro.value = nomes.join(" ");
-    emailCadastro.value = String(dados.google.email || "");
-    emailCadastro.readOnly = true;
-    emailCadastro.setAttribute("aria-readonly", "true");
-  } catch (erro) {
-    botao.disabled = true;
-    exibirMensagem(erro instanceof TypeError ? "Não foi possível conectar ao servidor." : erro.message);
-  }
-}
-
-prepararCadastroGoogle();
