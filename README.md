@@ -43,7 +43,7 @@ modernização do processo de atendimento, principalmente para organização da 
 | Orçamentos                | Modelado     | Tabela sem API ou tela                           |
 | Documentos                | Modelado     | Listagem sem emissão ou download                 |
 | Estoque                   | Modelado     | Tabelas sem API ou tela                          |
-| Avaliação                 | Modelado     | Tabela sem fluxo                                 |
+| Avaliação                 | Implementado | Cliente dá nota de 1 a 5 ao serviço concluído    |
 | Técnicos                  | Modelado     | Trabalho futuro                                  |
 | Portfólio                 | Parcial      | Depende do material da empresa                   |
 | WhatsApp                  | Manual       | Link `wa.me`; não há confirmação automática      |

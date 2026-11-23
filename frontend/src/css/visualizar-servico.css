@@ -461,6 +461,141 @@ body > header {
   transform: translateY(-1px);
 }
 
+/* Avaliação do atendimento */
+.form-avaliacao[hidden],
+.avaliacao-enviada[hidden] {
+  display: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.form-avaliacao {
+  display: grid;
+  gap: 10px;
+}
+
+.estrelas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  border: 0;
+}
+
+.estrelas legend {
+  width: 100%;
+  margin-bottom: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.estrelas input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.estrelas label {
+  color: rgb(255 255 255 / 22%);
+  font-size: 34px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    transform 120ms ease;
+}
+
+/* O JS marca com .cheia a estrela escolhida (ou sob o mouse) e as anteriores. */
+.estrelas label.cheia {
+  color: #ffd600;
+}
+
+.estrelas label:hover {
+  transform: scale(1.12);
+}
+
+.estrelas input:focus-visible + label {
+  outline: 2px solid var(--ciano);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.nome-nota {
+  margin-left: 8px;
+  color: var(--texto-secundario);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-avaliacao textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 13px;
+  background: rgb(255 255 255 / 4%);
+  color: #fff;
+  font: 400 13px/1.5 var(--fonte-corpo);
+  resize: vertical;
+}
+
+.form-avaliacao textarea:focus {
+  border-color: var(--ciano);
+  outline: none;
+}
+
+.aviso-avaliacao {
+  min-height: 18px;
+  color: #ff8a80;
+  font-size: 12px;
+}
+
+.btn-avaliar {
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+}
+
+.btn-avaliar:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.avaliacao-enviada {
+  display: grid;
+  gap: 6px;
+}
+
+.estrelas-lidas {
+  color: rgb(255 255 255 / 22%);
+  font-size: 28px;
+  letter-spacing: 2px;
+}
+
+.estrelas-lidas .cheia {
+  color: #ffd600;
+}
+
+.texto-avaliacao {
+  color: rgb(255 255 255 / 78%);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.avaliacao-enviada small {
+  color: var(--texto-secundario);
+  font-size: 12px;
+}
+
 /* Cartão de contato */
 .duvidas {
   display: grid;

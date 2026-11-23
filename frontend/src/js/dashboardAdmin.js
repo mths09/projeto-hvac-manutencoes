@@ -77,6 +77,13 @@ function normalizarPedido(pedido) {
         }))
       : [],
     totalDocuments: Number(pedido.total_documentos) || 0,
+    rating: pedido.avaliacao
+      ? {
+          score: Math.max(1, Math.min(5, Number(pedido.avaliacao.nota) || 0)),
+          comment: String(pedido.avaliacao.comentario || ""),
+          ratedAt: String(pedido.avaliacao.avaliada_em || ""),
+        }
+      : null,
     attachments: Array.isArray(pedido.anexos)
       ? pedido.anexos.map((anexo) => ({
           id: String(anexo.id),
@@ -352,6 +359,19 @@ function renderOverview() {
         </section>`;
 }
 
+// Nota que o cliente deu ao atendimento concluído (com o comentário, se houver).
+function ratingCell(order) {
+  if (!order.rating) {
+    return order.statusCode === "CONCLUIDO"
+      ? '<span class="rating-pending">Aguardando</span>'
+      : '<span class="rating-pending">—</span>';
+  }
+  const { score, comment } = order.rating;
+  return `
+    <span class="sr-estrelas" role="img" aria-label="Nota ${score} de 5">${"★".repeat(score)}<span class="sr-estrelas-vazias">${"★".repeat(5 - score)}</span></span>
+    ${comment ? `<small class="rating-comment">“${escapeHTML(comment)}”</small>` : ""}`;
+}
+
 function table(list, editable) {
   if (!list.length) return '<div class="empty">Nenhum pedido encontrado.</div>';
 
@@ -361,7 +381,7 @@ function table(list, editable) {
             <thead>
               <tr>
                 <th>Pedido</th><th>Cliente</th><th>Equipamento</th>
-                <th>Agendamento</th><th>Status</th>
+                <th>Agendamento</th><th>Status</th><th>Avaliação</th>
               </tr>
             </thead>
             <tbody>
@@ -393,6 +413,7 @@ function table(list, editable) {
                       : badge(order.status)
                   }
                   </td>
+                  <td>${ratingCell(order)}</td>
                 </tr>
               `,
                 )

@@ -204,7 +204,8 @@ try {
                     a.status AS status_agendamento,
                     a.id_anterior,
                     (SELECT anterior_d.inicio_previsto FROM agendamento anterior_a INNER JOIN disponibilidade anterior_d ON anterior_d.id_disponibilidade = anterior_a.id_disponibilidade WHERE anterior_a.id_agendamento = a.id_anterior) AS inicio_anterior,
-                    (SELECT COUNT(*) FROM documento doc WHERE doc.id_solicitacao = s.id_solicitacao) AS total_documentos
+                    (SELECT COUNT(*) FROM documento doc WHERE doc.id_solicitacao = s.id_solicitacao) AS total_documentos,
+                    av.nota AS avaliacao_nota, av.comentario AS avaliacao_comentario, av.avaliada_em
              FROM solicitacao s
              INNER JOIN status_solicitacao ss ON ss.id_status = s.id_status_atual
              INNER JOIN tipo_servico ts ON ts.id_tipo_servico = s.id_tipo_servico
@@ -219,6 +220,10 @@ try {
                 LIMIT 1
              )
              LEFT JOIN disponibilidade d ON d.id_disponibilidade = a.id_disponibilidade
+             LEFT JOIN avaliacao_atendimento av ON av.id_agendamento = (
+                SELECT MAX(a3.id_agendamento) FROM agendamento a3
+                WHERE a3.id_solicitacao = s.id_solicitacao AND a3.status = 'CONCLUIDO'
+             )
              WHERE s.arquivada_em IS NULL
              ORDER BY s.criada_em DESC, s.id_solicitacao DESC"
         );
@@ -243,7 +248,12 @@ try {
                 'status_nome' => (string) $linha['status_nome'],
                 'status_permitidos' => $transicoes[$codigoStatus] ?? [],
                 'urgente' => (bool) $linha['urgente'],
-                'total_documentos' => (int) $linha['total_documentos']
+                'total_documentos' => (int) $linha['total_documentos'],
+                'avaliacao' => $linha['avaliacao_nota'] === null ? null : [
+                    'nota' => (int) $linha['avaliacao_nota'],
+                    'comentario' => (string) ($linha['avaliacao_comentario'] ?? ''),
+                    'avaliada_em' => (string) $linha['avaliada_em'],
+                ],
             ];
         }
 
