@@ -39,7 +39,7 @@
           <a href="#contatos" class="nav-link"> Contatos </a>
         </div>
 
-        <a href="./frontend/src/paginas/login.html" class="btn-cliente">
+        <a href="./backend/area.php" data-area class="btn-cliente">
           <img src="./frontend/assets/icons/pessoa.svg" alt="" class="svg-pessoa" />
           <span class="btn-cliente-label">Área do Cliente</span>
         </a>
@@ -74,7 +74,7 @@
               </p>
 
             <div class="acoes-inicio">
-              <a href="./frontend/src/paginas/agendamento.html" class="btn btn-atendimento">
+              <a href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar class="btn btn-atendimento">
                 <!-- Simbolo Calendario -->
                 <!-- SVG extraído para assets/icons/calendario.svg e substituído por img. -->
                 <img src="./frontend/assets/icons/calendario.svg" alt="" class="svg svg-calendario" />
@@ -138,7 +138,7 @@
 
           <div class="grade-cards">
             <!-- ------ AR CONDICIONADO ------ -->
-            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+            <a href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar class="card-item">
               <div class="card-topo">
                 <!-- Simbolo AC-->
               <!-- SVG extraído para assets/icons/ar-condicionado.svg e substituído por img. -->
@@ -156,7 +156,7 @@
             </a>
 
             <!-- ------ GELADEIRA ------ -->
-            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+            <a href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar class="card-item">
               <div class="card-topo">
                 <!-- Icone Geladeira -->
               <!-- SVG extraído para assets/icons/frigorifico.svg e substituído por img. -->
@@ -176,7 +176,7 @@
             </a>
 
             <!-- ------ ILUMINACAO ------ -->
-            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+            <a href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar class="card-item">
               <div class="card-topo">
                 <!-- Icone Lâmpada -->
               <!-- SVG extraído para assets/icons/iluminacao.svg e substituído por img. -->
@@ -194,7 +194,7 @@
             </a>
 
             <!-- ------ MANUTENÇÃO ------ -->
-            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+            <a href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar class="card-item">
               <div class="card-topo">
                 <!-- Icone Manutenção -->
               <!-- SVG extraído para assets/icons/manutencao.svg e substituído por img. -->
@@ -214,7 +214,7 @@
             </a>
 
             <!-- ------ ELETROMECANICA ------ -->
-            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+            <a href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar class="card-item">
               <div class="card-topo">
                 <!-- Icone Raio -->
               <!-- SVG extraído para assets/icons/raio.svg e substituído por img. -->
@@ -232,7 +232,7 @@
             </a>
 
             <!-- ------ ATENDIMENTO URGENTE ------ -->
-            <a href="./frontend/src/paginas/agendamento.html" class="card-item">
+            <a href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar class="card-item">
               <div class="card-topo">
                 <!-- Icone urgente -->
               <!-- SVG extraído para assets/icons/atendimento-urgente.svg e substituído por img. -->
@@ -332,7 +332,7 @@
                   <span class="contato-acao-seta" aria-hidden="true">↗</span>
                 </a>
 
-                <a class="contato-acao contato-acao-agendar" href="./frontend/src/paginas/agendamento.html">
+                <a class="contato-acao contato-acao-agendar" href="./frontend/src/paginas/agendamento.html?origem=inicio" data-agendar>
                   <img src="./frontend/assets/icons/calendario.svg" alt="" />
                   <span><small>Atendimento</small><strong>Agendar avaliação</strong></span>
                   <span class="contato-acao-seta" aria-hidden="true">→</span>
@@ -406,7 +406,7 @@
         <ul>
           <li><a href="./frontend/src/paginas/pagina-projetos.html">Projetos</a></li>
           <li><a href="./frontend/src/paginas/pagina-sobre.html">Sobre</a></li>
-          <li><a href="./frontend/src/paginas/cadastro.html">Área do Cliente</a></li>
+          <li><a href="./backend/area.php" data-area>Área do Cliente</a></li>
           <li><a href="#contatos">Contatos</a></li>
         </ul>
       </div>
@@ -448,6 +448,25 @@
         class="whatsapp-flutuante-icone"
       />
     </a>
+
+    <!-- modal para aviso de necessidade do login ao agendar -->
+    <dialog
+      id="aviso-agendamento"
+      aria-labelledby="titulo-aviso-agendamento"
+      aria-describedby="texto-aviso-agendamento"
+    >
+      <h2 id="titulo-aviso-agendamento">Entre para agendar</h2>
+      <p id="texto-aviso-agendamento">
+        Você precisa entrar na sua conta de cliente para solicitar um atendimento.
+      </p>
+
+      <form method="dialog">
+        <button type="submit" autofocus>Agora não</button>
+        <a href="./frontend/src/paginas/login.html?agendar=inicio">
+          Entrar para agendar
+        </a>
+      </form>
+    </dialog>
 
     <script src="./frontend/src/js/script.js"></script>
   </body>
