@@ -12,6 +12,32 @@ let enviandoLogin = false;
 let liberarLoginEm = 0;
 let temporizadorLogin = null;
 
+function destinoAposLogin(dados) {
+  const entrada = new URLSearchParams(location.search);
+  const origem = entrada.get("origem") || entrada.get("agendar");
+  const origens = [
+    "inicio",
+    "dashboard",
+    "projetos",
+    "sobre",
+    "termos",
+    "servico",
+  ];
+
+  if (dados.area !== "cliente" || !origens.includes(origem)) {
+    return dados.destino;
+  }
+
+  const saida = new URLSearchParams({ origem });
+  const id = entrada.get("id");
+
+  if (origem === "servico" && /^[1-9]\d*$/.test(id ?? "")) {
+    saida.set("id", id);
+  }
+
+  return `./agendamento.html?${saida}`;
+}
+
 function definirErroCampo(campo, elementoErro, texto) {
   elementoErro.textContent = texto;
   elementoErro.hidden = !texto;
@@ -75,13 +101,14 @@ function mostrarMensagemLogin(texto, tipo) {
 function formatarTempo(segundos) {
   const minutos = Math.floor(segundos / 60);
   const restante = segundos % 60;
-  return String(minutos).padStart(2, "0") + ":" + String(restante).padStart(2, "0");
+  return (
+    String(minutos).padStart(2, "0") + ":" + String(restante).padStart(2, "0")
+  );
 }
 
 function atualizarContagemLogin() {
   const segundos = Math.max(0, Math.ceil((liberarLoginEm - Date.now()) / 1000));
   if (segundos > 0) {
-
     botaoLogin.disabled = true;
     botaoLogin.textContent = "Aguarde " + formatarTempo(segundos);
     return;
@@ -94,12 +121,18 @@ function atualizarContagemLogin() {
   contadorLogin.textContent = "";
   botaoLogin.disabled = false;
   botaoLogin.textContent = "Entrar na conta →";
-  mostrarMensagemLogin("O bloqueio terminou. Você já pode tentar entrar novamente.", "info");
+  mostrarMensagemLogin(
+    "O bloqueio terminou. Você já pode tentar entrar novamente.",
+    "info",
+  );
 }
 
 function iniciarContagemLogin(segundos) {
   liberarLoginEm = Date.now() + segundos * 1000;
-  mostrarMensagemLogin("Muitas tentativas. Aguarde o contador terminar antes de tentar novamente.", "erro");
+  mostrarMensagemLogin(
+    "Muitas tentativas. Aguarde o contador terminar antes de tentar novamente.",
+    "erro",
+  );
   if (temporizadorLogin !== null) window.clearInterval(temporizadorLogin);
   atualizarContagemLogin();
   temporizadorLogin = window.setInterval(atualizarContagemLogin, 1000);
@@ -153,7 +186,9 @@ formularioLogin.addEventListener("submit", async (evento) => {
 
     const dados = await resposta.json();
     if (!resposta.ok || dados?.sucesso !== true) {
-      const erro = new Error(dados?.mensagem || "Não foi possível entrar na conta.");
+      const erro = new Error(
+        dados?.mensagem || "Não foi possível entrar na conta.",
+      );
       erro.aguardarSegundos = Number(dados?.aguardar_segundos) || 0;
       throw erro;
     }
@@ -170,9 +205,9 @@ formularioLogin.addEventListener("submit", async (evento) => {
       throw new Error("O servidor retornou um destino de acesso inválido.");
     }
 
-    mostrarMensagemLogin("Login realizado! Abrindo seu painel...", "sucesso");
+    mostrarMensagemLogin("Login realizado! Redirecionando...", "sucesso");
     redirecionando = true;
-    window.location.replace(dados.destino);
+    window.location.replace(destinoAposLogin(dados));
   } catch (erro) {
     if (erro.aguardarSegundos > 0) {
       iniciarContagemLogin(erro.aguardarSegundos);
@@ -202,8 +237,14 @@ async function prepararLoginGoogle() {
   if (!container) return;
 
   try {
-    const configUrl = new URL("../../../backend/google_config.php", location.href);
-    const configResponse = await fetch(configUrl, { credentials: "same-origin", headers: { Accept: "application/json" } });
+    const configUrl = new URL(
+      "../../../backend/google_config.php",
+      location.href,
+    );
+    const configResponse = await fetch(configUrl, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
     const config = await configResponse.json();
     if (!configResponse.ok || config.sucesso !== true) return;
 
@@ -217,35 +258,68 @@ async function prepararLoginGoogle() {
       document.head.append(script);
     });
 
-    if (!window.google?.accounts?.id || typeof config.client_id !== "string" || !config.client_id) return;
+    if (
+      !window.google?.accounts?.id ||
+      typeof config.client_id !== "string" ||
+      !config.client_id
+    )
+      return;
     window.google.accounts.id.initialize({
       client_id: config.client_id,
       nonce: config.nonce,
       callback: async ({ credential }) => {
         if (!credential) {
-          mostrarMensagemLogin("O Google não retornou uma credencial válida.", "erro");
+          mostrarMensagemLogin(
+            "O Google não retornou uma credencial válida.",
+            "erro",
+          );
           return;
         }
         mostrarMensagemLogin("Validando sua conta Google...", "info");
         try {
-          const resposta = await fetch(new URL("../../../backend/login_google.php", location.href), {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify({ credential, csrf: config.csrf }),
-          });
+          const resposta = await fetch(
+            new URL("../../../backend/login_google.php", location.href),
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({ credential, csrf: config.csrf }),
+            },
+          );
           const dados = await resposta.json();
-          if (!resposta.ok || dados.sucesso !== true) throw new Error(dados.mensagem || "Não foi possível entrar com Google.");
-          if (dados.cadastro_google === true && dados.destino === "./cadastro.html?google=1") {
-            window.location.replace(dados.destino);
+          if (!resposta.ok || dados.sucesso !== true)
+            throw new Error(
+              dados.mensagem || "Não foi possível entrar com Google.",
+            );
+          if (
+            dados.cadastro_google === true &&
+            dados.destino === "./cadastro.html?google=1"
+          ) {
+            const cadastro = new URL(dados.destino, location.href);
+              const agendamento = new URL(destinoAposLogin({ area: "cliente", destino: "./dashboard.html" }), location.href);
+              cadastro.search = new URLSearchParams([...cadastro.searchParams, ...agendamento.searchParams]);
+              window.location.replace(cadastro.href);
             return;
           }
-          if (dados.area !== "cliente" || dados.destino !== "./dashboard.html") {
-            throw new Error("O servidor retornou um destino de acesso inválido.");
+          if (
+            dados.area !== "cliente" ||
+            dados.destino !== "./dashboard.html"
+          ) {
+            throw new Error(
+              "O servidor retornou um destino de acesso inválido.",
+            );
           }
-          window.location.replace(dados.destino);
+          window.location.replace(destinoAposLogin(dados));
         } catch (erro) {
-          mostrarMensagemLogin(erro instanceof TypeError ? "Não foi possível conectar ao servidor." : erro.message, "erro");
+          mostrarMensagemLogin(
+            erro instanceof TypeError
+              ? "Não foi possível conectar ao servidor."
+              : erro.message,
+            "erro",
+          );
         }
       },
     });
@@ -255,7 +329,10 @@ async function prepararLoginGoogle() {
       size: "large",
       text: "continue_with",
       shape: "rectangular",
-      width: Math.min(360, Math.max(220, Math.floor(container.clientWidth || 320))),
+      width: Math.min(
+        360,
+        Math.max(220, Math.floor(container.clientWidth || 320)),
+      ),
       logo_alignment: "left",
     });
     container.hidden = false;

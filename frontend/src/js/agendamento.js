@@ -2,6 +2,8 @@
   "use strict";
 
   const API = "../../../backend/agendamento.php";
+  const loginAgendamento =
+    "./login.html" + (location.search || "?origem=inicio");
   const elemento = (id) => document.getElementById(id);
   const cards = [...document.querySelectorAll(".servico-card")];
   const tipos = {
@@ -416,8 +418,7 @@
     const uf = camposEndereco.uf.value.trim().toUpperCase();
     const status = elemento("statusRegiao");
     const regiaoDaCidade = regioesAtendidas.find(
-      (regiao) =>
-        normalizarCidade(regiao.cidade) === normalizarCidade(cidade),
+      (regiao) => normalizarCidade(regiao.cidade) === normalizarCidade(cidade),
     );
 
     regiaoValidada = Boolean(regiaoDaCidade && regiaoDaCidade.uf === uf);
@@ -612,7 +613,7 @@
       elemento("botaoContinuar").disabled = !servico;
       return true;
     } catch (erro) {
-      if (erro.status === 401) window.location.replace("./login.html");
+      if (erro.status === 401) window.location.replace(loginAgendamento);
       mensagem(erro.message || "Não foi possível carregar os horários.", true);
       tentar.hidden = false;
       return false;
@@ -794,7 +795,7 @@
       elemento("confirmarAgendamento").textContent = "Ver meus pedidos →";
       elemento("voltarDetalhes").hidden = true;
     } catch (erro) {
-      if (erro.status === 401) return window.location.replace("./login.html");
+      if (erro.status === 401) return window.location.replace(loginAgendamento);
       if (
         [400, 422].includes(erro.status) ||
         erro.codigo === "HORARIO_INDISPONIVEL"

@@ -247,7 +247,19 @@ formCadastro.addEventListener("submit", async (event) => {
       if (dados.area !== "cliente" || dados.destino !== "./dashboard.html") {
         throw new Error("O servidor retornou um destino de acesso inválido.");
       }
-      window.location.replace(dados.destino);
+      const entrada = new URLSearchParams(location.search);
+      const origem = entrada.get("origem");
+      if (["inicio", "dashboard", "projetos", "sobre", "termos", "servico"].includes(origem)) {
+        const destino = new URL("./agendamento.html", location.href);
+        destino.searchParams.set("origem", origem);
+        const id = entrada.get("id");
+        if (origem === "servico" && /^[1-9]\d*$/.test(id ?? "")) {
+          destino.searchParams.set("id", id);
+        }
+        window.location.replace(destino.href);
+      } else {
+        window.location.replace(dados.destino);
+      }
       return;
     }
 

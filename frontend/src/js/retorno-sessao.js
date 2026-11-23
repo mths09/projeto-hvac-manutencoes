@@ -1,38 +1,27 @@
-document.querySelectorAll("[data-retorno-sessao]").forEach((link) => {
-  link.addEventListener("click", async (evento) => {
-    evento.preventDefault();
+const parametrosRetorno = new URLSearchParams(location.search);
+const idPedido = parametrosRetorno.get("id");
 
-    const paginaInicial = "../../../index.html";
-    const dashboard = "./dashboard.html";
-    let destinoSemSessao = paginaInicial;
+const destinosRetorno = new Map([
+  ["inicio", ["../../../index.html", "Voltar ao início"]],
+  ["dashboard", ["./dashboard.html", "Voltar ao painel"]],
+  ["projetos", ["./pagina-projetos.html", "Voltar aos projetos"]],
+  ["sobre", ["./pagina-sobre.html", "Voltar para Sobre nós"]],
+  ["termos", ["./privacidade-termos.html", "Voltar aos termos"]],
+]);
 
-    try {
-      const origem = new URL(document.referrer);
+if (/^[1-9]\d*$/.test(idPedido ?? "")) {
+  destinosRetorno.set("servico", [
+    `./visualizar-servico.html?id=${idPedido}`,
+    "Voltar aos detalhes do pedido",
+  ]);
+}
 
-      const origemDoProjeto =
-        origem.origin === window.location.origin &&
-        (origem.pathname.includes("/frontend/") ||
-          origem.pathname.endsWith("/index.html"));
+const [enderecoRetorno, textoRetorno] =
+  destinosRetorno.get(parametrosRetorno.get("origem")) ??
+  destinosRetorno.get("inicio");
 
-      if (origemDoProjeto) {
-        destinoSemSessao = origem.href;
-      }
-    } catch {
-      // Sem referrer válido: usar a página inicial.
-    }
-
-    try {
-      const resposta = await fetch("../../../backend/perfil_cliente.php", {
-        method: "GET",
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: { Accept: "application/json" },
-      });
-
-      window.location.assign(resposta.ok ? dashboard : destinoSemSessao);
-    } catch {
-      // Se a API não responder, não deixar a pessoa presa na tela atual.
-      window.location.assign(destinoSemSessao);
-    }
-  });
-});
+const botaoVoltar = document.querySelector(".voltar-site");
+if (botaoVoltar) {
+  botaoVoltar.href = enderecoRetorno;
+  botaoVoltar.textContent = `← ${textoRetorno}`;
+}

@@ -8,6 +8,14 @@
 
   const idServico = new URLSearchParams(window.location.search).get("id");
 
+  const novoAgendamento = document.querySelector(".btn-agendamento");
+
+  if (novoAgendamento && /^[1-9]\d*$/.test(idServico ?? "")) {
+    const destino = new URL(novoAgendamento.href);
+    destino.searchParams.set("id", idServico);
+    novoAgendamento.href = destino.href;
+  }
+
   // =========================================
   // FUNÇÕES AUXILIARES
   // =========================================
