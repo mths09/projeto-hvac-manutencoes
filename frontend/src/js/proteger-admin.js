@@ -26,6 +26,11 @@ if (botaoSairAdmin) {
     });
 
     const dados = await resposta.json();
+    // 403 = está logado, mas não é admin (ex.: cliente): volta para o painel dele.
+    if (resposta.status === 403) {
+      window.location.replace('./dashboard.html');
+      return;
+    }
     if (!resposta.ok || dados?.sucesso !== true) {
       window.location.replace('./login.html');
       return;

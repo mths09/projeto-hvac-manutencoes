@@ -229,7 +229,7 @@
 
       const link = criar("a", "link-baixar-documento", "Baixar PDF");
       link.href = String(documento.url || "");
-      link.dowload = "";
+      link.download = "";
 
       link.setAttribute(
         "aria-label",
@@ -240,6 +240,30 @@
       lista.append(cartao);
     }
   }
+
+  // Botão "Baixar recibo": usa o recibo mais recente que a equipe liberou para este serviço.
+  let urlRecibo = "";
+
+  function configurarRecibo(documentos) {
+    const botao = $("#btn-recibo");
+    if (!botao) return;
+
+    // A lista já vem do mais recente para o mais antigo.
+    const recibo = (Array.isArray(documentos) ? documentos : []).find(
+      (documento) => documento.tipo === "RECIBO" && documento.url,
+    );
+
+    urlRecibo = recibo ? String(recibo.url) : "";
+    botao.disabled = !recibo;
+    botao.textContent = recibo ? "Baixar recibo" : "Recibo ainda não disponível";
+    botao.title = recibo
+      ? `Baixar ${recibo.titulo || "recibo"} (PDF)`
+      : "O recibo aparece aqui quando a equipe liberar o documento.";
+  }
+
+  $("#btn-recibo")?.addEventListener("click", () => {
+    if (urlRecibo) window.location.href = urlRecibo;
+  });
 
   function renderizarAnexos(anexos) {
     const lista = $("#lista-fotos-atendimento");
@@ -445,6 +469,7 @@
 
     renderizarAnexos(servico.anexos);
     renderizarDocumentos(documentos);
+    configurarRecibo(documentos);
     renderizarAvaliacao(servico);
 
     montarLinhaTempo(servico);

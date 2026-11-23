@@ -233,6 +233,11 @@ body > header {
   text-transform: uppercase;
 }
 
+/* Sem isto, o display abaixo anula o atributo hidden (tela "Serviço não encontrado"). */
+.status-servico[hidden] {
+  display: none;
+}
+
 .status-servico {
   display: inline-flex;
   flex: 0 0 auto;
@@ -459,6 +464,17 @@ body > header {
 .btn-agendamento:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
+}
+
+.btn-nota-fiscal {
+  cursor: pointer;
+}
+
+.btn-nota-fiscal:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
 }
 
 /* Avaliação do atendimento */
