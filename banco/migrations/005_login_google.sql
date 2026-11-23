@@ -1,5 +1,5 @@
 -- Login Google para clientes.
--- Execute uma única vez no banco existente antes de implantar o novo código.
+-- Idempotente: pode ser executada de novo sem erro.
 ALTER TABLE `usuario`
-    ADD COLUMN `google_sub` VARCHAR(255) NULL AFTER `senha_hash`,
-    ADD UNIQUE KEY `un_usuario_google_sub` (`google_sub`);
+    ADD COLUMN IF NOT EXISTS `google_sub` VARCHAR(255) NULL AFTER `senha_hash`,
+    ADD UNIQUE KEY IF NOT EXISTS `un_usuario_google_sub` (`google_sub`);

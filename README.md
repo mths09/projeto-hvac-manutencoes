@@ -94,9 +94,19 @@ projeto-hvac-manutencoes/
    2. `banco/seed.sql`
    3. `banco/triagem_mvp.sql`
    4. `banco/demo_horarios.sql`
-   5. Os arquivos da pasta `banco/migrations/`, em ordem numérica:
-      - `001_recuperacao_senha.sql`
-      - `002_aceite_politica.sql`
+
+   O `schema.sql` já traz todas as tabelas e colunas atuais; num banco novo,
+   não é preciso rodar as migrations.
+
+   **Atualizando um banco antigo?** Rode os arquivos de `banco/migrations/`
+   em ordem numérica. Todos podem ser executados de novo sem erro (só criam o
+   que ainda falta):
+   - `001_recuperacao_senha.sql`
+   - `002_aceite_politica.sql`
+   - `003_unique_usuario_telefone.sql` (antes, corrija telefones duplicados;
+     a consulta está no próprio arquivo)
+   - `004_confirmacao_email_cadastro.sql`
+   - `005_login_google.sql`
 
 5. Para habilitar o envio de e-mails, copie
    `backend/email_config.example.php` para
@@ -128,7 +138,8 @@ projeto-hvac-manutencoes/
 
 - A sequência acima foi testada em um banco novo. Não a execute sobre um banco que contenha dados que você deseja preservar.
 - `seed.sql` insere dados fixos iniciais. Execute-o apenas uma vez, depois de criar as tabelas.
-- Execute cada migration uma vez, em ordem numérica. Se a tabela daquela migration já existir, não execute o mesmo arquivo novamente.
+- As migrations são idempotentes: rodar de novo não dá erro nem apaga dados.
+- Os scripts não fixam o nome do banco; selecione o banco no phpMyAdmin antes de importar.
 - `demo_horarios.sql` cria horários fictícios para demonstração. Ele pode ser executado novamente para repor horários, pois ignora os que já existem.
 - `hvac_db.sql` é um dump antigo e não faz parte desta sequência de instalação.
 - O link de recuperação de senha usa o endereço configurado em `app_url`. Com `localhost`, o link só abre o servidor local da máquina em que o navegador está sendo usado.

@@ -99,7 +99,8 @@ try {
             ss.codigo AS status,
             ss.nome AS status_nome,
             ea.endereco_informado AS endereco,
-            d.inicio_previsto,
+            -- Serviço concluído não tem agendamento ativo: usa o horário do atendimento realizado.
+            COALESCE(d.inicio_previsto, dc.inicio_previsto) AS inicio_previsto,
             a.id_agendamento,
             a.id_anterior,
             a.status AS status_agendamento,
@@ -136,6 +137,7 @@ try {
             FROM agendamento AS a3
             WHERE a3.id_solicitacao = s.id_solicitacao AND a3.status = 'CONCLUIDO'
          )
+         LEFT JOIN disponibilidade AS dc ON dc.id_disponibilidade = ac.id_disponibilidade
          LEFT JOIN avaliacao_atendimento AS av ON av.id_agendamento = ac.id_agendamento
          WHERE s.id_cliente = ?
          ORDER BY s.criada_em DESC, s.id_solicitacao DESC"

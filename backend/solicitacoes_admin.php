@@ -200,7 +200,7 @@ try {
                     ts.nome AS servico,
                     COALESCE(NULLIF(s.telefone_contato, ''), u.telefone, '') AS telefone,
                     ea.endereco_informado AS endereco,
-                    d.inicio_previsto,
+                    COALESCE(d.inicio_previsto, dc.inicio_previsto) AS inicio_previsto,
                     a.status AS status_agendamento,
                     a.id_anterior,
                     (SELECT anterior_d.inicio_previsto FROM agendamento anterior_a INNER JOIN disponibilidade anterior_d ON anterior_d.id_disponibilidade = anterior_a.id_disponibilidade WHERE anterior_a.id_agendamento = a.id_anterior) AS inicio_anterior,
@@ -220,10 +220,12 @@ try {
                 LIMIT 1
              )
              LEFT JOIN disponibilidade d ON d.id_disponibilidade = a.id_disponibilidade
-             LEFT JOIN avaliacao_atendimento av ON av.id_agendamento = (
+             LEFT JOIN agendamento ac ON ac.id_agendamento = (
                 SELECT MAX(a3.id_agendamento) FROM agendamento a3
                 WHERE a3.id_solicitacao = s.id_solicitacao AND a3.status = 'CONCLUIDO'
              )
+             LEFT JOIN disponibilidade dc ON dc.id_disponibilidade = ac.id_disponibilidade
+             LEFT JOIN avaliacao_atendimento av ON av.id_agendamento = ac.id_agendamento
              WHERE s.arquivada_em IS NULL
              ORDER BY s.criada_em DESC, s.id_solicitacao DESC"
         );

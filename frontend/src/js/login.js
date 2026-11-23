@@ -202,7 +202,7 @@ async function prepararLoginGoogle() {
   if (!container) return;
 
   try {
-    const configUrl = new URL("../../../backend/google_config.php", location.href);
+    const configUrl = new URL("../../../backend/google_preparar_login.php", location.href);
     const configResponse = await fetch(configUrl, { credentials: "same-origin", headers: { Accept: "application/json" } });
     const config = await configResponse.json();
     if (!configResponse.ok || config.sucesso !== true) return;
