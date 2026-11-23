@@ -4,6 +4,7 @@ Options -Indexes
 Options -Indexes
 RewriteEngine On
 RewriteRule ^(\.git|\.vscode|banco|tests|docs|tmp)(/|$) - [F,NC,L]
+RewriteRule ^backend/google_config\.php$ - [L]
 RewriteRule (^|/)[^/]*config[^/]*\.(php|json|ini)$ - [F,NC,L]
 RewriteRule \.(sql|md|ini|log|env|bak|zip)$ - [F,NC,L]
 </IfModule>
