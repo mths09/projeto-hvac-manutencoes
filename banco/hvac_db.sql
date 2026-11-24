@@ -590,6 +590,7 @@ CREATE TABLE `usuario` (
   `nome` varchar(150) NOT NULL,
   `email` varchar(254) NOT NULL,
   `senha_hash` varchar(255) NOT NULL,
+  `google_sub` varchar(255) DEFAULT NULL,
   `telefone` varchar(25) NOT NULL,
   `telefone_normalizado` varchar(25) GENERATED ALWAYS AS (NULLIF(REGEXP_REPLACE(`telefone`, '[^0-9]', ''), '')) VIRTUAL,
   `data_nascimento` date DEFAULT NULL,
@@ -608,8 +609,7 @@ CREATE TABLE `aceite_politica` (
   `user_agent_hash` char(64) NOT NULL,
   PRIMARY KEY (`id_aceite`),
   UNIQUE KEY `un_aceite_usuario_versao` (`id_usuario`,`versao`),
-  KEY `fk_aceite_usuario` (`id_usuario`),
-
+  KEY `fk_aceite_usuario` (`id_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `cadastro_pendente` (
@@ -875,7 +875,8 @@ ALTER TABLE `triagem`
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id_usuario`),
   ADD UNIQUE KEY `un_usuario_email` (`email`),
-  ADD UNIQUE KEY `un_usuario_telefone_normalizado` (`telefone_normalizado`);
+  ADD UNIQUE KEY `un_usuario_telefone_normalizado` (`telefone_normalizado`),
+  ADD UNIQUE KEY `un_usuario_google_sub` (`google_sub`);
 
 -- Usuário administrador inicial para instalações limpas
 -- A senha armazenada é um hash bcrypt compatível com password_verify().
