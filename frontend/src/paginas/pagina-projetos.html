@@ -85,7 +85,8 @@
         <div class="secao-cabecalho">
           <p class="sobretitulo">Soluções na prática</p>
           <h2 id="titulo-casos">Situações demonstrativas</h2>
-          <p>
+          <!-- Se houver serviços publicados no painel, o JS troca os exemplos por eles -->
+          <p id="intro-projetos">
             Os casos abaixo são fictícios e foram criados para apresentar a
             abordagem técnica. As imagens são ilustrativas, baseadas no material
             visual fornecido pela empresa.
@@ -94,6 +95,7 @@
 
         <div
           class="filtros-projetos"
+          id="filtros-projetos"
           role="group"
           aria-label="Filtrar exemplos por categoria"
         >
@@ -256,7 +258,7 @@
           </article>
         </div>
 
-        <p class="aviso-demonstrativo">
+        <p class="aviso-demonstrativo" id="aviso-demonstrativo">
           Página demonstrativa de projetos acadêmicos. Os casos e resultados
           apresentados são fictícios e não comprovam serviços executados nem
           garantem resultados futuros.

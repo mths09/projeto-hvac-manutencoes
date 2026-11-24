@@ -51,7 +51,8 @@ try {
     }
 
     require_once __DIR__ . '/conexao.php';
-    $stmt = $conexao->prepare('SELECT id_usuario, nome, email, perfil, ativo FROM usuario WHERE google_sub = ? LIMIT 1');
+
+    $stmt = $conexao->prepare('SELECT id_usuario, nome, email, telefone, perfil, ativo FROM usuario WHERE google_sub = ? LIMIT 1');
     $stmt->bind_param('s', $payload['sub']);
     $stmt->execute();
     $usuario = $stmt->get_result()->fetch_assoc();
@@ -71,7 +72,7 @@ try {
     }
 
     if (!$usuario) {
-        $stmt = $conexao->prepare('SELECT id_usuario, nome, email, perfil, ativo, google_sub FROM usuario WHERE email = ? LIMIT 1');
+        $stmt = $conexao->prepare('SELECT id_usuario, nome, email, telefone, perfil, ativo, google_sub FROM usuario WHERE email = ? LIMIT 1');
         $stmt->bind_param('s', $email);
         $stmt->execute();
         $usuario = $stmt->get_result()->fetch_assoc();
@@ -107,16 +108,51 @@ try {
         responderGoogle(200, ['sucesso' => true, 'area' => 'cliente', 'destino' => './dashboard.html']);
     }
 
-    $nome = trim((string) ($payload['name'] ?? ''));
-    $_SESSION['cadastro_google'] = [
-        'sub' => $payload['sub'],
-        'email' => $email,
-        'nome' => $nome,
-        'expira_em' => time() + 600,
-    ];
-    $_SESSION['csrf_cadastro_google'] = bin2hex(random_bytes(32));
+    // Primeiro acesso: cria a conta só com nome e e-mail do Google. Telefone,
+    // endereço e nascimento o cliente completa depois, pelo aviso no dashboard.
+    // Telefone vazio vira NULL em telefone_normalizado, sem violar o índice único.
+    $nome = preg_replace('/\s+/u', ' ', trim((string) ($payload['name'] ?? ''))) ?? '';
+    if (mb_strlen($nome, 'UTF-8') < 2 || preg_match('/[\p{C}<>]/u', $nome)) {
+        $nome = (string) strstr($email, '@', true);
+    }
+    $nome = mb_substr($nome, 0, 150, 'UTF-8');
+    $senhaHash = password_hash(bin2hex(random_bytes(32)), PASSWORD_BCRYPT, ['cost' => 12]);
+    if (!is_string($senhaHash)) {
+        throw new RuntimeException('Não foi possível proteger a conta.');
+    }
+    $telefoneVazio = '';
+    $perfil = 'cliente';
+    $versaoPolitica = '1.0';
+    $ipHash = hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido'));
+    $userAgentHash = hash('sha256', (string) ($_SERVER['HTTP_USER_AGENT'] ?? 'desconhecido'));
+    $aceitoEm = date('Y-m-d H:i:s');
+
+    $conexao->begin_transaction();
+    try {
+        $stmt = $conexao->prepare('INSERT INTO usuario (nome,email,senha_hash,telefone,data_nascimento,perfil,google_sub) VALUES (?,?,?,?,NULL,?,?)');
+        $stmt->bind_param('ssssss', $nome, $email, $senhaHash, $telefoneVazio, $perfil, $payload['sub']);
+        $stmt->execute();
+        $idUsuario = (int) $conexao->insert_id;
+        $stmt->close();
+
+        // O aviso da política fica junto ao botão do Google no login.
+        $stmt = $conexao->prepare('INSERT INTO aceite_politica (id_usuario,versao,ip_hash,user_agent_hash,aceito_em) VALUES (?,?,?,?,?)');
+        $stmt->bind_param('issss', $idUsuario, $versaoPolitica, $ipHash, $userAgentHash, $aceitoEm);
+        $stmt->execute();
+        $stmt->close();
+        $conexao->commit();
+    } catch (Throwable $erro) {
+        $conexao->rollback();
+        if ($erro instanceof mysqli_sql_exception && (int) $erro->getCode() === 1062) {
+            // Outro envio simultâneo criou a conta: basta entrar de novo.
+            responderGoogle(409, ['sucesso' => false, 'mensagem' => 'Sua conta acabou de ser criada. Clique em continuar com Google novamente.']);
+        }
+        throw $erro;
+    }
+
+    estabelecerSessaoGoogle(['id_usuario' => $idUsuario, 'nome' => $nome, 'email' => $email]);
     session_write_close();
-    responderGoogle(200, ['sucesso' => true, 'cadastro_google' => true, 'destino' => './cadastro.html?google=1']);
+    responderGoogle(200, ['sucesso' => true, 'area' => 'cliente', 'destino' => './dashboard.html']);
 } catch (mysqli_sql_exception $erro) {
     error_log('Falha no banco durante login Google: código ' . $erro->getCode());
     responderGoogle(503, ['sucesso' => false, 'mensagem' => 'Não foi possível acessar a conta. Tente novamente mais tarde.']);

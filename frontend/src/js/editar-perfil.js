@@ -17,6 +17,7 @@ const botaoSalvar = formularioPerfil.querySelector('[type="submit"]');
 const campoNome = document.querySelector("#nome");
 const campoEmail = document.querySelector("#email");
 const campoTelefone = document.querySelector("#telefone");
+const campoNascimento = document.querySelector("#data_nascimento");
 const campoCep = document.querySelector("#cep");
 const campoNumero = document.querySelector("#numero");
 const campoLogradouro = document.querySelector("#logradouro");
@@ -44,8 +45,27 @@ const camposPorNome = {
   nome: campoNome,
   email: campoEmail,
   telefone: campoTelefone,
+  data_nascimento: campoNascimento,
   ...camposEndereco,
 };
+
+const hoje = new Date();
+campoNascimento.max = [
+  hoje.getFullYear(),
+  String(hoje.getMonth() + 1).padStart(2, "0"),
+  String(hoje.getDate()).padStart(2, "0"),
+].join("-");
+
+// Opcional: vazio é permitido.
+function validarNascimento() {
+  if (campoNascimento.validity.badInput) return "Informe uma data válida.";
+  const valor = campoNascimento.value;
+  if (valor === "") return "";
+  if (valor < campoNascimento.min || valor > campoNascimento.max) {
+    return "Informe uma data de nascimento válida, que não esteja no futuro.";
+  }
+  return "";
+}
 
 const buscaCep = ativarBuscaCep(camposEndereco, statusCep);
 
@@ -56,6 +76,7 @@ function validarFormulario() {
   mostrarErro(campoNome, validarNome(campoNome.value));
   mostrarErro(campoEmail, validarEmail(campoEmail.value));
   mostrarErro(campoTelefone, validarTelefone(campoTelefone.value));
+  mostrarErro(campoNascimento, validarNascimento());
   validarCamposEndereco(camposEndereco);
 }
 
@@ -83,6 +104,9 @@ function preencherCampos(perfil) {
   campoNome.value = textoSeguro(perfil.nome);
   campoEmail.value = textoSeguro(perfil.email);
   campoTelefone.value = formatarTelefone(perfil.telefone);
+  campoNascimento.value = /^\d{4}-\d{2}-\d{2}$/.test(textoSeguro(perfil.data_nascimento))
+    ? perfil.data_nascimento
+    : "";
 
   campoCep.value = formatarCep(textoSeguro(endereco.cep));
   campoLogradouro.value = textoSeguro(endereco.logradouro);
@@ -232,6 +256,7 @@ formularioPerfil.addEventListener("submit", async (evento) => {
     nome: campoNome.value.trim(),
     email: campoEmail.value.trim(),
     telefone: campoTelefone.value.trim(),
+    data_nascimento: campoNascimento.value,
     endereco: {
       cep: campoCep.value.trim(),
       logradouro: campoLogradouro.value.trim(),

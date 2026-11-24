@@ -1,6 +1,5 @@
 -- Horários de demonstração: dias úteis dos próximos 14 dias, 4 faixas por dia.
 -- Pode ser executado de novo: só cria o que ainda não existe.
-USE hvac_db;
 SET time_zone = '-03:00';
 
 INSERT INTO disponibilidade (inicio_previsto, fim_previsto, situacao, capacidade)

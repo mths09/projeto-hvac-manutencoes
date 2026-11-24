@@ -707,12 +707,13 @@ form input[aria-invalid="true"]:focus {
   display: none;
 }
 
-.aviso-cadastro-google {
-  margin: 14px 0;
-  padding: 12px 14px;
-  border: 1px solid #22d3ee;
-  border-radius: 10px;
-  background: rgba(34, 211, 238, 0.08);
-  color: #cffafe;
-  font-size: 13px;
+.aviso-politica-google {
+  margin: -4px 0 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #aab3c8;
+}
+
+.aviso-politica-google a {
+  color: #22d3ee;
 }

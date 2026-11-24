@@ -238,7 +238,7 @@ async function prepararLoginGoogle() {
 
   try {
     const configUrl = new URL(
-      "../../../backend/google_config.php",
+      "../../../backend/google_preparar_login.php",
       location.href,
     );
     const configResponse = await fetch(configUrl, {
@@ -264,6 +264,9 @@ async function prepararLoginGoogle() {
       !config.client_id
     )
       return;
+
+    // Login padrão do Google: só nome e e-mail, sem permissões extras.
+    // Telefone, endereço e nascimento ficam no perfil.
     window.google.accounts.id.initialize({
       client_id: config.client_id,
       nonce: config.nonce,
@@ -294,16 +297,8 @@ async function prepararLoginGoogle() {
             throw new Error(
               dados.mensagem || "Não foi possível entrar com Google.",
             );
-          if (
-            dados.cadastro_google === true &&
-            dados.destino === "./cadastro.html?google=1"
-          ) {
-            const cadastro = new URL(dados.destino, location.href);
-              const agendamento = new URL(destinoAposLogin({ area: "cliente", destino: "./dashboard.html" }), location.href);
-              cadastro.search = new URLSearchParams([...cadastro.searchParams, ...agendamento.searchParams]);
-              window.location.replace(cadastro.href);
-            return;
-          }
+          // O Google sempre cria/entra na conta e vai para o painel do cliente
+          // (ou volta ao agendamento, se o login começou por lá).
           if (
             dados.area !== "cliente" ||
             dados.destino !== "./dashboard.html"
@@ -336,6 +331,8 @@ async function prepararLoginGoogle() {
       logo_alignment: "left",
     });
     container.hidden = false;
+    const avisoPolitica = document.getElementById("aviso-politica-google");
+    if (avisoPolitica) avisoPolitica.hidden = false;
   } catch (erro) {
     console.error("Não foi possível carregar o login Google:", erro);
   }

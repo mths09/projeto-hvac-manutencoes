@@ -2,13 +2,18 @@
   "use strict";
 
   const API = "../../../backend/dashboard_cliente.php";
+  const API_AVALIACAO = "../../../backend/avaliacao_cliente.php";
   const PAGINA_LOGIN = "./login.html";
+  const NOMES_NOTA = ["", "Muito ruim", "Ruim", "Regular", "Bom", "Excelente"];
+
+  let csrf = "";
 
   const $ = (seletor) => document.querySelector(seletor);
 
   const idServico = new URLSearchParams(window.location.search).get("id");
 
-  const novoAgendamento = document.querySelector(".btn-agendamento");
+  // Só o link "Novo agendamento" do painel de ações (o botão da avaliação usa a mesma classe).
+  const novoAgendamento = document.querySelector(".painel-acoes a.btn-agendamento");
 
   if (novoAgendamento && /^[1-9]\d*$/.test(idServico ?? "")) {
     const destino = new URL(novoAgendamento.href);
@@ -233,7 +238,7 @@
 
       const link = criar("a", "link-baixar-documento", "Baixar PDF");
       link.href = String(documento.url || "");
-      link.dowload = "";
+      link.download = "";
 
       link.setAttribute(
         "aria-label",
@@ -244,6 +249,30 @@
       lista.append(cartao);
     }
   }
+
+  // Botão "Baixar recibo": usa o recibo mais recente que a equipe liberou para este serviço.
+  let urlRecibo = "";
+
+  function configurarRecibo(documentos) {
+    const botao = $("#btn-recibo");
+    if (!botao) return;
+
+    // A lista já vem do mais recente para o mais antigo.
+    const recibo = (Array.isArray(documentos) ? documentos : []).find(
+      (documento) => documento.tipo === "RECIBO" && documento.url,
+    );
+
+    urlRecibo = recibo ? String(recibo.url) : "";
+    botao.disabled = !recibo;
+    botao.textContent = recibo ? "Baixar recibo" : "Recibo ainda não disponível";
+    botao.title = recibo
+      ? `Baixar ${recibo.titulo || "recibo"} (PDF)`
+      : "O recibo aparece aqui quando a equipe liberar o documento.";
+  }
+
+  $("#btn-recibo")?.addEventListener("click", () => {
+    if (urlRecibo) window.location.href = urlRecibo;
+  });
 
   function renderizarAnexos(anexos) {
     const lista = $("#lista-fotos-atendimento");
@@ -268,6 +297,145 @@
 
     lista.className = "";
     lista.append(galeria);
+  }
+
+  // =========================================
+  // AVALIAÇÃO DO ATENDIMENTO (só serviço concluído)
+  // =========================================
+
+  function mostrarAvaliacaoEnviada(avaliacao) {
+    const nota = Math.max(0, Math.min(5, Number(avaliacao.nota) || 0));
+    const estrelas = $("#estrelas-lidas");
+
+    estrelas.replaceChildren();
+    for (let i = 1; i <= 5; i++) {
+      estrelas.append(criar("span", i <= nota ? "cheia" : "", "★"));
+    }
+    estrelas.setAttribute(
+      "aria-label",
+      `Sua nota: ${nota} de 5 (${NOMES_NOTA[nota] || ""})`,
+    );
+
+    texto("#texto-avaliacao", avaliacao.comentario, "Sem comentário.");
+    texto(
+      "#data-avaliacao",
+      avaliacao.avaliada_em
+        ? `Avaliado em ${formatarDataHora(avaliacao.avaliada_em)}`
+        : "",
+      "",
+    );
+
+    $("#avaliacao-atendimento .titulo-sessao").textContent = "Sua avaliação";
+    $("#form-avaliacao").hidden = true;
+    $("#avaliacao-enviada").hidden = false;
+  }
+
+  function pintarEstrelas(ate) {
+    document.querySelectorAll(".estrelas label").forEach((label, indice) => {
+      label.classList.toggle("cheia", indice < ate);
+    });
+    texto("#nome-nota", NOMES_NOTA[ate] || "", "");
+  }
+
+  function notaEscolhida() {
+    return Number($('.estrelas input[name="nota"]:checked')?.value) || 0;
+  }
+
+  function prepararFormularioAvaliacao(servico) {
+    const form = $("#form-avaliacao");
+    const aviso = $("#aviso-avaliacao");
+    const botao = form.querySelector('button[type="submit"]');
+
+    document.querySelectorAll(".estrelas label").forEach((label, indice) => {
+      label.addEventListener("mouseenter", () => pintarEstrelas(indice + 1));
+    });
+    $(".estrelas").addEventListener("mouseleave", () =>
+      pintarEstrelas(notaEscolhida()),
+    );
+    form.addEventListener("change", () => {
+      pintarEstrelas(notaEscolhida());
+      aviso.textContent = "";
+    });
+
+    form.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+
+      const nota = notaEscolhida();
+      if (!nota) {
+        aviso.textContent = "Escolha de 1 a 5 estrelas.";
+        return;
+      }
+
+      botao.disabled = true;
+      botao.textContent = "Enviando…";
+      aviso.textContent = "";
+
+      try {
+        const resposta = await fetch(API_AVALIACAO, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            csrf,
+            protocolo: servico.protocolo,
+            nota,
+            comentario: $("#comentario-avaliacao").value,
+          }),
+        });
+
+        if (resposta.status === 401) {
+          window.location.replace(PAGINA_LOGIN);
+          return;
+        }
+
+        const dados = await resposta.json().catch(() => ({}));
+
+        if (resposta.ok && dados?.sucesso === true) {
+          mostrarAvaliacaoEnviada(dados.avaliacao || { nota });
+          return;
+        }
+
+        aviso.textContent =
+          dados?.mensagem || "Não foi possível enviar a avaliação.";
+
+        // Já avaliado em outra aba: recarrega para mostrar a nota salva.
+        if (resposta.status === 409) carregar();
+      } catch (erro) {
+        console.error("Erro ao enviar avaliação:", erro);
+        aviso.textContent =
+          "Não foi possível enviar agora. Verifique a conexão e tente de novo.";
+      } finally {
+        botao.disabled = false;
+        botao.textContent = "Enviar avaliação";
+      }
+    });
+  }
+
+  let formularioPreparado = false;
+
+  function renderizarAvaliacao(servico) {
+    const secao = $("#avaliacao-atendimento");
+    if (!secao) return;
+
+    if (servico.avaliacao) {
+      secao.hidden = false;
+      mostrarAvaliacaoEnviada(servico.avaliacao);
+      return;
+    }
+
+    if (!servico.pode_avaliar) {
+      secao.hidden = true;
+      return;
+    }
+
+    secao.hidden = false;
+    if (!formularioPreparado) {
+      prepararFormularioAvaliacao(servico);
+      formularioPreparado = true;
+    }
   }
 
   function preencherServico(servico, documentos = []) {
@@ -310,6 +478,8 @@
 
     renderizarAnexos(servico.anexos);
     renderizarDocumentos(documentos);
+    configurarRecibo(documentos);
+    renderizarAvaliacao(servico);
 
     montarLinhaTempo(servico);
   }
@@ -368,6 +538,7 @@
         throw new Error(dados?.mensagem || "Não foi possível carregar.");
       }
 
+      csrf = String(dados.csrf || "");
       preencherUsuario(dados.usuario || {});
 
       const servico = (dados.servicos || []).find(

@@ -62,6 +62,51 @@
             </ol>
           </section>
 
+          <!-- Avaliação: só aparece quando o serviço está concluído -->
+          <section id="avaliacao-atendimento" class="card" hidden>
+            <h2 class="titulo-sessao">Avalie o atendimento</h2>
+
+            <form id="form-avaliacao" class="form-avaliacao" novalidate>
+              <fieldset class="estrelas">
+                <legend>Que nota você dá para este atendimento?</legend>
+                <input type="radio" name="nota" id="nota-1" value="1" />
+                <label for="nota-1" title="1 estrela: Muito ruim">★<span class="sr-only">1 estrela, muito ruim</span></label>
+                <input type="radio" name="nota" id="nota-2" value="2" />
+                <label for="nota-2" title="2 estrelas: Ruim">★<span class="sr-only">2 estrelas, ruim</span></label>
+                <input type="radio" name="nota" id="nota-3" value="3" />
+                <label for="nota-3" title="3 estrelas: Regular">★<span class="sr-only">3 estrelas, regular</span></label>
+                <input type="radio" name="nota" id="nota-4" value="4" />
+                <label for="nota-4" title="4 estrelas: Bom">★<span class="sr-only">4 estrelas, bom</span></label>
+                <input type="radio" name="nota" id="nota-5" value="5" />
+                <label for="nota-5" title="5 estrelas: Excelente">★<span class="sr-only">5 estrelas, excelente</span></label>
+                <span class="nome-nota" id="nome-nota" aria-hidden="true"></span>
+              </fieldset>
+
+              <label for="comentario-avaliacao" class="titulo-item">
+                Comentário (opcional)
+              </label>
+              <textarea
+                id="comentario-avaliacao"
+                name="comentario"
+                maxlength="1000"
+                rows="3"
+                placeholder="Conte como foi o atendimento"
+              ></textarea>
+
+              <p id="aviso-avaliacao" class="aviso-avaliacao" role="status"></p>
+
+              <button type="submit" class="btn-agendamento btn-avaliar">
+                Enviar avaliação
+              </button>
+            </form>
+
+            <div id="avaliacao-enviada" class="avaliacao-enviada" hidden>
+              <p class="estrelas-lidas" id="estrelas-lidas"></p>
+              <p class="texto-avaliacao" id="texto-avaliacao"></p>
+              <small id="data-avaliacao"></small>
+            </div>
+          </section>
+
           <section id="detalhes-servico" class="card">
             <h2 class="titulo-sessao">Detalhes do serviço</h2>
 
@@ -126,8 +171,9 @@
           <section class="card painel-acoes">
             <h2 class="titulo-sessao">Ações</h2>
 
-            <button class="btn-nota-fiscal" type="button">
-              Baixar nota fiscal
+            <!-- Baixa o recibo que a equipe liberou para este serviço (painel admin > Documentos) -->
+            <button id="btn-recibo" class="btn-nota-fiscal" type="button" disabled>
+              Carregando recibo…
             </button>
 
             <a href="./agendamento.html?origem=servico" class="btn-agendamento">

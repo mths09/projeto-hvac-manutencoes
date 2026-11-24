@@ -43,6 +43,7 @@ async function salvarPerfil(perfil) {
       nome: perfil.nome,
       email: perfil.email,
       telefone: perfil.telefone,
+      data_nascimento: perfil.data_nascimento,
       endereco: perfil.endereco,
       csrf: csrfPerfil,
     }),

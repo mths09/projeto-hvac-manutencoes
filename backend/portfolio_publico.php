@@ -20,7 +20,7 @@ try {
     require_once __DIR__ . '/conexao.php';
     $stmt = $conexao->prepare(
         'SELECT i.id_item_portfolio AS id, i.titulo, i.descricao,
-                i.localidade_publica AS localidade, c.nome AS categoria,
+                i.localidade_publica AS localidade, c.nome AS categoria, c.codigo AS categoria_codigo,
                 c.cor AS cor_categoria, i.id_arquivo_capa
          FROM item_portfolio i
          INNER JOIN categoria_portfolio c ON c.id_categoria = i.id_categoria AND c.ativo = 1
@@ -38,6 +38,7 @@ try {
             'descricao' => (string) ($linha['descricao'] ?? ''),
             'localidade' => (string) ($linha['localidade'] ?? ''),
             'categoria' => (string) $linha['categoria'],
+            'categoria_codigo' => (string) $linha['categoria_codigo'],
             'cor_categoria' => (string) ($linha['cor_categoria'] ?? '#00d8f3'),
             'imagem' => './backend/portfolio_imagem.php?id=' . (string) $linha['id_arquivo_capa']
         ];

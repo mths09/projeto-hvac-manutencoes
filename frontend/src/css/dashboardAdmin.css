@@ -1018,6 +1018,36 @@ label {
   color: #f5f6fc;
 }
 
+/* Avaliação do cliente na tabela do histórico */
+.sr-estrelas {
+  color: #ffd600;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.sr-estrelas-vazias {
+  color: rgb(255 255 255 / 20%);
+}
+
+td .sr-estrelas {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.rating-comment {
+  display: block;
+  max-width: 260px;
+  margin-top: 2px;
+  color: #a0a5b7;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.rating-pending {
+  color: #81879b;
+  font-size: 12px;
+}
+
 .sr-documentos {
   display: grid;
   gap: 14px;

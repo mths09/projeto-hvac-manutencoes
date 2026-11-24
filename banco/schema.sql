@@ -832,6 +832,113 @@ ALTER TABLE `triagem`
   ADD CONSTRAINT `fk_triagem_respondente` FOREIGN KEY (`id_respondente`) REFERENCES `usuario` (`id_usuario`),
   ADD CONSTRAINT `fk_triagem_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
 
+-- Restrições (chaves estrangeiras) das demais tabelas.
+-- Garantem que cada registro aponte para um pai existente (iguais às do banco em uso).
+--
+ALTER TABLE `agendamento`
+  ADD CONSTRAINT `fk_agendamento_anterior` FOREIGN KEY (`id_anterior`) REFERENCES `agendamento` (`id_agendamento`),
+  ADD CONSTRAINT `fk_agendamento_atribuicao` FOREIGN KEY (`id_atribuicao`) REFERENCES `atribuicao_tecnica` (`id_atribuicao`),
+  ADD CONSTRAINT `fk_agendamento_disponibilidade` FOREIGN KEY (`id_disponibilidade`) REFERENCES `disponibilidade` (`id_disponibilidade`),
+  ADD CONSTRAINT `fk_agendamento_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `anexo_solicitacao`
+  ADD CONSTRAINT `fk_anexo_solicitacao_arquivo` FOREIGN KEY (`id_arquivo`) REFERENCES `arquivo` (`id_arquivo`),
+  ADD CONSTRAINT `fk_anexo_solicitacao_resposta` FOREIGN KEY (`id_resposta`) REFERENCES `resposta_triagem` (`id_resposta`),
+  ADD CONSTRAINT `fk_anexo_solicitacao_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `arquivo`
+  ADD CONSTRAINT `fk_arquivo_autor` FOREIGN KEY (`id_autor`) REFERENCES `usuario` (`id_usuario`);
+
+ALTER TABLE `atribuicao_tecnica`
+  ADD CONSTRAINT `fk_atribuicao_responsavel` FOREIGN KEY (`id_responsavel`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_atribuicao_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`),
+  ADD CONSTRAINT `fk_atribuicao_tecnico` FOREIGN KEY (`id_tecnico`) REFERENCES `tecnico` (`id_tecnico`);
+
+ALTER TABLE `avaliacao_atendimento`
+  ADD CONSTRAINT `fk_avaliacao_agendamento` FOREIGN KEY (`id_agendamento`) REFERENCES `agendamento` (`id_agendamento`),
+  ADD CONSTRAINT `fk_avaliacao_autor` FOREIGN KEY (`id_autor`) REFERENCES `usuario` (`id_usuario`);
+
+ALTER TABLE `condicao_pergunta`
+  ADD CONSTRAINT `fk_condicao_opcao_esperada` FOREIGN KEY (`id_opcao_esperada`) REFERENCES `opcao_pergunta` (`id_opcao`),
+  ADD CONSTRAINT `fk_condicao_pergunta_destino` FOREIGN KEY (`id_pergunta_destino`) REFERENCES `pergunta_triagem` (`id_pergunta`),
+  ADD CONSTRAINT `fk_condicao_pergunta_origem` FOREIGN KEY (`id_pergunta_origem`) REFERENCES `pergunta_triagem` (`id_pergunta`);
+
+ALTER TABLE `disponibilidade`
+  ADD CONSTRAINT `fk_disponibilidade_editor` FOREIGN KEY (`id_editor`) REFERENCES `usuario` (`id_usuario`);
+
+ALTER TABLE `documento`
+  ADD CONSTRAINT `fk_documento_arquivo` FOREIGN KEY (`id_arquivo`) REFERENCES `arquivo` (`id_arquivo`),
+  ADD CONSTRAINT `fk_documento_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `endereco_atendimento`
+  ADD CONSTRAINT `fk_endereco_atendimento_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `endereco_usuario`
+  ADD CONSTRAINT `fk_endereco_usuario_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
+
+ALTER TABLE `historico_status`
+  ADD CONSTRAINT `fk_historico_responsavel` FOREIGN KEY (`id_responsavel`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_historico_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`),
+  ADD CONSTRAINT `fk_historico_status_anterior` FOREIGN KEY (`id_status_anterior`) REFERENCES `status_solicitacao` (`id_status`),
+  ADD CONSTRAINT `fk_historico_status_novo` FOREIGN KEY (`id_status_novo`) REFERENCES `status_solicitacao` (`id_status`);
+
+ALTER TABLE `item_portfolio`
+  ADD CONSTRAINT `fk_item_portfolio_capa` FOREIGN KEY (`id_arquivo_capa`) REFERENCES `arquivo` (`id_arquivo`),
+  ADD CONSTRAINT `fk_item_portfolio_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `categoria_portfolio` (`id_categoria`),
+  ADD CONSTRAINT `fk_item_portfolio_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `item_solicitacao`
+  ADD CONSTRAINT `fk_item_solicitacao_estoque` FOREIGN KEY (`id_item_estoque`) REFERENCES `item_estoque` (`id_item_estoque`),
+  ADD CONSTRAINT `fk_item_solicitacao_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `movimentacao_estoque`
+  ADD CONSTRAINT `fk_movimentacao_estorno` FOREIGN KEY (`id_estorno_de`) REFERENCES `movimentacao_estoque` (`id_movimentacao`),
+  ADD CONSTRAINT `fk_movimentacao_item_estoque` FOREIGN KEY (`id_item_estoque`) REFERENCES `item_estoque` (`id_item_estoque`),
+  ADD CONSTRAINT `fk_movimentacao_item_solicitacao` FOREIGN KEY (`id_item_solicitacao`) REFERENCES `item_solicitacao` (`id_item_solicitacao`),
+  ADD CONSTRAINT `fk_movimentacao_responsavel` FOREIGN KEY (`id_responsavel`) REFERENCES `usuario` (`id_usuario`);
+
+ALTER TABLE `notificacao`
+  ADD CONSTRAINT `fk_notificacao_agendamento` FOREIGN KEY (`id_agendamento`) REFERENCES `agendamento` (`id_agendamento`),
+  ADD CONSTRAINT `fk_notificacao_destinatario` FOREIGN KEY (`id_destinatario`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_notificacao_documento` FOREIGN KEY (`id_documento`) REFERENCES `documento` (`id_documento`),
+  ADD CONSTRAINT `fk_notificacao_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `opcao_pergunta`
+  ADD CONSTRAINT `fk_opcao_pergunta_pergunta` FOREIGN KEY (`id_pergunta`) REFERENCES `pergunta_triagem` (`id_pergunta`);
+
+ALTER TABLE `orcamento`
+  ADD CONSTRAINT `fk_orcamento_decisor` FOREIGN KEY (`id_decisor`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_orcamento_solicitacao` FOREIGN KEY (`id_solicitacao`) REFERENCES `solicitacao` (`id_solicitacao`);
+
+ALTER TABLE `pergunta_triagem`
+  ADD CONSTRAINT `fk_pergunta_questionario` FOREIGN KEY (`id_questionario`) REFERENCES `questionario` (`id_questionario`);
+
+ALTER TABLE `questionario`
+  ADD CONSTRAINT `fk_questionario_tipo_servico` FOREIGN KEY (`id_tipo_servico`) REFERENCES `tipo_servico` (`id_tipo_servico`);
+
+ALTER TABLE `resposta_opcao`
+  ADD CONSTRAINT `fk_resposta_opcao_opcao` FOREIGN KEY (`id_opcao`) REFERENCES `opcao_pergunta` (`id_opcao`),
+  ADD CONSTRAINT `fk_resposta_opcao_resposta` FOREIGN KEY (`id_resposta`) REFERENCES `resposta_triagem` (`id_resposta`);
+
+ALTER TABLE `resposta_triagem`
+  ADD CONSTRAINT `fk_resposta_triagem_pergunta` FOREIGN KEY (`id_pergunta`) REFERENCES `pergunta_triagem` (`id_pergunta`),
+  ADD CONSTRAINT `fk_resposta_triagem_triagem` FOREIGN KEY (`id_triagem`) REFERENCES `triagem` (`id_triagem`);
+
+ALTER TABLE `solicitacao`
+  ADD CONSTRAINT `fk_solicitacao_arquivador` FOREIGN KEY (`id_arquivador`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_solicitacao_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_solicitacao_criador` FOREIGN KEY (`id_criador`) REFERENCES `usuario` (`id_usuario`),
+  ADD CONSTRAINT `fk_solicitacao_status` FOREIGN KEY (`id_status_atual`) REFERENCES `status_solicitacao` (`id_status`),
+  ADD CONSTRAINT `fk_solicitacao_tipo_servico` FOREIGN KEY (`id_tipo_servico`) REFERENCES `tipo_servico` (`id_tipo_servico`);
+
+ALTER TABLE `tecnico`
+  ADD CONSTRAINT `fk_tecnico_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`);
+
+ALTER TABLE `tecnico_especialidade`
+  ADD CONSTRAINT `fk_tecnico_especialidade_tecnico` FOREIGN KEY (`id_tecnico`) REFERENCES `tecnico` (`id_tecnico`),
+  ADD CONSTRAINT `fk_tecnico_especialidade_tipo_servico` FOREIGN KEY (`id_tipo_servico`) REFERENCES `tipo_servico` (`id_tipo_servico`);
+
+
 -- Estrutura para tabela de limite de tentativas de login.
 CREATE TABLE `tentativa_login` (
   `id_tentativa` bigint(20) NOT NULL AUTO_INCREMENT,

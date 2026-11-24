@@ -46,6 +46,12 @@ function localDate() {
   ].join("-");
 }
 
+// 401: sem login -> tela de login. 403: logado mas sem acesso de admin (ex.: cliente)
+// -> painel do cliente (que manda para o login se também não for cliente).
+function sairDoPainelAdmin(status) {
+  window.location.replace(status === 403 ? "./dashboard.html" : "./login.html");
+}
+
 function normalizarPedido(pedido) {
   const inicio = String(pedido.inicio_previsto || "");
   const criado = String(pedido.criada_em || "");
@@ -77,6 +83,13 @@ function normalizarPedido(pedido) {
         }))
       : [],
     totalDocuments: Number(pedido.total_documentos) || 0,
+    rating: pedido.avaliacao
+      ? {
+          score: Math.max(1, Math.min(5, Number(pedido.avaliacao.nota) || 0)),
+          comment: String(pedido.avaliacao.comentario || ""),
+          ratedAt: String(pedido.avaliacao.avaliada_em || ""),
+        }
+      : null,
     attachments: Array.isArray(pedido.anexos)
       ? pedido.anexos.map((anexo) => ({
           id: String(anexo.id),
@@ -105,7 +118,7 @@ async function carregarSolicitacoesAdmin(
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
+      sairDoPainelAdmin(resposta.status);
       return;
     }
     if (
@@ -187,7 +200,7 @@ async function enviarAcaoAdmin(pedido, acao, valores, controle) {
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
+      sairDoPainelAdmin(resposta.status);
       return;
     }
     if (!resposta.ok || dados?.sucesso !== true) {
@@ -352,6 +365,19 @@ function renderOverview() {
         </section>`;
 }
 
+// Nota que o cliente deu ao atendimento concluído (com o comentário, se houver).
+function ratingCell(order) {
+  if (!order.rating) {
+    return order.statusCode === "CONCLUIDO"
+      ? '<span class="rating-pending">Aguardando</span>'
+      : '<span class="rating-pending">—</span>';
+  }
+  const { score, comment } = order.rating;
+  return `
+    <span class="sr-estrelas" role="img" aria-label="Nota ${score} de 5">${"★".repeat(score)}<span class="sr-estrelas-vazias">${"★".repeat(5 - score)}</span></span>
+    ${comment ? `<small class="rating-comment">“${escapeHTML(comment)}”</small>` : ""}`;
+}
+
 function table(list, editable) {
   if (!list.length) return '<div class="empty">Nenhum pedido encontrado.</div>';
 
@@ -361,7 +387,7 @@ function table(list, editable) {
             <thead>
               <tr>
                 <th>Pedido</th><th>Cliente</th><th>Equipamento</th>
-                <th>Agendamento</th><th>Status</th>
+                <th>Agendamento</th><th>Status</th><th>Avaliação</th>
               </tr>
             </thead>
             <tbody>
@@ -393,6 +419,7 @@ function table(list, editable) {
                       : badge(order.status)
                   }
                   </td>
+                  <td>${ratingCell(order)}</td>
                 </tr>
               `,
                 )
@@ -1204,7 +1231,7 @@ function renderSchedule() {
       .then(async (resposta) => {
         const dados = await resposta.json();
         if (resposta.status === 401 || resposta.status === 403) {
-          window.location.replace("./login.html");
+          sairDoPainelAdmin(resposta.status);
           throw new Error("Sessão administrativa encerrada.");
         }
         if (
@@ -1637,7 +1664,7 @@ function renderSchedule() {
       });
       const dados = await resposta.json();
       if (resposta.status === 401 || resposta.status === 403) {
-        window.location.replace("./login.html");
+        sairDoPainelAdmin(resposta.status);
         return;
       }
       if (!resposta.ok || dados?.sucesso !== true) {
@@ -1984,7 +2011,7 @@ async function carregarPortfolioAdmin() {
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
+      sairDoPainelAdmin(resposta.status);
       return;
     }
     if (
@@ -2035,7 +2062,7 @@ async function enviarPortfolio(formData) {
   });
   const dados = await resposta.json();
   if (resposta.status === 401 || resposta.status === 403) {
-    window.location.replace("./login.html");
+    sairDoPainelAdmin(resposta.status);
     throw new Error("Entre como administrador para continuar.");
   }
   if (!resposta.ok || dados?.sucesso !== true)
@@ -2219,7 +2246,7 @@ async function carregarNotificacoesAdmin() {
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
+      sairDoPainelAdmin(resposta.status);
       return;
     }
     if (
@@ -2253,7 +2280,7 @@ async function acaoNotificacaoAdmin(acao, id = "") {
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
+      sairDoPainelAdmin(resposta.status);
       return false;
     }
     if (!resposta.ok || dados?.sucesso !== true)
@@ -2423,7 +2450,7 @@ async function carregarHorariosPedido() {
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
+      sairDoPainelAdmin(resposta.status);
       return;
     }
     if (
@@ -2518,7 +2545,7 @@ form.elements.phone.addEventListener("input", () => {
       const resultado = await resposta.json();
       if (sequencia !== buscaClienteSequencia) return;
       if (resposta.status === 401 || resposta.status === 403) {
-        window.location.replace("./login.html");
+        sairDoPainelAdmin(resposta.status);
         return;
       }
       if (!resposta.ok || resultado?.sucesso !== true) {
@@ -2652,7 +2679,7 @@ form.addEventListener("submit", async (event) => {
     });
     const resultado = await resposta.json();
     if (resposta.status === 401 || resposta.status === 403) {
-      window.location.replace("./login.html");
+      sairDoPainelAdmin(resposta.status);
       return;
     }
     if (!resposta.ok || resultado?.sucesso !== true) {

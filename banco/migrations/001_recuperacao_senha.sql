@@ -1,6 +1,5 @@
 -- Migração idempotente para bancos HVAC já existentes.
 -- Pode ser executada novamente sem apagar os dados da tabela.
-USE `hvac_db`;
 
 CREATE TABLE IF NOT EXISTS `recuperacao_senha` (
   `id_recuperacao` bigint(20) NOT NULL AUTO_INCREMENT,

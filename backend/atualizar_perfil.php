@@ -186,6 +186,35 @@ if(is_string($dados['telefone'] ?? null)) {
     }
 }
 
+// Data de nascimento é opcional: ausente = não mexe; vazia = remove.
+$atualizarNascimento = array_key_exists('data_nascimento', $dados);
+$dataNascimento = null;
+
+if ($atualizarNascimento) {
+    $valorNascimento = $dados['data_nascimento'];
+
+    if (!is_string($valorNascimento)) {
+        $erros['data_nascimento'] = 'Este campo deve ser um texto.';
+    } elseif (trim($valorNascimento) !== '') {
+        $valorNascimento = trim($valorNascimento);
+        $fuso = new DateTimeZone('America/Sao_Paulo');
+        $data = preg_match('/^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$/D', $valorNascimento)
+            ? DateTimeImmutable::createFromFormat('!Y-m-d', $valorNascimento, $fuso)
+            : false;
+
+        if (
+            !$data ||
+            $data->format('Y-m-d') !== $valorNascimento ||
+            $data > new DateTimeImmutable('today', $fuso) ||
+            (int) $data->format('Y') < 1900
+        ) {
+            $erros['data_nascimento'] = 'Informe uma data de nascimento válida, que não esteja no futuro.';
+        } else {
+            $dataNascimento = $valorNascimento;
+        }
+    }
+}
+
 if ($erros !== []) {
     responder(422, [
         'sucesso' => false,
@@ -264,6 +293,14 @@ try {
 
     $linhasAfetadas = $stmt->affected_rows;
     $stmt->close();
+
+    if ($atualizarNascimento) {
+        $stmt = $conexao->prepare('UPDATE usuario SET data_nascimento = ? WHERE id_usuario = ? AND ativo = 1');
+        $stmt->bind_param('si', $dataNascimento, $idUsuario);
+        $stmt->execute();
+        $linhasAfetadas += $stmt->affected_rows;
+        $stmt->close();
+    }
 
     // verificar se o usuário ainda esta ativo, se nada foi afetado
     if($linhasAfetadas === 0) {
@@ -358,6 +395,7 @@ try {
             'nome' => $nome,
             'email' => $email,
             'telefone' => $telefone,
+            'data_nascimento' => (string) ($dataNascimento ?? ''),
             'endereco' => $endereco,
         ],
     ]);

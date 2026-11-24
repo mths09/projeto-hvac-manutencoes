@@ -50,7 +50,7 @@ try {
     require_once __DIR__ . '/conexao.php';
 
     $stmt = $conexao->prepare(
-        'SELECT nome, email, telefone, perfil, ativo, criado_em
+        'SELECT nome, email, telefone, data_nascimento, perfil, ativo, criado_em
         FROM usuario WHERE id_usuario = ? LIMIT 1'
     );
     $stmt->bind_param('i', $idUsuario);
@@ -101,6 +101,7 @@ try {
             'nome' => (string) $usuario['nome'],
             'email' => (string) $usuario['email'],
             'telefone' => (string) $usuario['telefone'],
+            'data_nascimento' => (string) ($usuario['data_nascimento'] ?? ''),
             'endereco' => $enderecoPerfil,
             'endereco_antigo' => $enderecoAntigo,
             'criado_em' => (string) $usuario['criado_em']

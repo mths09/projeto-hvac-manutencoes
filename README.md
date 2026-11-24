@@ -43,7 +43,7 @@ modernização do processo de atendimento, principalmente para organização da 
 | Orçamentos                | Modelado     | Tabela sem API ou tela                           |
 | Documentos                | Modelado     | Listagem sem emissão ou download                 |
 | Estoque                   | Modelado     | Tabelas sem API ou tela                          |
-| Avaliação                 | Modelado     | Tabela sem fluxo                                 |
+| Avaliação                 | Implementado | Cliente dá nota de 1 a 5 ao serviço concluído    |
 | Técnicos                  | Modelado     | Trabalho futuro                                  |
 | Portfólio                 | Parcial      | Depende do material da empresa                   |
 | WhatsApp                  | Manual       | Link `wa.me`; não há confirmação automática      |
@@ -85,37 +85,31 @@ git clone https://github.com/mths09/projeto-hvac-manutencoes.git
 
 **Instalação nova.** No phpMyAdmin, crie e selecione o banco `hvac_db` com collation `utf8mb4_unicode_ci`. Importe os seguintes arquivos nesta ordem:
 
-1. `banco/schema.sql`
-2. `banco/seed.sql`
-3. `banco/triagem_mvp.sql`
-4. `banco/demo_horarios.sql`, se precisar de horários fictícios para demonstração.
+4. Selecione o banco `hvac_db` e importe os arquivos nesta ordem:
+   1. `banco/schema.sql`
+   2. `banco/seed.sql`
+   3. `banco/triagem_mvp.sql`
+   4. `banco/demo_horarios.sql`
 
-O `schema.sql` atual já incorpora as migrations `001` a `005`. Importe a carga inicial uma única vez por banco novo.
+   O `schema.sql` já traz todas as tabelas e colunas atuais; num banco novo,
+   não é preciso rodar as migrations.
 
-**Migração com dados.** Exporte a estrutura e os dados do banco original e importe o dump em um banco vazio no destino. Faça backup também dos anexos e das mídias usados na instalação. Em um dump de versão anterior, compare a estrutura restaurada com `banco/migrations/` e aplique apenas as migrations pendentes, em ordem numérica. O arquivo `banco/hvac_db.sql` do repositório é um dump antigo.
+   **Atualizando um banco antigo?** Rode os arquivos de `banco/migrations/`
+   em ordem numérica. Todos podem ser executados de novo sem erro (só criam o
+   que ainda falta):
+   - `001_recuperacao_senha.sql`
+   - `002_aceite_politica.sql`
+   - `003_unique_usuario_telefone.sql` (antes, corrija telefones duplicados;
+     a consulta está no próprio arquivo)
+   - `004_confirmacao_email_cadastro.sql`
+   - `005_login_google.sql`
 
-#### Conta e permissões do MariaDB
+5. Para habilitar o envio de e-mails, copie
+   `backend/email_config.example.php` para
+   `backend/email_config.local.php` e configure o SMTP. Nunca envie o arquivo
+   `email_config.local.php` ao Git.
 
-O exemplo versionado usa `hvac_app` em `localhost`. Para recuperar a configuração da instalação original, confirme a conta em `backend/db_config.local.php` e execute as consultas abaixo com uma conta administrativa do MariaDB de origem. Ajuste o usuário e o host da conta conforme a instalação.
-
-```sql
-SHOW CREATE USER 'hvac_app'@'localhost';
-SHOW GRANTS FOR 'hvac_app'@'localhost';
-```
-
-Os privilégios efetivos da instalação original precisam ser confirmados com essas consultas. Se a importação e as migrations forem executadas por uma conta administrativa, use o seguinte modelo para uma instalação nova e valide as operações com a conta da aplicação. Substitua o marcador por uma senha definida localmente.
-
-```sql
-CREATE USER 'hvac_app'@'localhost' IDENTIFIED BY '<SENHA_DEFINIDA_LOCALMENTE>';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `hvac_db`.* TO 'hvac_app'@'localhost';
-SHOW GRANTS FOR 'hvac_app'@'localhost';
-```
-
-### 3. Configurar a conexão e o PHP
-
-Copie `backend/db_config.example.php` para `backend/db_config.local.php`. Configure `host` como `localhost` quando PHP e MariaDB rodarem na mesma máquina. Preencha `usuario` e `senha` com a conta criada no destino e `banco` com `hvac_db`. O `backend/conexao.php` lê esse arquivo, usa MySQLi e aplica `utf8mb4` e o fuso `America/Sao_Paulo`.
-
-Abra o `php.ini` usado pelo Apache, normalmente `C:\xampp\php\php.ini`. Confira as extensões carregadas, descomente as diretivas existentes quando necessário e ajuste os limites dos anexos.
+6. No arquivo `C:\xampp\php\php.ini`, confira os limites para os anexos:
 
 ```ini
 extension=mysqli
@@ -128,37 +122,28 @@ post_max_size=135M
 max_file_uploads=5
 ```
 
-Reinicie o Apache e confira no ambiente web se os valores foram aplicados. Verifique se o PHP consegue gravar no diretório definido em `session.save_path` e nos diretórios usados para armazenar arquivos da aplicação.
+Salve o arquivo e reinicie o Apache para aplicar as alterações.
 
-### 4. Configurar o SMTP
+7. Para habilitar conexão com o banco, copie
+   `backend/db_config.example.php` para
+   `backend/db_config.local.php` e configure com seus dados.
+   Nunca envie o arquivo `backend/db_config.local.php` ao Git.
 
-Copie `backend/email_config.example.php` para `backend/email_config.local.php`. O envio para administradores e clientes passa por `backend/email_notificacao.php`. Quando preenchidas, as variáveis de ambiente `HVAC_*` têm precedência sobre o arquivo local.
+8. Acesse:
 
-| Campo | Configuração |
-| --- | --- |
-| `host` | `smtp.gmail.com` |
-| `port` | `587` |
-| `security` | `tls` (STARTTLS) |
-| `username` | Conta Gmail que autentica no SMTP. Confirme a conta usada no destino. |
-| `app_password` | Senha de app da conta Gmail, preenchida localmente. |
-| `from_email` | Endereço remetente autorizado pela conta SMTP. |
-| `from_name` | `HVAC Lex Company` |
-| `notify_to` | Endereço administrativo que recebe o resumo de novos pedidos. Confirme a caixa de destino. |
-| `app_url` | URL base da aplicação, sem barra final. Deve ser acessível no dispositivo que abrirá os links. |
+   `http://localhost/projeto-hvac-manutencoes/index.html`
 
-O cliente recebe as mensagens no endereço cadastrado. Teste a confirmação de cadastro, as mensagens de pedido ou agendamento, a atualização de status e a recuperação de senha. Quando `app_url` usa `localhost`, os links apontam para o próprio dispositivo em que forem abertos.
+   Se o clone ou a pasta dentro de `htdocs` tiver outro nome, ajuste o endereço.
 
-Mantenha `backend/db_config.local.php` e `backend/email_config.local.php` fora do Git.
+### Observações sobre o banco e a configuração local
 
-### 5. Abrir e validar a instalação
-
-Acesse `http://localhost/projeto-hvac-manutencoes/index.html`. Ajuste o endereço se a pasta ou a porta do Apache forem diferentes. Para habilitar o login com Google, execute `composer install` na raiz e confira `backend/google_config.php` e as URLs autorizadas para o ambiente.
-
-- [ ] **Banco e agendamento.** Confira a conexão com a conta da aplicação, os serviços, a triagem e os horários. Registre um pedido de teste e confira os dados no banco.
-- [ ] **Contas e login.** Teste credenciais inválidas e confirme que cliente e administrador são encaminhados a `dashboard.html` e `tela-adm.html`, respectivamente. Em banco novo no Windows, confirme como o administrador inicial será provisionado. O script `backend/criar_admin_inicial.php` exige um terminal Linux interativo.
-- [ ] **Sessões.** Use a logo na página de perfil para voltar à página inicial e confira se a sessão permanece ativa. Abra “Área do Cliente” ou “Área do Admin” e verifique o retorno à área correta. Teste também o logout e a expiração da sessão.
-- [ ] **Permissões e arquivos.** Confira o bloqueio das APIs administrativas para visitantes e clientes. Valide que cada cliente só acessa seus próprios pedidos e anexos e que o upload funciona na instalação.
-- [ ] **E-mails.** Confirme o resumo na caixa administrativa, as mensagens na caixa do cliente e o funcionamento dos links com a URL do destino.
+- A sequência acima foi testada em um banco novo. Não a execute sobre um banco que contenha dados que você deseja preservar.
+- `seed.sql` insere dados fixos iniciais. Execute-o apenas uma vez, depois de criar as tabelas.
+- Execute cada migration uma vez, em ordem numérica. Se a tabela daquela migration já existir, não execute o mesmo arquivo novamente.
+- `demo_horarios.sql` cria horários fictícios para demonstração. Ele pode ser executado novamente para repor horários, pois ignora os que já existem.
+- `hvac_db.sql` é um dump antigo e não faz parte desta sequência de instalação.
+- O link de recuperação de senha usa o endereço configurado em `app_url`. Com `localhost`, o link só abre o servidor local da máquina em que o navegador está sendo usado.
+- Para usar o envio de e-mail em outra máquina, configure o SMTP e o `app_url` nessa instalação. Não compartilhe senhas SMTP no Git nem em capturas de tela.
 
 ## 🗄️ Banco de dados
 

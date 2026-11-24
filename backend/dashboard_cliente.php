@@ -99,7 +99,8 @@ try {
             ss.codigo AS status,
             ss.nome AS status_nome,
             ea.endereco_informado AS endereco,
-            d.inicio_previsto,
+            -- Serviço concluído não tem agendamento ativo: usa o horário do atendimento realizado.
+            COALESCE(d.inicio_previsto, dc.inicio_previsto) AS inicio_previsto,
             a.id_agendamento,
             a.id_anterior,
             a.status AS status_agendamento,
@@ -112,7 +113,12 @@ try {
                   AND a.status IN ('PENDENTE', 'CONFIRMADO')
                   AND a.id_anterior IS NULL
                   AND d.inicio_previsto > NOW()
-                  THEN 1 ELSE 0 END AS pode_reagendar
+                  THEN 1 ELSE 0 END AS pode_reagendar,
+            CASE WHEN ss.codigo = 'CONCLUIDO' AND ac.id_agendamento IS NOT NULL AND av.id_avaliacao IS NULL
+                 THEN 1 ELSE 0 END AS pode_avaliar,
+            av.nota AS avaliacao_nota,
+            av.comentario AS avaliacao_comentario,
+            av.avaliada_em
          FROM solicitacao AS s
          INNER JOIN tipo_servico AS ts ON ts.id_tipo_servico = s.id_tipo_servico
          INNER JOIN status_solicitacao AS ss ON ss.id_status = s.id_status_atual
@@ -126,6 +132,13 @@ try {
             LIMIT 1
          )
          LEFT JOIN disponibilidade AS d ON d.id_disponibilidade = a.id_disponibilidade
+         LEFT JOIN agendamento AS ac ON ac.id_agendamento = (
+            SELECT MAX(a3.id_agendamento)
+            FROM agendamento AS a3
+            WHERE a3.id_solicitacao = s.id_solicitacao AND a3.status = 'CONCLUIDO'
+         )
+         LEFT JOIN disponibilidade AS dc ON dc.id_disponibilidade = ac.id_disponibilidade
+         LEFT JOIN avaliacao_atendimento AS av ON av.id_agendamento = ac.id_agendamento
          WHERE s.id_cliente = ?
          ORDER BY s.criada_em DESC, s.id_solicitacao DESC"
     );
@@ -154,6 +167,12 @@ try {
             'reagendamento_pendente' => ($linha['status_agendamento'] ?? '') === 'PENDENTE' && !empty($linha['id_anterior']),
             'pode_cancelar' => (int) ($linha['pode_cancelar'] ?? 0) === 1,
             'pode_reagendar' => (int) ($linha['pode_reagendar'] ?? 0) === 1,
+            'pode_avaliar' => (int) ($linha['pode_avaliar'] ?? 0) === 1,
+            'avaliacao' => $linha['avaliacao_nota'] === null ? null : [
+                'nota' => (int) $linha['avaliacao_nota'],
+                'comentario' => (string) ($linha['avaliacao_comentario'] ?? ''),
+                'avaliada_em' => (string) $linha['avaliada_em'],
+            ],
         ];
 
         $resumo['total']++;
