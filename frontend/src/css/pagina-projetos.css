@@ -200,6 +200,16 @@
   padding: 1.35rem;
 }
 
+.filtros-projetos[hidden],
+.aviso-demonstrativo[hidden] {
+  display: none;
+}
+
+.cartao-projeto .local-projeto {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
 .categoria-projeto {
   color: #72c8ff;
   font-size: 0.78rem;
