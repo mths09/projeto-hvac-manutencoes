@@ -44,7 +44,7 @@
             <a href="./pagina-sobre.html">Sobre Nós</a>
             <a href="../../../index.html#contatos">Contato</a>
           </div>
-          <a href="./login.html" class="btn-cliente">
+          <a href="../../../backend/area.php" data-area class="btn-cliente">
             <img
               src="../../assets/icons/pessoa.svg"
               alt=""
@@ -67,7 +67,10 @@
               residências e veja como uma avaliação técnica transforma sintomas
               em soluções cuidadosas.
             </p>
-            <a class="botao-primario" href="./agendamento.html"
+            <a
+              class="botao-primario"
+              href="./agendamento.html?origem=projetos"
+              data-agendar
               >Solicitar avaliação</a
             >
             <p class="projetos-hero-nota">
@@ -264,7 +267,10 @@
         <p class="sobretitulo">HVAC Sorocaba · Gestão técnica residencial</p>
         <h2>Seu patrimônio merece cuidado técnico.</h2>
         <p>Conte o que precisa e solicite uma avaliação para o seu caso.</p>
-        <a class="botao-primario" href="./agendamento.html"
+        <a
+          class="botao-primario"
+          href="./agendamento.html?origem=projetos"
+          data-agendar
           >Solicitar atendimento</a
         >
       </section>
@@ -290,8 +296,14 @@
       <div>
         <h2 class="footer-coluna-titulo">Atendimento</h2>
         <ul>
-          <li><a href="./agendamento.html">Agendar atendimento</a></li>
-          <li><a href="./login.html">Área do Cliente</a></li>
+          <li>
+            <a href="./agendamento.html?origem=projetos" data-agendar
+              >Agendar atendimento</a
+            >
+          </li>
+          <li>
+            <a href="../../../backend/area.php" data-area>Área do Cliente</a>
+          </li>
         </ul>
       </div>
       <div>
@@ -324,6 +336,24 @@
         class="whatsapp-flutuante-icone"
       />
     </a>
+
+    <!-- modal para aviso de necessidade do login ao agendar -->
+    <dialog
+      id="aviso-agendamento"
+      aria-labelledby="titulo-aviso-agendamento"
+      aria-describedby="texto-aviso-agendamento"
+    >
+      <h2 id="titulo-aviso-agendamento">Entre para agendar</h2>
+      <p id="texto-aviso-agendamento">
+        Você precisa entrar na sua conta de cliente para solicitar um
+        atendimento.
+      </p>
+
+      <form method="dialog">
+        <button type="submit" autofocus>Agora não</button>
+        <a href="./login.html"> Entrar para agendar </a>
+      </form>
+    </dialog>
 
     <script src="../js/script.js" defer></script>
     <script src="../js/pagina-projetos.js" defer></script>

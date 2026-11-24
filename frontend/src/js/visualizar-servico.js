@@ -12,6 +12,15 @@
 
   const idServico = new URLSearchParams(window.location.search).get("id");
 
+  // Só o link "Novo agendamento" do painel de ações (o botão da avaliação usa a mesma classe).
+  const novoAgendamento = document.querySelector(".painel-acoes a.btn-agendamento");
+
+  if (novoAgendamento && /^[1-9]\d*$/.test(idServico ?? "")) {
+    const destino = new URL(novoAgendamento.href);
+    destino.searchParams.set("id", idServico);
+    novoAgendamento.href = destino.href;
+  }
+
   // =========================================
   // FUNÇÕES AUXILIARES
   // =========================================
